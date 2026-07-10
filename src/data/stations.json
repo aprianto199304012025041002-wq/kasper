@@ -10,10 +10,13 @@
     "clnt_name": "ARMA SEBELAS, PT.",
     "kota": "KOTA YOGYAKARTA",
     "kecamatan": "GONDOMANAN",
+    "province": "DAERAH ISTIMEWA YOGYAKARTA",
     "status": "Granted",
     "erp_dbm": 66.03121,
     "jenis": "swasta",
-    "validity": "—"
+    "validity": "—",
+    "latitude": null,
+    "longitude": null
   },
   {
     "id": 50,
@@ -26,10 +29,13 @@
     "clnt_name": "RADIO RIA KENCANA. PT",
     "kota": "SLEMAN",
     "kecamatan": "DEPOK",
+    "province": "DAERAH ISTIMEWA YOGYAKARTA",
     "status": "Granted",
     "erp_dbm": 64.11091,
     "jenis": "swasta",
-    "validity": "—"
+    "validity": "—",
+    "latitude": null,
+    "longitude": null
   },
   {
     "id": 34,
@@ -42,10 +48,13 @@
     "clnt_name": "RADIO PERMATA SWARANUSA, PT.",
     "kota": "KOTA YOGYAKARTA",
     "kecamatan": "GONDOKUSUMAN",
+    "province": "DAERAH ISTIMEWA YOGYAKARTA",
     "status": "Granted",
     "erp_dbm": 65.9233,
     "jenis": "swasta",
-    "validity": "—"
+    "validity": "—",
+    "latitude": null,
+    "longitude": null
   },
   {
     "id": 5,
@@ -58,10 +67,13 @@
     "clnt_name": "RADIO SANGGA BUANA CITRA, PT.",
     "kota": "BANTUL",
     "kecamatan": "KASIHAN",
+    "province": "DAERAH ISTIMEWA YOGYAKARTA",
     "status": "Granted",
     "erp_dbm": 67.4427,
     "jenis": "swasta",
-    "validity": "—"
+    "validity": "—",
+    "latitude": null,
+    "longitude": null
   },
   {
     "id": 20,
@@ -74,10 +86,13 @@
     "clnt_name": "RADIO RASIKA ARDAYA LILASWARA MADYANTARA, PT.",
     "kota": "BANTUL",
     "kecamatan": "KASIHAN",
+    "province": "DAERAH ISTIMEWA YOGYAKARTA",
     "status": "Granted",
     "erp_dbm": 64.77121,
     "jenis": "swasta",
-    "validity": "—"
+    "validity": "—",
+    "latitude": null,
+    "longitude": null
   },
   {
     "id": 24,
@@ -90,10 +105,13 @@
     "clnt_name": "LPPL RADIO SWARA DHAKSINARGA",
     "kota": "GUNUNGKIDUL",
     "kecamatan": "WONOSARI",
+    "province": "DAERAH ISTIMEWA YOGYAKARTA",
     "status": "Granted",
     "erp_dbm": 64.61091,
     "jenis": "publik_lokal",
-    "validity": "—"
+    "validity": "—",
+    "latitude": null,
+    "longitude": null
   },
   {
     "id": 19,
@@ -106,10 +124,13 @@
     "clnt_name": "RADIO SWARA SASANDO. PT",
     "kota": "SLEMAN",
     "kecamatan": "DEPOK",
+    "province": "DAERAH ISTIMEWA YOGYAKARTA",
     "status": "Granted",
     "erp_dbm": 63.0103,
     "jenis": "swasta",
-    "validity": "—"
+    "validity": "—",
+    "latitude": null,
+    "longitude": null
   },
   {
     "id": 18,
@@ -122,10 +143,13 @@
     "clnt_name": "RADIO SIARAN D.I. MEDARI, PT, PT.",
     "kota": "SLEMAN",
     "kecamatan": "SLEMAN",
+    "province": "DAERAH ISTIMEWA YOGYAKARTA",
     "status": "Granted",
     "erp_dbm": 64.94068,
     "jenis": "swasta",
-    "validity": "—"
+    "validity": "—",
+    "latitude": null,
+    "longitude": null
   },
   {
     "id": 54,
@@ -138,10 +162,13 @@
     "clnt_name": "LEMBAGA PENYIARAN PUBLIK RADIO REPUBLIK INDONESIA",
     "kota": "SLEMAN",
     "kecamatan": "DEPOK",
+    "province": "DAERAH ISTIMEWA YOGYAKARTA",
     "status": "Granted",
     "erp_dbm": 74.0609,
     "jenis": "publik",
-    "validity": "—"
+    "validity": "—",
+    "latitude": null,
+    "longitude": null
   },
   {
     "id": 17,
@@ -154,10 +181,13 @@
     "clnt_name": "RADIO ALOISIA MEGASWARA, PT.",
     "kota": "SLEMAN",
     "kecamatan": "GAMPING",
+    "province": "DAERAH ISTIMEWA YOGYAKARTA",
     "status": "Granted",
     "erp_dbm": 65.4794,
     "jenis": "swasta",
-    "validity": "—"
+    "validity": "—",
+    "latitude": null,
+    "longitude": null
   },
   {
     "id": 10,
@@ -170,10 +200,13 @@
     "clnt_name": "RADIO SWARA SEMBADA",
     "kota": "SLEMAN",
     "kecamatan": "NGAGLIK",
+    "province": "DAERAH ISTIMEWA YOGYAKARTA",
     "status": "Granted",
     "erp_dbm": 64.4794,
     "jenis": "swasta",
-    "validity": "—"
+    "validity": "—",
+    "latitude": null,
+    "longitude": null
   },
   {
     "id": 56,
@@ -186,10 +219,13 @@
     "clnt_name": "RADIO MATARAM BUANA SUARA, PT.",
     "kota": "KOTA YOGYAKARTA",
     "kecamatan": "UMBULHARJO",
+    "province": "DAERAH ISTIMEWA YOGYAKARTA",
     "status": "Granted",
     "erp_dbm": 68.0103,
     "jenis": "swasta",
-    "validity": "—"
+    "validity": "—",
+    "latitude": null,
+    "longitude": null
   },
   {
     "id": 26,
@@ -202,10 +238,13 @@
     "clnt_name": "RADIO SWARA ARGO SOSRO, PT.",
     "kota": "GUNUNGKIDUL",
     "kecamatan": "WONOSARI",
+    "province": "DAERAH ISTIMEWA YOGYAKARTA",
     "status": "Granted",
     "erp_dbm": 64.042,
     "jenis": "swasta",
-    "validity": "—"
+    "validity": "—",
+    "latitude": null,
+    "longitude": null
   },
   {
     "id": 52,
@@ -218,10 +257,13 @@
     "clnt_name": "RADIO ADHIKARTA FM, PT.",
     "kota": "KULON PROGO",
     "kecamatan": "SENTOLO",
+    "province": "DAERAH ISTIMEWA YOGYAKARTA",
     "status": "Granted",
     "erp_dbm": 60.5,
     "jenis": "swasta",
-    "validity": "—"
+    "validity": "—",
+    "latitude": null,
+    "longitude": null
   },
   {
     "id": 9,
@@ -234,10 +276,13 @@
     "clnt_name": "RADIO PERSATUAN, PT.",
     "kota": "BANTUL",
     "kecamatan": "BANTUL",
+    "province": "DAERAH ISTIMEWA YOGYAKARTA",
     "status": "Granted",
     "erp_dbm": 65.9909,
     "jenis": "swasta",
-    "validity": "—"
+    "validity": "—",
+    "latitude": null,
+    "longitude": null
   },
   {
     "id": 45,
@@ -250,10 +295,13 @@
     "clnt_name": "RADIO KOTA PERAK, PT.",
     "kota": "GUNUNGKIDUL",
     "kecamatan": "PATUK",
+    "province": "DAERAH ISTIMEWA YOGYAKARTA",
     "status": "Granted",
     "erp_dbm": 62.58,
     "jenis": "swasta",
-    "validity": "—"
+    "validity": "—",
+    "latitude": null,
+    "longitude": null
   },
   {
     "id": 12,
@@ -266,10 +314,13 @@
     "clnt_name": "RADIO SWARA MAHASISWA SANATA DHARMA",
     "kota": "SLEMAN",
     "kecamatan": "DEPOK",
+    "province": "DAERAH ISTIMEWA YOGYAKARTA",
     "status": "Granted",
     "erp_dbm": 65.5794,
     "jenis": "swasta",
-    "validity": "—"
+    "validity": "—",
+    "latitude": null,
+    "longitude": null
   },
   {
     "id": 57,
@@ -282,10 +333,13 @@
     "clnt_name": "RADIO YASA SINDI KALYENA, PT.",
     "kota": "BANTUL",
     "kecamatan": "PIYUNGAN",
+    "province": "DAERAH ISTIMEWA YOGYAKARTA",
     "status": "Granted",
     "erp_dbm": 66.76091,
     "jenis": "swasta",
-    "validity": "—"
+    "validity": "—",
+    "latitude": null,
+    "longitude": null
   },
   {
     "id": 16,
@@ -298,10 +352,13 @@
     "clnt_name": "RADIO KIDUNG INDAH SUARA SERASI YOGYAKARTA, PT.",
     "kota": "SLEMAN",
     "kecamatan": "MLATI",
+    "province": "DAERAH ISTIMEWA YOGYAKARTA",
     "status": "Granted",
     "erp_dbm": 65.8603,
     "jenis": "swasta",
-    "validity": "—"
+    "validity": "—",
+    "latitude": null,
+    "longitude": null
   },
   {
     "id": 33,
@@ -314,10 +371,13 @@
     "clnt_name": "RADIO ISTAKALISA, PT",
     "kota": "KOTA YOGYAKARTA",
     "kecamatan": "GONDOKUSUMAN",
+    "province": "DAERAH ISTIMEWA YOGYAKARTA",
     "status": "Granted",
     "erp_dbm": 64.0712,
     "jenis": "swasta",
-    "validity": "—"
+    "validity": "—",
+    "latitude": null,
+    "longitude": null
   },
   {
     "id": 23,
@@ -330,10 +390,13 @@
     "clnt_name": "RADIO EFEKTIF MULTIKREATIF INDONESIA, PT.",
     "kota": "SLEMAN",
     "kecamatan": "DEPOK",
+    "province": "DAERAH ISTIMEWA YOGYAKARTA",
     "status": "Granted",
     "erp_dbm": 62.3,
     "jenis": "swasta",
-    "validity": "—"
+    "validity": "—",
+    "latitude": null,
+    "longitude": null
   },
   {
     "id": 30,
@@ -346,10 +409,13 @@
     "clnt_name": "RADIO BIWARA KIRANA MATARAM, PT.",
     "kota": "KOTA YOGYAKARTA",
     "kecamatan": "GONDOKUSUMAN",
+    "province": "DAERAH ISTIMEWA YOGYAKARTA",
     "status": "Granted",
     "erp_dbm": 67.7712,
     "jenis": "swasta",
-    "validity": "—"
+    "validity": "—",
+    "latitude": null,
+    "longitude": null
   },
   {
     "id": 7,
@@ -362,10 +428,13 @@
     "clnt_name": "RADIO ESTI MADA CITRA, PT.",
     "kota": "KOTA YOGYAKARTA",
     "kecamatan": "UMBULHARJO",
+    "province": "DAERAH ISTIMEWA YOGYAKARTA",
     "status": "Granted",
     "erp_dbm": 68.5132,
     "jenis": "swasta",
-    "validity": "—"
+    "validity": "—",
+    "latitude": null,
+    "longitude": null
   },
   {
     "id": 41,
@@ -378,10 +447,13 @@
     "clnt_name": "RADIO GEMA CECYA DHAKSINARGA, PT.",
     "kota": "GUNUNGKIDUL",
     "kecamatan": "PATUK",
+    "province": "DAERAH ISTIMEWA YOGYAKARTA",
     "status": "Granted",
     "erp_dbm": 68.7712,
     "jenis": "swasta",
-    "validity": "—"
+    "validity": "—",
+    "latitude": null,
+    "longitude": null
   },
   {
     "id": 46,
@@ -394,10 +466,13 @@
     "clnt_name": "RADIO SUARA VISITAMA EDUKASI ARTISTA CENDIKIA, PT.",
     "kota": "SLEMAN",
     "kecamatan": "NGAGLIK",
+    "province": "DAERAH ISTIMEWA YOGYAKARTA",
     "status": "Granted",
     "erp_dbm": 65.0,
     "jenis": "swasta",
-    "validity": "—"
+    "validity": "—",
+    "latitude": null,
+    "longitude": null
   },
   {
     "id": 47,
@@ -410,10 +485,13 @@
     "clnt_name": "RADIO RETJO BUNTUNG, PT.",
     "kota": "KOTA YOGYAKARTA",
     "kecamatan": "PAKUALAMAN",
+    "province": "DAERAH ISTIMEWA YOGYAKARTA",
     "status": "Granted",
     "erp_dbm": 68.0102,
     "jenis": "swasta",
-    "validity": "—"
+    "validity": "—",
+    "latitude": null,
+    "longitude": null
   },
   {
     "id": 39,
@@ -426,10 +504,13 @@
     "clnt_name": "RADIO SWARA ADHILOKA, , PT.",
     "kota": "GUNUNGKIDUL",
     "kecamatan": "WONOSARI",
+    "province": "DAERAH ISTIMEWA YOGYAKARTA",
     "status": "Granted",
     "erp_dbm": 64.5,
     "jenis": "swasta",
-    "validity": "—"
+    "validity": "—",
+    "latitude": null,
+    "longitude": null
   },
   {
     "id": 40,
@@ -442,10 +523,13 @@
     "clnt_name": "RADIO PRIMA AMANAT NUSANTARA, PT.",
     "kota": "BANTUL",
     "kecamatan": "DLINGO",
+    "province": "DAERAH ISTIMEWA YOGYAKARTA",
     "status": "Granted",
     "erp_dbm": 65.4897,
     "jenis": "swasta",
-    "validity": "—"
+    "validity": "—",
+    "latitude": null,
+    "longitude": null
   },
   {
     "id": 21,
@@ -458,10 +542,13 @@
     "clnt_name": "RADIO ANDALAN MUDA, PT.",
     "kota": "KULON PROGO",
     "kecamatan": "GIRIMULYO",
+    "province": "DAERAH ISTIMEWA YOGYAKARTA",
     "status": "Granted",
     "erp_dbm": 66.01091,
     "jenis": "swasta",
-    "validity": "—"
+    "validity": "—",
+    "latitude": null,
+    "longitude": null
   },
   {
     "id": 8,
@@ -474,10 +561,13 @@
     "clnt_name": "RADIO SUARA ISTANA, PT.",
     "kota": "KOTA YOGYAKARTA",
     "kecamatan": "GONDOKUSUMAN",
+    "province": "DAERAH ISTIMEWA YOGYAKARTA",
     "status": "Granted",
     "erp_dbm": 65.0103,
     "jenis": "swasta",
-    "validity": "—"
+    "validity": "—",
+    "latitude": null,
+    "longitude": null
   },
   {
     "id": 14,
@@ -490,10 +580,13 @@
     "clnt_name": "RADIO SWARA GADJAH MADA, PT.",
     "kota": "SLEMAN",
     "kecamatan": "MLATI",
+    "province": "DAERAH ISTIMEWA YOGYAKARTA",
     "status": "Granted",
     "erp_dbm": 68.9794,
     "jenis": "swasta",
-    "validity": "—"
+    "validity": "—",
+    "latitude": null,
+    "longitude": null
   },
   {
     "id": 22,
@@ -506,10 +599,13 @@
     "clnt_name": "RADIO PAMORING ADAGIO, PT.",
     "kota": "GUNUNGKIDUL",
     "kecamatan": "PATUK",
+    "province": "DAERAH ISTIMEWA YOGYAKARTA",
     "status": "Granted",
     "erp_dbm": 65.79181,
     "jenis": "swasta",
-    "validity": "—"
+    "validity": "—",
+    "latitude": null,
+    "longitude": null
   },
   {
     "id": 27,
@@ -522,10 +618,13 @@
     "clnt_name": "LEMBAGA PENYIARAN PUBLIK RADIO REPUBLIK INDONESIA",
     "kota": "SLEMAN",
     "kecamatan": "PAKEM",
+    "province": "DAERAH ISTIMEWA YOGYAKARTA",
     "status": "Granted",
     "erp_dbm": 71.58151,
     "jenis": "publik",
-    "validity": "—"
+    "validity": "—",
+    "latitude": null,
+    "longitude": null
   },
   {
     "id": 44,
@@ -538,10 +637,13 @@
     "clnt_name": "LEMBAGA PENYIARAN PUBLIK RADIO REPUBLIK INDONESIA",
     "kota": "SLEMAN",
     "kecamatan": "DEPOK",
+    "province": "DAERAH ISTIMEWA YOGYAKARTA",
     "status": "Granted",
     "erp_dbm": 71.60098,
     "jenis": "publik",
-    "validity": "—"
+    "validity": "—",
+    "latitude": null,
+    "longitude": null
   },
   {
     "id": 29,
@@ -554,10 +656,13 @@
     "clnt_name": "RADIO ARDHIA SWARA, PT.",
     "kota": "SLEMAN",
     "kecamatan": "NGAGLIK",
+    "province": "DAERAH ISTIMEWA YOGYAKARTA",
     "status": "Granted",
     "erp_dbm": 59.8413,
     "jenis": "swasta",
-    "validity": "—"
+    "validity": "—",
+    "latitude": null,
+    "longitude": null
   },
   {
     "id": 38,
@@ -570,10 +675,13 @@
     "clnt_name": "RADIO PRIMA UNISI YOGYA, PT.",
     "kota": "KOTA YOGYAKARTA",
     "kecamatan": "GONDOKUSUMAN",
+    "province": "DAERAH ISTIMEWA YOGYAKARTA",
     "status": "Granted",
     "erp_dbm": 65.7712,
     "jenis": "swasta",
-    "validity": "—"
+    "validity": "—",
+    "latitude": null,
+    "longitude": null
   },
   {
     "id": 48,
@@ -586,10 +694,13 @@
     "clnt_name": "RAKOSA, PT.",
     "kota": "SLEMAN",
     "kecamatan": "DEPOK",
+    "province": "DAERAH ISTIMEWA YOGYAKARTA",
     "status": "Granted",
     "erp_dbm": 63.2,
     "jenis": "swasta",
-    "validity": "—"
+    "validity": "—",
+    "latitude": null,
+    "longitude": null
   },
   {
     "id": 31,
@@ -602,10 +713,13 @@
     "clnt_name": "RADIO SUARA PELITA NUSANTARA, PT.",
     "kota": "SLEMAN",
     "kecamatan": "NGAGLIK",
+    "province": "DAERAH ISTIMEWA YOGYAKARTA",
     "status": "Granted",
     "erp_dbm": 65.4609,
     "jenis": "swasta",
-    "validity": "—"
+    "validity": "—",
+    "latitude": null,
+    "longitude": null
   },
   {
     "id": 6,
@@ -618,10 +732,13 @@
     "clnt_name": "RADIO GERONIMO, PT.",
     "kota": "KOTA YOGYAKARTA",
     "kecamatan": "GONDOKUSUMAN",
+    "province": "DAERAH ISTIMEWA YOGYAKARTA",
     "status": "Granted",
     "erp_dbm": 65.355,
     "jenis": "swasta",
-    "validity": "—"
+    "validity": "—",
+    "latitude": null,
+    "longitude": null
   },
   {
     "id": 55,
@@ -634,10 +751,13 @@
     "clnt_name": "LEMBAGA PENYIARAN PUBLIK RADIO REPUBLIK INDONESIA",
     "kota": "GUNUNGKIDUL",
     "kecamatan": "PATUK",
+    "province": "DAERAH ISTIMEWA YOGYAKARTA",
     "status": "Granted",
     "erp_dbm": 66.8413,
     "jenis": "publik",
-    "validity": "—"
+    "validity": "—",
+    "latitude": null,
+    "longitude": null
   },
   {
     "id": 11,
@@ -650,10 +770,13 @@
     "clnt_name": "RADIO SUARA INDRAKILA, PT.",
     "kota": "KULON PROGO",
     "kecamatan": "GIRIMULYO",
+    "province": "DAERAH ISTIMEWA YOGYAKARTA",
     "status": "Granted",
     "erp_dbm": 64.7882,
     "jenis": "swasta",
-    "validity": "—"
+    "validity": "—",
+    "latitude": null,
+    "longitude": null
   },
   {
     "id": 15,
@@ -666,10 +789,13 @@
     "clnt_name": "PERKUMPULAN RADIO KOMUNITAS WISATA JOGJA",
     "kota": "BANTUL",
     "kecamatan": "BANGUNTAPAN",
+    "province": "DAERAH ISTIMEWA YOGYAKARTA",
     "status": "Granted",
     "erp_dbm": 45.8619,
     "jenis": "komunitas",
-    "validity": "—"
+    "validity": "—",
+    "latitude": null,
+    "longitude": null
   },
   {
     "id": 28,
@@ -682,10 +808,13 @@
     "clnt_name": "PERKUMPULAN LEMBAGA PENYIARAN RADIO CITRA DESA RADIO FM",
     "kota": "BANTUL",
     "kecamatan": "SANDEN",
+    "province": "DAERAH ISTIMEWA YOGYAKARTA",
     "status": "Granted",
     "erp_dbm": 47.62281,
     "jenis": "komunitas",
-    "validity": "—"
+    "validity": "—",
+    "latitude": null,
+    "longitude": null
   },
   {
     "id": 36,
@@ -698,10 +827,13 @@
     "clnt_name": "PERKUMPULAN RADIO KOMUNITAS PARADISS SUMBERAGUNG JETIS BANTUL",
     "kota": "BANTUL",
     "kecamatan": "JETIS",
+    "province": "DAERAH ISTIMEWA YOGYAKARTA",
     "status": "Granted",
     "erp_dbm": 45.62121,
     "jenis": "komunitas",
-    "validity": "—"
+    "validity": "—",
+    "latitude": null,
+    "longitude": null
   },
   {
     "id": 2,
@@ -714,10 +846,13 @@
     "clnt_name": "PERKUMPULAN SLEMAN KOTA PENYIARAN RADIO HASBUNA",
     "kota": "SLEMAN",
     "kecamatan": "SLEMAN",
+    "province": "DAERAH ISTIMEWA YOGYAKARTA",
     "status": "Granted",
     "erp_dbm": 44.77121,
     "jenis": "komunitas",
-    "validity": "—"
+    "validity": "—",
+    "latitude": null,
+    "longitude": null
   },
   {
     "id": 3,
@@ -730,10 +865,13 @@
     "clnt_name": "PERKUMPULAN PENYIARAN RADIO KOMUNITAS IDENTITAS MAJELIS TAFSIR AL QURAN KECAMATAN KASIHAN (IMTAK) FM",
     "kota": "BANTUL",
     "kecamatan": "KASIHAN",
+    "province": "DAERAH ISTIMEWA YOGYAKARTA",
     "status": "Granted",
     "erp_dbm": 44.77121,
     "jenis": "komunitas",
-    "validity": "—"
+    "validity": "—",
+    "latitude": null,
+    "longitude": null
   },
   {
     "id": 4,
@@ -746,10 +884,13 @@
     "clnt_name": "PERKUMPULAN PENYIARAN KOMUNITAS BALAI BUDAYA MINOMARTANI",
     "kota": "SLEMAN",
     "kecamatan": "NGAGLIK",
+    "province": "DAERAH ISTIMEWA YOGYAKARTA",
     "status": "Granted",
     "erp_dbm": 44.77121,
     "jenis": "komunitas",
-    "validity": "—"
+    "validity": "—",
+    "latitude": null,
+    "longitude": null
   },
   {
     "id": 13,
@@ -762,10 +903,13 @@
     "clnt_name": "PERKUMPULAN RADIO KOMUNITAS SWARA KEBUDAYAAN GILANGHARJO PANDAK BANTUL",
     "kota": "BANTUL",
     "kecamatan": "PANDAK",
+    "province": "DAERAH ISTIMEWA YOGYAKARTA",
     "status": "Granted",
     "erp_dbm": 45.7712,
     "jenis": "komunitas",
-    "validity": "—"
+    "validity": "—",
+    "latitude": null,
+    "longitude": null
   },
   {
     "id": 42,
@@ -778,10 +922,13 @@
     "clnt_name": "PERKUMPULAN MA`ARIF WATES PENYIARAN RADIO KOMUNITAS MARISA",
     "kota": "KULON PROGO",
     "kecamatan": "WATES",
+    "province": "DAERAH ISTIMEWA YOGYAKARTA",
     "status": "Granted",
     "erp_dbm": 44.77121,
     "jenis": "komunitas",
-    "validity": "—"
+    "validity": "—",
+    "latitude": null,
+    "longitude": null
   },
   {
     "id": 43,
@@ -794,10 +941,13 @@
     "clnt_name": "PERKUMPULAN RADIO KOMUNITAS MEDIA DENGAR SWARAKOTA",
     "kota": "BANTUL",
     "kecamatan": "KASIHAN",
+    "province": "DAERAH ISTIMEWA YOGYAKARTA",
     "status": "Granted",
     "erp_dbm": 44.77121,
     "jenis": "komunitas",
-    "validity": "—"
+    "validity": "—",
+    "latitude": null,
+    "longitude": null
   },
   {
     "id": 49,
@@ -810,10 +960,13 @@
     "clnt_name": "PERKUMPULAN PENYIARAN RADIO SUARA PASAR",
     "kota": "KULON PROGO",
     "kecamatan": "WATES",
+    "province": "DAERAH ISTIMEWA YOGYAKARTA",
     "status": "Granted",
     "erp_dbm": 47.82281,
     "jenis": "komunitas",
-    "validity": "—"
+    "validity": "—",
+    "latitude": null,
+    "longitude": null
   },
   {
     "id": 1,
@@ -826,10 +979,13 @@
     "clnt_name": "PERKUMPULAN RADIO KOMUNITAS WARGA GODEAN",
     "kota": "SLEMAN",
     "kecamatan": "GODEAN",
+    "province": "DAERAH ISTIMEWA YOGYAKARTA",
     "status": "Granted",
     "erp_dbm": 44.77121,
     "jenis": "komunitas",
-    "validity": "—"
+    "validity": "—",
+    "latitude": null,
+    "longitude": null
   },
   {
     "id": 37,
@@ -842,10 +998,13 @@
     "clnt_name": "PERKUMPULAN PENYIARAN KOMUNITAS MEDIA RADIO SWARA DESA INDONESIA",
     "kota": "BANTUL",
     "kecamatan": "BANGUNTAPAN",
+    "province": "DAERAH ISTIMEWA YOGYAKARTA",
     "status": "Granted",
     "erp_dbm": 44.77121,
     "jenis": "komunitas",
-    "validity": "—"
+    "validity": "—",
+    "latitude": null,
+    "longitude": null
   },
   {
     "id": 32,
@@ -858,10 +1017,13 @@
     "clnt_name": "PERKUMPULAN RADIO KOMUNITAS ROMIKA FM",
     "kota": "SLEMAN",
     "kecamatan": "TURI",
+    "province": "DAERAH ISTIMEWA YOGYAKARTA",
     "status": "Granted",
     "erp_dbm": 44.77121,
     "jenis": "komunitas",
-    "validity": "—"
+    "validity": "—",
+    "latitude": null,
+    "longitude": null
   },
   {
     "id": 35,
@@ -874,10 +1036,13 @@
     "clnt_name": "PERKUMPULAN BUDAYA KULON PROGO (RADIO BINANGUN)",
     "kota": "KULON PROGO",
     "kecamatan": "PENGASIH",
+    "province": "DAERAH ISTIMEWA YOGYAKARTA",
     "status": "Granted",
     "erp_dbm": 44.77121,
     "jenis": "komunitas",
-    "validity": "—"
+    "validity": "—",
+    "latitude": null,
+    "longitude": null
   },
   {
     "id": 51,
@@ -890,10 +1055,13 @@
     "clnt_name": "KOMUNITAS PENDOPO NUSANTARA",
     "kota": "GUNUNGKIDUL",
     "kecamatan": "NGLIPAR",
+    "province": "DAERAH ISTIMEWA YOGYAKARTA",
     "status": "Granted",
     "erp_dbm": 44.77121,
     "jenis": "komunitas",
-    "validity": "—"
+    "validity": "—",
+    "latitude": null,
+    "longitude": null
   },
   {
     "id": 53,
@@ -906,9 +1074,12 @@
     "clnt_name": "PERKUMPULAN PENYIARAN RADIO KOMUNITAS KARISMA FM",
     "kota": "SLEMAN",
     "kecamatan": "GAMPING",
+    "province": "DAERAH ISTIMEWA YOGYAKARTA",
     "status": "Granted",
     "erp_dbm": 44.77121,
     "jenis": "komunitas",
-    "validity": "—"
+    "validity": "—",
+    "latitude": null,
+    "longitude": null
   }
 ]

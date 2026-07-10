@@ -1,7 +1,7 @@
 {
   "name": "isr-fm-spectrum",
-  "version": "1.0.0",
-  "description": "Visualisasi Pita Spektrum Frekuensi FM - Data ISR Balmon Yogyakarta",
+  "version": "3.0.0",
+  "description": "Peta Spektrum FM ISR — multi-provinsi, detail stasiun, interferensi",
   "type": "module",
   "scripts": {
     "dev": "vite",

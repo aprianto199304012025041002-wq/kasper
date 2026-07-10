@@ -1,224 +1,203 @@
 <?php
-// api/src/StationRepository.php
-// Semua query ke tabel ISR ada di sini — ubah nama tabel/kolom sesuai schema database kamu
+// api/src/StationRepository.php v3 — tambah getById, getNeighbors, getStationsWithCoords
 
 class StationRepository
 {
-    // ---------------------------------------------------------------
-    // Sesuaikan nama tabel dan kolom dengan database ISR kamu
-    // ---------------------------------------------------------------
-    private const TABLE   = 'isr_stations';   // nama tabel utama
+    private const TABLE = 'isr_stations';
     private const COL_MAP = [
-        'freq'      => 'freq',          // frekuensi center (MHz)
-        'bw'        => 'bwidth',        // bandwidth (kHz)
-        'stn_name'  => 'stn_name',      // nama pemancar
-        'clnt_name' => 'clnt_name',     // nama penyelenggara
-        'service'   => 'service',       // 'Broadcast'
-        'subservice'=> 'subservice',    // 'FM'
-        'erp'       => 'erp_pwr_dbm',  // effective radiated power dBm
-        'status'    => 'lic_status',    // 'Granted' / 'Cancelled' / 'Expired'
-        'province'  => 'province',      // 'DAERAH ISTIMEWA YOGYAKARTA'
-        'city'      => 'city',          // kabupaten/kota
-        'district'  => 'district',      // kecamatan
-        'no_simf'   => 'no_simf',       // nomor surat izin
-        'validity'  => 'lic_expiry',    // tanggal berakhir izin
+        'freq'      => 'freq',
+        'bw'        => 'bwidth',
+        'stn_name'  => 'stn_name',
+        'clnt_name' => 'clnt_name',
+        'service'   => 'service',
+        'subservice'=> 'subservice',
+        'erp'       => 'erp_pwr_dbm',
+        'status'    => 'lic_status',
+        'province'  => 'province',
+        'city'      => 'city',
+        'district'  => 'district',
+        'no_simf'   => 'no_simf',
+        'validity'  => 'lic_expiry',
+        'lat'       => 'latitude',
+        'lon'       => 'longitude',
+        'tower_h'   => 'tower_height_m',
+        'gain'      => 'antenna_gain',
     ];
 
     public function __construct(private PDO $db) {}
 
-    // ---------------------------------------------------------------
-    // Public API
-    // ---------------------------------------------------------------
-
-    /**
-     * Ambil semua stasiun FM dengan filter opsional.
-     *
-     * @param array $filters  Keys: province, city, jenis, status, search
-     * @return array
-     */
+    // ── Daftar stasiun dengan filter ─────────────────────────────────────
     public function getStations(array $filters = []): array
     {
         [$where, $params] = $this->buildWhere($filters);
-
         $sql = "
             SELECT
-                {$this->col('no_simf')}          AS no_simf,
-                {$this->col('freq')}              AS freq,
-                {$this->col('bw')}                AS bw_khz,
-                ROUND({$this->col('freq')} - {$this->col('bw')} / 2 / 1000, 4)  AS lower_mhz,
-                ROUND({$this->col('freq')} + {$this->col('bw')} / 2 / 1000, 4)  AS upper_mhz,
-                {$this->col('stn_name')}          AS stn_name,
-                {$this->col('clnt_name')}         AS clnt_name,
-                {$this->col('city')}              AS kota,
-                {$this->col('district')}          AS kecamatan,
-                {$this->col('erp')}               AS erp_dbm,
-                {$this->col('status')}            AS status,
-                {$this->col('validity')}          AS validity,
-                {$this->classifyJenis()}          AS jenis
+                id,
+                {$this->col('no_simf')}     AS no_simf,
+                {$this->col('freq')}         AS freq,
+                {$this->col('bw')}           AS bw_khz,
+                ROUND({$this->col('freq')} - {$this->col('bw')}/2/1000, 4) AS lower_mhz,
+                ROUND({$this->col('freq')} + {$this->col('bw')}/2/1000, 4) AS upper_mhz,
+                {$this->col('stn_name')}     AS stn_name,
+                {$this->col('clnt_name')}    AS clnt_name,
+                {$this->col('city')}         AS kota,
+                {$this->col('district')}     AS kecamatan,
+                {$this->col('province')}     AS province,
+                {$this->col('erp')}          AS erp_dbm,
+                {$this->col('status')}       AS status,
+                {$this->col('validity')}     AS validity,
+                {$this->col('lat')}          AS latitude,
+                {$this->col('lon')}          AS longitude,
+                {$this->classifyJenis()}     AS jenis
             FROM " . self::TABLE . "
-            WHERE
-                {$this->col('service')}    = 'Broadcast'
-                AND {$this->col('subservice')} = 'FM'
-                $where
+            WHERE {$this->col('service')} = 'Broadcast'
+              AND {$this->col('subservice')} = 'FM'
+              $where
             ORDER BY {$this->col('freq')} ASC
         ";
-
         $stmt = $this->db->prepare($sql);
         $stmt->execute($params);
         return $stmt->fetchAll();
     }
 
-    /**
-     * Ambil daftar kota/kabupaten unik yang punya stasiun FM.
-     */
-    public function getCities(?string $province = null): array
+    // ── Detail satu stasiun by ID ─────────────────────────────────────────
+    public function getById(int $id): ?array
     {
-        $where  = $province ? "AND {$this->col('province')} = :province" : '';
-        $params = $province ? [':province' => $province] : [];
-
-        $sql = "
-            SELECT DISTINCT {$this->col('city')} AS kota
-            FROM " . self::TABLE . "
-            WHERE {$this->col('service')} = 'Broadcast'
-              AND {$this->col('subservice')} = 'FM'
-              $where
-            ORDER BY {$this->col('city')}
-        ";
-
-        $stmt = $this->db->prepare($sql);
-        $stmt->execute($params);
-        return array_column($stmt->fetchAll(), 'kota');
+        $stmt = $this->db->prepare("SELECT * FROM " . self::TABLE . " WHERE id = :id LIMIT 1");
+        $stmt->execute([':id' => $id]);
+        $row = $stmt->fetch();
+        return $row ?: null;
     }
 
-    /**
-     * Ambil satu stasiun berdasar frekuensi exact (±0.05 MHz).
-     */
+    // ── Detail satu stasiun by frekuensi (±0.05 MHz) ─────────────────────
     public function getByFreq(float $freq): ?array
     {
-        $sql = "
-            SELECT *
-            FROM " . self::TABLE . "
-            WHERE {$this->col('service')} = 'Broadcast'
-              AND {$this->col('subservice')} = 'FM'
-              AND ABS({$this->col('freq')} - :freq) < 0.05
-            LIMIT 1
-        ";
+        $sql = "SELECT * FROM " . self::TABLE . "
+                WHERE {$this->col('service')} = 'Broadcast'
+                  AND {$this->col('subservice')} = 'FM'
+                  AND ABS({$this->col('freq')} - :freq) < 0.05
+                LIMIT 1";
         $stmt = $this->db->prepare($sql);
         $stmt->execute([':freq' => $freq]);
         $row = $stmt->fetch();
         return $row ?: null;
     }
 
-    /**
-     * Statistik ringkas: total stasiun per kota, per jenis.
-     */
+    // ── Stasiun tetangga: frekuensi berdekatan, provinsi sama ─────────────
+    public function getNeighbors(float $centerFreq, string $province, float $freqRange = 2.0): array
+    {
+        $sql = "
+            SELECT
+                id,
+                {$this->col('freq')}      AS freq,
+                {$this->col('stn_name')}  AS stn_name,
+                {$this->col('clnt_name')} AS clnt_name,
+                {$this->col('city')}      AS kota,
+                {$this->col('erp')}       AS erp_dbm,
+                {$this->col('status')}    AS status,
+                {$this->col('lat')}       AS latitude,
+                {$this->col('lon')}       AS longitude,
+                ABS({$this->col('freq')} - :cf) AS freq_distance
+            FROM " . self::TABLE . "
+            WHERE {$this->col('service')} = 'Broadcast'
+              AND {$this->col('subservice')} = 'FM'
+              AND {$this->col('province')} = :prov
+              AND ABS({$this->col('freq')} - :cf2) BETWEEN 0.05 AND :range
+            ORDER BY freq_distance ASC
+            LIMIT 10
+        ";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([':cf' => $centerFreq, ':cf2' => $centerFreq, ':prov' => $province, ':range' => $freqRange]);
+        return $stmt->fetchAll();
+    }
+
+    // ── Stasiun dengan koordinat GPS (untuk interferensi) ─────────────────
+    public function getStationsWithCoords(array $filters = []): array
+    {
+        [$where, $params] = $this->buildWhere($filters);
+        $sql = "
+            SELECT
+                id,
+                {$this->col('freq')}      AS freq,
+                {$this->col('bw')}        AS bw_khz,
+                {$this->col('stn_name')}  AS stn_name,
+                {$this->col('clnt_name')} AS clnt_name,
+                {$this->col('city')}      AS kota,
+                {$this->col('province')}  AS province,
+                {$this->col('erp')}       AS erp_dbm,
+                {$this->col('status')}    AS status,
+                {$this->col('lat')}       AS latitude,
+                {$this->col('lon')}       AS longitude
+            FROM " . self::TABLE . "
+            WHERE {$this->col('service')} = 'Broadcast'
+              AND {$this->col('subservice')} = 'FM'
+              AND {$this->col('lat')} IS NOT NULL
+              AND {$this->col('lon')} IS NOT NULL
+              $where
+            ORDER BY {$this->col('freq')} ASC
+        ";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute($params);
+        return $stmt->fetchAll();
+    }
+
+    // ── Statistik per kota dan jenis ─────────────────────────────────────
     public function getStats(array $filters = []): array
     {
         [$where, $params] = $this->buildWhere($filters);
-
-        // Per kota
         $sqlKota = "
             SELECT {$this->col('city')} AS kota, COUNT(*) AS total
             FROM " . self::TABLE . "
-            WHERE {$this->col('service')} = 'Broadcast'
-              AND {$this->col('subservice')} = 'FM'
-              $where
-            GROUP BY {$this->col('city')}
-            ORDER BY total DESC
-        ";
-        $stmt = $this->db->prepare($sqlKota);
-        $stmt->execute($params);
-        $perKota = $stmt->fetchAll();
+            WHERE {$this->col('service')} = 'Broadcast' AND {$this->col('subservice')} = 'FM' $where
+            GROUP BY {$this->col('city')} ORDER BY total DESC";
+        $s1 = $this->db->prepare($sqlKota); $s1->execute($params);
 
-        // Per jenis
         $sqlJenis = "
             SELECT {$this->classifyJenis()} AS jenis, COUNT(*) AS total
             FROM " . self::TABLE . "
-            WHERE {$this->col('service')} = 'Broadcast'
-              AND {$this->col('subservice')} = 'FM'
-              $where
-            GROUP BY jenis
-            ORDER BY total DESC
-        ";
-        $stmt = $this->db->prepare($sqlJenis);
-        $stmt->execute($params);
-        $perJenis = $stmt->fetchAll();
+            WHERE {$this->col('service')} = 'Broadcast' AND {$this->col('subservice')} = 'FM' $where
+            GROUP BY jenis ORDER BY total DESC";
+        $s2 = $this->db->prepare($sqlJenis); $s2->execute($params);
 
-        return [
-            'per_kota'  => $perKota,
-            'per_jenis' => $perJenis,
-        ];
+        return ['per_kota' => $s1->fetchAll(), 'per_jenis' => $s2->fetchAll()];
     }
 
-    // ---------------------------------------------------------------
-    // Helpers
-    // ---------------------------------------------------------------
-
-    private function col(string $key): string
+    // ── Daftar kota unik ──────────────────────────────────────────────────
+    public function getCities(?string $province = null): array
     {
-        return self::COL_MAP[$key] ?? $key;
+        $where  = $province ? "AND {$this->col('province')} = :province" : '';
+        $params = $province ? [':province' => $province] : [];
+        $stmt = $this->db->prepare(
+            "SELECT DISTINCT {$this->col('city')} AS kota FROM " . self::TABLE .
+            " WHERE {$this->col('service')}='Broadcast' AND {$this->col('subservice')}='FM' $where ORDER BY kota"
+        );
+        $stmt->execute($params);
+        return array_column($stmt->fetchAll(), 'kota');
     }
 
-    /**
-     * CASE expression untuk mengklasifikasi jenis stasiun dari nama klien.
-     */
+    // ── Helpers ───────────────────────────────────────────────────────────
+    private function col(string $key): string { return self::COL_MAP[$key] ?? $key; }
+
     private function classifyJenis(): string
     {
-        $clnt = $this->col('clnt_name');
-        return "
-            CASE
-                WHEN $clnt LIKE '%RRI%' OR $clnt LIKE '%RADIO REPUBLIK%' THEN 'publik'
-                WHEN $clnt LIKE '%LPPL%' OR $clnt LIKE '%LEMBAGA PENYIARAN PUBLIK LOKAL%' THEN 'publik_lokal'
-                WHEN $clnt LIKE '%PERKUMPULAN%' OR $clnt LIKE '%KOMUNITAS%' THEN 'komunitas'
-                ELSE 'swasta'
-            END
-        ";
+        $c = $this->col('clnt_name');
+        return "CASE
+            WHEN $c LIKE '%RRI%' OR $c LIKE '%RADIO REPUBLIK%' THEN 'publik'
+            WHEN $c LIKE '%LPPL%' OR $c LIKE '%LEMBAGA PENYIARAN PUBLIK LOKAL%' THEN 'publik_lokal'
+            WHEN $c LIKE '%PERKUMPULAN%' OR $c LIKE '%KOMUNITAS%' THEN 'komunitas'
+            ELSE 'swasta'
+        END";
     }
 
-    /**
-     * Build WHERE clause dari filter array.
-     * Filter yang didukung: province, city, jenis, status, search, freq_min, freq_max
-     */
     private function buildWhere(array $filters): array
     {
-        $clauses = [];
-        $params  = [];
-
-        if (!empty($filters['province'])) {
-            $clauses[] = "{$this->col('province')} = :province";
-            $params[':province'] = $filters['province'];
-        }
-
-        if (!empty($filters['city'])) {
-            $clauses[] = "{$this->col('city')} = :city";
-            $params[':city'] = $filters['city'];
-        }
-
-        if (!empty($filters['status'])) {
-            $clauses[] = "{$this->col('status')} = :status";
-            $params[':status'] = $filters['status'];
-        }
-
-        if (!empty($filters['freq_min'])) {
-            $clauses[] = "{$this->col('freq')} >= :freq_min";
-            $params[':freq_min'] = (float) $filters['freq_min'];
-        }
-
-        if (!empty($filters['freq_max'])) {
-            $clauses[] = "{$this->col('freq')} <= :freq_max";
-            $params[':freq_max'] = (float) $filters['freq_max'];
-        }
-
-        if (!empty($filters['search'])) {
-            $clauses[] = "({$this->col('stn_name')} LIKE :search OR {$this->col('clnt_name')} LIKE :search)";
-            $params[':search'] = '%' . $filters['search'] . '%';
-        }
-
-        // Filter jenis pakai HAVING karena itu computed column
-        // Dihandle di level aplikasi setelah fetch jika dibutuhkan
-        // (untuk simplisitas, filter jenis di PHP side)
-
-        $sql = $clauses ? 'AND ' . implode(' AND ', $clauses) : '';
-        return [$sql, $params];
+        $clauses = []; $params = [];
+        if (!empty($filters['province'])) { $clauses[] = "{$this->col('province')} = :province"; $params[':province'] = $filters['province']; }
+        if (!empty($filters['city']))     { $clauses[] = "{$this->col('city')} = :city";         $params[':city']     = $filters['city']; }
+        if (!empty($filters['status']))   { $clauses[] = "{$this->col('status')} = :status";     $params[':status']   = $filters['status']; }
+        if (!empty($filters['freq_min'])) { $clauses[] = "{$this->col('freq')} >= :freq_min";    $params[':freq_min'] = (float)$filters['freq_min']; }
+        if (!empty($filters['freq_max'])) { $clauses[] = "{$this->col('freq')} <= :freq_max";    $params[':freq_max'] = (float)$filters['freq_max']; }
+        if (!empty($filters['search']))   { $clauses[] = "({$this->col('stn_name')} LIKE :search OR {$this->col('clnt_name')} LIKE :search)"; $params[':search'] = '%'.$filters['search'].'%'; }
+        return [$clauses ? 'AND '.implode(' AND ', $clauses) : '', $params];
     }
 }

@@ -1,0 +1,184 @@
+/* src/components/province.css */
+
+.province-bar {
+  background: var(--bg-panel);
+  border-bottom: 1px solid var(--border-hairline);
+  padding: 0 32px;
+  display: flex;
+  align-items: center;
+  gap: 0;
+  overflow-x: auto;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.province-bar::-webkit-scrollbar { display: none; }
+
+.province-tab {
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--text-tertiary);
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  padding: 13px 16px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: color 0.1s, border-color 0.1s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.province-tab:hover { color: var(--text-secondary); }
+
+.province-tab.is-active {
+  color: var(--signal-phosphor);
+  border-bottom-color: var(--signal-phosphor);
+}
+
+.province-tab__count {
+  font-size: 10px;
+  background: var(--bg-input);
+  border: 1px solid var(--border-mid);
+  border-radius: 3px;
+  padding: 1px 5px;
+}
+
+.province-tab.is-active .province-tab__count {
+  background: var(--signal-phosphor-dim);
+  border-color: var(--signal-phosphor);
+  color: var(--signal-phosphor);
+}
+
+/* Interference summary cards */
+.interf-summary {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1px;
+  background: var(--border-hairline);
+  border: 1px solid var(--border-hairline);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+
+.interf-card {
+  background: var(--bg-panel);
+  padding: 14px 18px;
+}
+
+.interf-card__label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--text-tertiary);
+  font-family: var(--font-mono);
+  margin-bottom: 6px;
+}
+
+.interf-card__val {
+  font-family: var(--font-mono);
+  font-size: 24px;
+  font-weight: 600;
+}
+
+.interf-card__val.is-danger  { color: var(--signal-danger); }
+.interf-card__val.is-warn    { color: var(--signal-warn); }
+.interf-card__val.is-ok      { color: var(--signal-phosphor); }
+.interf-card__val.is-neutral { color: var(--text-primary); }
+
+/* Interference table */
+.interf-table-wrap {
+  border: 1px solid var(--border-hairline);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.interf-table-head {
+  display: grid;
+  grid-template-columns: 30px 140px 140px 80px 80px 80px 80px 1fr;
+  gap: 8px;
+  padding: 9px 14px;
+  background: var(--bg-input);
+  border-bottom: 1px solid var(--border-hairline);
+  font-size: 10px;
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-tertiary);
+}
+
+.interf-table-row {
+  display: grid;
+  grid-template-columns: 30px 140px 140px 80px 80px 80px 80px 1fr;
+  gap: 8px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border-hairline);
+  font-size: 12px;
+  align-items: center;
+  transition: background 0.08s;
+  cursor: default;
+}
+
+.interf-table-row:last-child { border-bottom: none; }
+.interf-table-row:hover { background: var(--bg-panel-raised); }
+
+.interf-table-row.is-critical { border-left: 3px solid var(--signal-danger); }
+.interf-table-row.is-warning  { border-left: 3px solid var(--signal-warn); }
+.interf-table-row.is-ok       { border-left: 3px solid var(--signal-phosphor); }
+
+.row-idx {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-tertiary);
+}
+
+.row-stn {
+  font-size: 12px;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.row-stn__freq {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-tertiary);
+}
+
+.row-mono {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.margin-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+
+.margin-bar__track {
+  flex: 1;
+  height: 4px;
+  background: var(--bg-input);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.margin-bar__fill {
+  height: 100%;
+  border-radius: 2px;
+}
+
+@media (max-width: 900px) {
+  .province-bar { padding: 0 16px; }
+  .interf-summary { grid-template-columns: repeat(2, 1fr); }
+  .interf-table-head,
+  .interf-table-row { grid-template-columns: 30px 1fr 1fr 70px 70px; }
+  .interf-table-head > :nth-child(n+6),
+  .interf-table-row  > :nth-child(n+6) { display: none; }
+}
