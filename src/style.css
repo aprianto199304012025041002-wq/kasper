@@ -1,0 +1,99 @@
+/* ============================================================
+   DESIGN TOKENS
+   Konsep: panel kontrol monitoring spektrum — dark console,
+   grid presisi, tipografi mono untuk data teknis (frekuensi/angka),
+   sans untuk UI. Aksen hijau fosfor (seperti layar analyzer RF lama)
+   dipakai HANYA untuk highlight "kanal kosong" — elemen tanda tangan halaman ini.
+   ============================================================ */
+:root {
+  /* Warna dasar — console gelap, bukan hitam pekat */
+  --bg-base: #0e1410;
+  --bg-panel: #141b16;
+  --bg-panel-raised: #1a221c;
+  --bg-input: #0b100d;
+  --border-hairline: #25302a;
+  --border-mid: #354238;
+
+  /* Teks */
+  --text-primary: #e8f0ea;
+  --text-secondary: #93a89c;
+  --text-tertiary: #5c7066;
+
+  /* Aksen sinyal — terinspirasi dari display spectrum analyzer RF */
+  --signal-phosphor: #5ee69c;     /* hijau fosfor: kanal KOSONG — elemen tanda tangan */
+  --signal-phosphor-dim: #2a4a39;
+  --signal-occupied: #4a90d9;     /* biru: kanal terpakai default */
+  --signal-warn: #e6a23c;
+  --signal-danger: #e2585a;
+  --signal-danger-dim: #3a2424;
+
+  /* Warna per wilayah kabupaten/kota (5 wilayah DIY) */
+  --region-kota: #4a90d9;
+  --region-sleman: #5ee69c;
+  --region-bantul: #e6b85c;
+  --region-gunungkidul: #d97a9c;
+  --region-kulonprogo: #9d8ce6;
+
+  /* Tipografi */
+  --font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  --font-sans: 'Inter', -apple-system, system-ui, sans-serif;
+
+  /* Layout */
+  --radius-sm: 3px;
+  --radius-md: 5px;
+  --container-max: 1320px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { color-scheme: dark; }
+
+body {
+  background: var(--bg-base);
+  background-image:
+    linear-gradient(var(--border-hairline) 1px, transparent 1px),
+    linear-gradient(90deg, var(--border-hairline) 1px, transparent 1px);
+  background-size: 48px 48px;
+  background-attachment: fixed;
+  background-position: -1px -1px;
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+#app { min-height: 100vh; }
+
+::selection { background: var(--signal-phosphor-dim); color: var(--signal-phosphor); }
+
+a { color: inherit; }
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+}
+
+::-webkit-scrollbar { height: 10px; width: 10px; }
+::-webkit-scrollbar-track { background: var(--bg-panel); }
+::-webkit-scrollbar-thumb { background: var(--border-mid); border-radius: 5px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-tertiary); }
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  * { animation: none !important; transition: none !important; }
+}
+
+/* Focus visibility */
+:focus-visible {
+  outline: 2px solid var(--signal-phosphor);
+  outline-offset: 2px;
+}
+
+.mono { font-family: var(--font-mono); }
+
+.sr-only {
+  position: absolute; width: 1px; height: 1px;
+  padding: 0; margin: -1px; overflow: hidden;
+  clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+}

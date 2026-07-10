@@ -1,0 +1,65 @@
+/* src/components/stats.css */
+.stats-bar {
+  max-width: var(--container-max);
+  margin: 0 auto;
+  padding: 20px 32px 0;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1px;
+  background: var(--border-hairline);
+  border: 1px solid var(--border-hairline);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.stat-cell {
+  background: var(--bg-panel);
+  padding: 16px 20px;
+  position: relative;
+}
+
+.stat-cell__label {
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--text-tertiary);
+  margin-bottom: 8px;
+  font-family: var(--font-mono);
+}
+
+.stat-cell__value {
+  font-family: var(--font-mono);
+  font-size: 26px;
+  font-weight: 600;
+  line-height: 1;
+  color: var(--text-primary);
+}
+
+.stat-cell__value.is-phosphor { color: var(--signal-phosphor); }
+.stat-cell__value.is-occupied { color: var(--signal-occupied); }
+.stat-cell__value.is-danger { color: var(--signal-danger); }
+
+.stat-cell__unit {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  margin-left: 4px;
+  font-weight: 400;
+}
+
+.stat-cell__bar {
+  margin-top: 10px;
+  height: 3px;
+  background: var(--bg-input);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.stat-cell__bar-fill {
+  height: 100%;
+  border-radius: 2px;
+}
+
+@media (max-width: 760px) {
+  .stats-bar { grid-template-columns: repeat(2, 1fr); padding: 16px; }
+  .stat-cell__value { font-size: 20px; }
+}
