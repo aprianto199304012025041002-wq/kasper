@@ -1,5 +1,4 @@
 <?php
-// api/index.php v3 — tambah: /provinces, /stations/:id detail, /interference
 declare(strict_types=1);
 
 require_once __DIR__ . '/src/config.php';
@@ -11,10 +10,10 @@ require_once __DIR__ . '/src/StationRepository.php';
 require_once __DIR__ . '/src/ProvinceRepository.php';
 require_once __DIR__ . '/src/InterferenceEngine.php';
 
-$config = require __DIR__ . '/src/config.php';
-$cache  = new Cache($config['cache']);
-$db     = Database::connect($config['db']);
-$repo   = new StationRepository($db);
+$config   = require __DIR__ . '/src/config.php';
+$cache    = new Cache($config['cache']);
+$db       = Database::connect($config['db']);
+$repo     = new StationRepository($db);
 $provRepo = new ProvinceRepository($db);
 
 header('Content-Type: application/json; charset=utf-8');
@@ -26,9 +25,9 @@ header('X-Content-Type-Options: nosniff');
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') { http_response_code(204); exit; }
 if ($_SERVER['REQUEST_METHOD'] !== 'GET')     { Response::error('Method not allowed', 405); }
 
+// Routing
 $path  = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
-$path  = preg_replace('#^/api#', '', $path);
-$path  = rtrim($path, '/') ?: '/';
+$path  = rtrim(preg_replace('#^/api#', '', $path), '/') ?: '/';
 $parts = explode('/', trim($path, '/'));
 $route = $parts[0] ?? '';
 $param = $parts[1] ?? null;
@@ -36,38 +35,19 @@ $qp    = $_GET;
 
 switch ($route) {
 
-    // ── /stations[?province=&city=&jenis=&status=&search=] ─────────────
-    // ── /stations/:freq  → detail satu stasiun lengkap + tetangga ───────
+    // ── GET /stations[?province=&city=&jenis=&search=] ────────────────────
+    // ── GET /stations/:freq ───────────────────────────────────────────────
     case 'stations':
         if ($param !== null) {
-            // Coba cari by freq dulu, lalu by id
-            $byFreq = filter_var($param, FILTER_VALIDATE_FLOAT);
-            $byId   = filter_var($param, FILTER_VALIDATE_INT);
-
-            if ($byFreq !== false) {
-                $station = $repo->getByFreq($byFreq);
-            } elseif ($byId !== false) {
-                $station = $repo->getById((int)$byId);
-            } else {
-                Response::error('Parameter tidak valid');
-            }
-
-            if (!$station) Response::notFound("Stasiun tidak ditemukan");
-
-            // Stasiun tetangga: frekuensi ±2 MHz, provinsi sama
-            $neighbors = $repo->getNeighbors(
-                (float)$station['freq'],
-                $station['province'] ?? '',
-                2.0
-            );
-
-            Response::json([
-                'data'      => $station,
-                'neighbors' => $neighbors,
-            ]);
+            $freq = filter_var($param, FILTER_VALIDATE_FLOAT);
+            if ($freq === false) Response::error('Parameter frekuensi tidak valid');
+            $station = $repo->getByFreq($freq);
+            if (!$station) Response::notFound("Stasiun {$freq} MHz tidak ditemukan");
+            $neighbors = $repo->getNeighbors((float)$station['freq'], $station['province'] ?? '', 2.0);
+            Response::json(['data' => $station, 'neighbors' => $neighbors]);
         }
 
-        $province = $qp['province'] ?? 'DAERAH ISTIMEWA YOGYAKARTA';
+        $province = $qp['province'] ?? '';
         $filters  = array_filter([
             'province' => $province,
             'city'     => $qp['city']     ?? null,
@@ -108,34 +88,30 @@ switch ($route) {
         Response::json($result);
         break;
 
-    // ── /provinces ───────────────────────────────────────────────────────
+    // ── GET /provinces ────────────────────────────────────────────────────
     case 'provinces':
-        $cacheKey = 'provinces_list';
+        $cacheKey = 'provinces_all';
         if ($cached = $cache->get($cacheKey)) { header('X-Cache: HIT'); Response::json($cached); }
-
-        $result = [
-            'provinces'    => $provRepo->listWithStats(),
-            'generated_at' => date('c'),
-        ];
+        $result = ['provinces' => $provRepo->listWithStats(), 'generated_at' => date('c')];
         $cache->set($cacheKey, $result);
         Response::json($result);
         break;
 
-    // ── /cities[?province=] ──────────────────────────────────────────────
+    // ── GET /cities?province= ─────────────────────────────────────────────
     case 'cities':
-        $province = $qp['province'] ?? 'DAERAH ISTIMEWA YOGYAKARTA';
-        Response::json([
-            'province' => $province,
-            'cities'   => $provRepo->citiesInProvince($province),
-        ]);
+        $province = $qp['province'] ?? '';
+        $cacheKey = 'cities_' . md5($province);
+        if ($cached = $cache->get($cacheKey)) { header('X-Cache: HIT'); Response::json($cached); }
+        $result = ['province' => $province, 'cities' => $provRepo->citiesInProvince($province)];
+        $cache->set($cacheKey, $result);
+        Response::json($result);
         break;
 
-    // ── /channels[?province=&city=] ──────────────────────────────────────
+    // ── GET /channels?province=&city= ─────────────────────────────────────
     case 'channels':
-        $filters  = array_filter(['province' => $qp['province'] ?? 'DAERAH ISTIMEWA YOGYAKARTA', 'city' => $qp['city'] ?? null]);
+        $filters  = array_filter(['province' => $qp['province'] ?? '', 'city' => $qp['city'] ?? null]);
         $cacheKey = 'channels_' . md5(json_encode($filters));
         if ($cached = $cache->get($cacheKey)) { header('X-Cache: HIT'); Response::json($cached); }
-
         $stations   = $repo->getStations($filters);
         $channelMap = ChannelEngine::computeMap($stations);
         $result     = ['channel_map' => $channelMap, 'summary' => ChannelEngine::summarize($channelMap)];
@@ -143,13 +119,12 @@ switch ($route) {
         Response::json($result);
         break;
 
-    // ── /slots[?province=&city=&min_count=] ─────────────────────────────
+    // ── GET /slots?province=&city=&min_count= ─────────────────────────────
     case 'slots':
-        $filters  = array_filter(['province' => $qp['province'] ?? 'DAERAH ISTIMEWA YOGYAKARTA', 'city' => $qp['city'] ?? null]);
+        $filters  = array_filter(['province' => $qp['province'] ?? '', 'city' => $qp['city'] ?? null]);
         $minCount = max(1, (int)($qp['min_count'] ?? 1));
         $cacheKey = 'slots_' . md5(json_encode($filters) . $minCount);
         if ($cached = $cache->get($cacheKey)) { header('X-Cache: HIT'); Response::json($cached); }
-
         $stations   = $repo->getStations($filters);
         $channelMap = ChannelEngine::computeMap($stations);
         $blocks     = array_values(array_filter(ChannelEngine::findFreeBlocks($channelMap), fn($b) => $b['count'] >= $minCount));
@@ -158,35 +133,29 @@ switch ($route) {
         Response::json($result);
         break;
 
-    // ── /interference[?province=&city=] ─────────────────────────────────
+    // ── GET /interference?province=&city= ─────────────────────────────────
     case 'interference':
-        $province = $qp['province'] ?? 'DAERAH ISTIMEWA YOGYAKARTA';
-        $filters  = array_filter(['province' => $province, 'city' => $qp['city'] ?? null]);
-        $cacheKey = 'interference_' . md5(json_encode($filters));
+        $filters  = array_filter(['province' => $qp['province'] ?? '', 'city' => $qp['city'] ?? null]);
+        $cacheKey = 'interf_' . md5(json_encode($filters));
         if ($cached = $cache->get($cacheKey)) { header('X-Cache: HIT'); Response::json($cached); }
-
-        // Ambil stasiun dengan lat/lon
         $stations = $repo->getStationsWithCoords($filters);
         if (empty($stations)) {
             Response::json([
-                'message' => 'Tidak ada stasiun dengan koordinat GPS. Isi kolom latitude/longitude di database.',
-                'pairs'   => [],
-                'summary' => ['co_channel'=>0,'adjacent_1'=>0,'adjacent_2'=>0,'clean'=>0],
-                'stations_evaluated' => 0,
+                'message' => 'Tidak ada stasiun dengan koordinat GPS.',
+                'pairs' => [], 'summary' => ['co_channel'=>0,'adjacent_1'=>0,'adjacent_2'=>0,'clean'=>0],
+                'stations_evaluated' => 0, 'model' => 'N/A',
             ]);
         }
-
         $result = InterferenceEngine::evaluate($stations);
         $cache->set($cacheKey, $result);
         Response::json($result);
         break;
 
-    // ── /stats[?province=&city=] ─────────────────────────────────────────
+    // ── GET /stats?province=&city= ────────────────────────────────────────
     case 'stats':
-        $filters  = array_filter(['province' => $qp['province'] ?? 'DAERAH ISTIMEWA YOGYAKARTA', 'city' => $qp['city'] ?? null]);
+        $filters  = array_filter(['province' => $qp['province'] ?? '', 'city' => $qp['city'] ?? null]);
         $cacheKey = 'stats_' . md5(json_encode($filters));
         if ($cached = $cache->get($cacheKey)) { header('X-Cache: HIT'); Response::json($cached); }
-
         $stations   = $repo->getStations($filters);
         $channelMap = ChannelEngine::computeMap($stations);
         $result     = array_merge(ChannelEngine::summarize($channelMap), $repo->getStats($filters));
@@ -194,16 +163,25 @@ switch ($route) {
         Response::json($result);
         break;
 
-    // ── /health ──────────────────────────────────────────────────────────
+    // ── GET /health ───────────────────────────────────────────────────────
     case 'health':
         try {
             $db->query('SELECT 1');
-            Response::json(['status'=>'ok','db'=>'connected','time'=>date('c'),'version'=>'3.0']);
+            // Test tabel isr ada
+            $count = $db->query("SELECT COUNT(*) FROM isr WHERE service='Broadcast' AND subservice='FM'")->fetchColumn();
+            Response::json([
+                'status'     => 'ok',
+                'db'         => 'connected',
+                'table'      => 'isr',
+                'fm_records' => (int)$count,
+                'version'    => '3.0',
+                'time'       => date('c'),
+            ]);
         } catch (Exception $e) {
-            Response::json(['status'=>'error','db'=>$e->getMessage()], 503);
+            Response::json(['status' => 'error', 'detail' => $e->getMessage()], 503);
         }
         break;
 
     default:
-        Response::notFound('Endpoint tidak ditemukan. Tersedia: /stations, /provinces, /cities, /channels, /slots, /interference, /stats, /health');
+        Response::notFound('Endpoint tidak ada. Tersedia: /stations, /provinces, /cities, /channels, /slots, /interference, /stats, /health');
 }
