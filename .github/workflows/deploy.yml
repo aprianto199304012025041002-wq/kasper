@@ -23,13 +23,28 @@ jobs:
         run: npm install && npm run build
 
       - name: Generate config.php dari secrets
+        env:
+          DB_HOST: ${{ secrets.DB_HOST }}
+          DB_NAME: ${{ secrets.DB_NAME }}
+          DB_USER: ${{ secrets.DB_USER }}
+          DB_PASS: ${{ secrets.DB_PASS }}
         run: |
           mkdir -p api/src
-          printf '<?php\nreturn [\n    '"'"'db'"'"' => [\n        '"'"'host'"'"'    => '"'"'%s'"'"',\n        '"'"'port'"'"'    => '"'"'3306'"'"',\n        '"'"'name'"'"'    => '"'"'%s'"'"',\n        '"'"'user'"'"'    => '"'"'%s'"'"',\n        '"'"'pass'"'"'    => '"'"'%s'"'"',\n        '"'"'charset'"'"' => '"'"'utf8mb4'"'"',\n    ],\n    '"'"'cors'"'"' => ['"'"'allowed_origin'"'"' => '"'"'*'"'"'],\n    '"'"'cache'"'"' => ['"'"'enabled'"'"' => true, '"'"'dir'"'"' => __DIR__ . '"'"'/../cache'"'"', '"'"'ttl'"'"' => 300],\n];\n' \
-            "${{ secrets.DB_HOST }}" \
-            "${{ secrets.DB_NAME }}" \
-            "${{ secrets.DB_USER }}" \
-            "${{ secrets.DB_PASS }}" > api/src/config.php
+          cat > api/src/config.php << PHPEOF
+          <?php
+          return [
+              'db' => [
+                  'host'    => '${DB_HOST}',
+                  'port'    => '3306',
+                  'name'    => '${DB_NAME}',
+                  'user'    => '${DB_USER}',
+                  'pass'    => '${DB_PASS}',
+                  'charset' => 'utf8mb4',
+              ],
+              'cors' => ['allowed_origin' => '*'],
+              'cache' => ['enabled' => true, 'dir' => __DIR__ . '/../cache', 'ttl' => 300],
+          ];
+          PHPEOF
 
       - name: Deploy via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
