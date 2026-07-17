@@ -242,5 +242,5 @@ Analisis interferensi menggunakan model **free-space path loss** berbasis ITU-R 
 - **2nd Adjacent ±400 kHz**: protection ratio minimum 10 dB
 - Radius evaluasi: 150 km per pasangan stasiun
 - **Prasyarat**: kolom `latitude` dan `longitude` di tabel `isr_stations` harus terisi
-
+hehehe
 Model ini adalah aproksimasi — untuk analisis resmi gunakan software propagasi ITU-R P.1546 atau SEAMCAT.
