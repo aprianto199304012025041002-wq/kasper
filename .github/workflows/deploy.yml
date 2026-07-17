@@ -1,0 +1,53 @@
+name: Build & Deploy to Hostinger
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install & build frontend
+        run: npm install && npm run build
+
+      - name: Generate config.php dari secrets
+        run: |
+          mkdir -p api/src
+          printf '<?php\nreturn [\n    '"'"'db'"'"' => [\n        '"'"'host'"'"'    => '"'"'%s'"'"',\n        '"'"'port'"'"'    => '"'"'3306'"'"',\n        '"'"'name'"'"'    => '"'"'%s'"'"',\n        '"'"'user'"'"'    => '"'"'%s'"'"',\n        '"'"'pass'"'"'    => '"'"'%s'"'"',\n        '"'"'charset'"'"' => '"'"'utf8mb4'"'"',\n    ],\n    '"'"'cors'"'"' => ['"'"'allowed_origin'"'"' => '"'"'*'"'"'],\n    '"'"'cache'"'"' => ['"'"'enabled'"'"' => true, '"'"'dir'"'"' => __DIR__ . '"'"'/../cache'"'"', '"'"'ttl'"'"' => 300],\n];\n' \
+            "${{ secrets.DB_HOST }}" \
+            "${{ secrets.DB_NAME }}" \
+            "${{ secrets.DB_USER }}" \
+            "${{ secrets.DB_PASS }}" > api/src/config.php
+
+      - name: Deploy via FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_HOST }}
+          username: ${{ secrets.FTP_USER }}
+          password: ${{ secrets.FTP_PASS }}
+          local-dir: ./
+          server-dir: /public_html/
+          exclude: |
+            **/.git*
+            **/.git*/**
+            **/node_modules/**
+            **/src/**
+            .env*
+            .gitignore
+            README.md
+            package*.json
+            vite.config.js
+            isr-spectrum.code-workspace
+            index.html
