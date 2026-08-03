@@ -852,12 +852,15 @@ export async function renderGeoGridView(container, currentProvince, currentFilte
   try {
     const { fetchProvinces } = await import('./apiClient.js');
     const provinces = await fetchProvinces();
-    selProvince.innerHTML = provinces.map(p =>
+    const allOpt = `<option value="" ${!province ? 'selected' : ''}>🌐 Semua Provinsi</option>`;
+    selProvince.innerHTML = allOpt + provinces.map(p =>
       `<option value="${esc(p.name)}" ${p.name === province ? 'selected' : ''}>${p.name.replace(/DAERAH ISTIMEWA /gi,'D.I. ').replace(/PROVINSI /gi,'')}</option>`
     ).join('');
-    if (!province && provinces.length) province = provinces[0].name;
+    // Kalau tidak ada province awal, default ke "Semua Provinsi"
+    if (!province) province = '';
   } catch {
-    selProvince.innerHTML = `<option value="${esc(province)}">${province || 'D.I. Yogyakarta'}</option>`;
+    const allOpt = `<option value="" ${!province ? 'selected' : ''}>🌐 Semua Provinsi</option>`;
+    selProvince.innerHTML = allOpt + (province ? `<option value="${esc(province)}" selected>${province}</option>` : '');
   }
 
   // ── Apply filters + re-render ──
@@ -874,9 +877,10 @@ export async function renderGeoGridView(container, currentProvince, currentFilte
 
   // ── Load data ──
   async function loadData() {
-    area.innerHTML = `<div class="gg-state"><div class="gg-spinner"></div><span>Memuat data spektrum…</span></div>`;
+    area.innerHTML = `<div class="gg-state"><div class="gg-spinner"></div><span>Memuat data spektrum${province ? ' — ' + province.replace(/DAERAH ISTIMEWA /gi,'D.I. ').replace(/PROVINSI /gi,'') : ' semua provinsi'}…</span></div>`;
     try {
-      const params = { province };
+      // province kosong = ambil semua provinsi dari API
+      const params = province ? { province } : {};
       const data = await fetchSpectrum(params);
       allStations = (data.stations || []).map(s => ({ ...s, freq: parseFloat(s.freq) }));
       applyFilters();
