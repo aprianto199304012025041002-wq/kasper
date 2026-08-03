@@ -11,6 +11,8 @@ import { renderBandView, renderBandRuler } from './bandView.js';
 import { renderDetailPage } from './detailPage.js';
 import { renderInterferencePanel } from './interferenceView.js';
 import { renderGeoGridView } from './geoGridView.js';
+import { initMobileUI, openFilterDrawer, syncFilterBadge } from './mobile.js';
+import './components/responsive.css';
 
 // ── Warna dinamis — di-generate dari HSL berdasar index kota ─────────
 const CITY_PALETTE = [
@@ -69,6 +71,32 @@ async function boot() {
   renderShell();
   attachEvents();
   await loadData();
+
+  // Mobile UI
+  const mob = initMobileUI(
+    () => state,
+    (view) => {
+      state.view = view;
+      state.page = 'main';
+      renderControls();
+      renderContent();
+    },
+    async (page) => {
+      state.page = page;
+      state.view = state.view || 'grid';
+      if (page === 'interference' && !state.interfData) await loadInterference();
+      else renderContent();
+    },
+    (filters) => {
+      if (filters.filterCity     !== undefined) state.filterCity     = filters.filterCity;
+      if (filters.filterJenis    !== undefined) state.filterJenis    = filters.filterJenis;
+      if (filters.filterChanView !== undefined) state.filterChanView = filters.filterChanView;
+      if (filters.searchTerm     !== undefined) state.searchTerm     = filters.searchTerm;
+      loadData();
+    }
+  );
+  window.__openMobFilter = () => openFilterDrawer(state);
+  window.__mobSync = mob;
 }
 
 // ── Shell ─────────────────────────────────────────────────────────────
@@ -309,6 +337,10 @@ function renderControls() {
     </div>` : ''}
     <input type="search" class="control-input search-input" id="fSearch"
       placeholder="Cari stasiun / frekuensi…" value="${state.searchTerm}" style="width:200px"/>
+    <button class="mob-filter-btn" id="mobFilterBtn" onclick="window.__openMobFilter()">
+      ⚙ Filter
+      <span class="mob-badge"></span>
+    </button>
     <div style="display:flex;gap:6px;margin-left:auto;align-items:center">
       <div class="view-toggle">
         <button class="view-toggle__btn ${state.view==='grid'?'is-active':''}" data-view="grid">⊞ Grid</button>
