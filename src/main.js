@@ -5,7 +5,6 @@ import './components/grid.css';
 import './components/band.css';
 import './components/province.css';
 import './components/detail-page.css';
-import './components/geo-grid.css';
 import { fetchSpectrum, fetchProvinces, fetchStationDetail, fetchInterference, isUsingFallback } from './apiClient.js';
 import { renderBandView, renderBandRuler } from './bandView.js';
 import { renderDetailPage } from './detailPage.js';
@@ -602,3 +601,4 @@ function openSlotDetail(start,end) {
 function esc(str){const d=document.createElement('div');d.textContent=String(str);return d.innerHTML;}
 
 boot();
+
