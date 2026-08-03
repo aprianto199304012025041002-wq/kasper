@@ -5,10 +5,12 @@ import './components/grid.css';
 import './components/band.css';
 import './components/province.css';
 import './components/detail-page.css';
+import './components/geo-grid.css';
 import { fetchSpectrum, fetchProvinces, fetchStationDetail, fetchInterference, isUsingFallback } from './apiClient.js';
 import { renderBandView, renderBandRuler } from './bandView.js';
 import { renderDetailPage } from './detailPage.js';
 import { renderInterferencePanel } from './interferenceView.js';
+import { renderGeoGridView } from './geoGridView.js';
 
 // ── Warna dinamis — di-generate dari HSL berdasar index kota ─────────
 const CITY_PALETTE = [
@@ -60,7 +62,6 @@ async function boot() {
   try {
     state.provinces = await fetchProvinces();
     if (state.provinces.length > 0) {
-      // Default: provinsi dengan FM terbanyak
       state.province = state.provinces[0].name;
     }
   } catch(e) { state.provinces = []; }
@@ -155,7 +156,6 @@ async function loadData() {
   try {
     state.data    = await fetchSpectrum(filters);
     state.loading = false;
-    // Reset city color map saat ganti provinsi
     Object.keys(_cityColorMap).forEach(k=>delete _cityColorMap[k]);
     _colorIdx = 0;
   } catch(e) { state.error=e.message; state.loading=false; }
@@ -281,14 +281,17 @@ function renderControls() {
     ? '<span class="source-badge">⬡ data lokal</span>'
     : '<span class="source-badge is-live"><span class="live-dot"></span> API live</span>';
 
+  // Sembunyikan filter wilayah & tampilkan di geo-grid (ditangani internal)
+  const hideCity = state.view === 'geo';
+
   el.innerHTML = `
-    <div class="control-group">
+    ${!hideCity ? `<div class="control-group">
       <span class="control-group__label">Wilayah</span>
       <select class="control-input" id="fCity">
         <option value="all">Semua</option>
         ${cities.map(c=>`<option value="${c}" ${state.filterCity===c?'selected':''}>${c}</option>`).join('')}
       </select>
-    </div>
+    </div>` : ''}
     <div class="control-group">
       <span class="control-group__label">Jenis</span>
       <select class="control-input" id="fJenis">
@@ -296,20 +299,21 @@ function renderControls() {
         ${Object.entries(JENIS_LABELS).map(([k,v])=>`<option value="${k}" ${state.filterJenis===k?'selected':''}>${v}</option>`).join('')}
       </select>
     </div>
-    <div class="control-group">
+    ${state.view !== 'geo' ? `<div class="control-group">
       <span class="control-group__label">Tampilkan</span>
       <select class="control-input" id="fChanView">
         <option value="all"  ${state.filterChanView==='all' ?'selected':''}>Semua kanal</option>
         <option value="free" ${state.filterChanView==='free'?'selected':''}>Kosong saja</option>
         <option value="used" ${state.filterChanView==='used'?'selected':''}>Terpakai saja</option>
       </select>
-    </div>
+    </div>` : ''}
     <input type="search" class="control-input search-input" id="fSearch"
       placeholder="Cari stasiun / frekuensi…" value="${state.searchTerm}" style="width:200px"/>
     <div style="display:flex;gap:6px;margin-left:auto;align-items:center">
       <div class="view-toggle">
         <button class="view-toggle__btn ${state.view==='grid'?'is-active':''}" data-view="grid">⊞ Grid</button>
         <button class="view-toggle__btn ${state.view==='band'?'is-active':''}" data-view="band">▬ Pita</button>
+        <button class="view-toggle__btn ${state.view==='geo'?'is-active':''}" data-view="geo">⊟ Geo Grid</button>
         <button class="view-toggle__btn ${state.page==='interference'?'is-active':''}" data-page="interference">⚡ Interferensi</button>
       </div>
       ${src}
@@ -319,7 +323,7 @@ function renderControls() {
 // ── Legend dinamis ────────────────────────────────────────────────────
 function renderLegend() {
   const el = document.getElementById('legendBar');
-  if (!el || !state.data) return;
+  if (!el || !state.data || state.view === 'geo') { if (el) el.innerHTML = ''; return; }
   const cities = [...new Set(state.data.stations.map(s=>s.kota||s.city).filter(Boolean))].sort();
   el.innerHTML = `<div class="legend-strip">
     ${cities.map(c=>{
@@ -360,6 +364,24 @@ function renderContent() {
     return;
   }
 
+  // ── Geo Grid view ──────────────────────────────────────────────────
+  if (state.view === 'geo') {
+    renderLegend();
+    el.innerHTML = '<div id="geoGridContainer"></div>';
+    const filters = {
+      jenis: state.filterJenis,
+      search: state.searchTerm,
+      showAdj: true,
+      showLabel: true,
+    };
+    renderGeoGridView(
+      document.getElementById('geoGridContainer'),
+      state.province,
+      filters
+    );
+    return;
+  }
+
   if (!state.data) return;
   updateStatsBar(state.data.summary);
   renderLegend();
@@ -397,7 +419,7 @@ function renderContent() {
   }
 }
 
-// ── Cell render — ukuran lebih besar, info lebih lengkap ──────────────
+// ── Cell render ───────────────────────────────────────────────────────
 function renderCell(c) {
   if (c.type==='used') {
     const color = cityColor(c.station?.kota||c.station?.city);
