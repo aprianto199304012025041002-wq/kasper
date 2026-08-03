@@ -259,46 +259,52 @@
 
 /* ══════════════════════════════════════════════════════════════════════
    GEO GRID — mobile adaptation
+   Class names sesuai geoGridView.js (komenk design language)
+   gg-city-lbl / gg-city-chs / gg-ch-freq / gg-ch-lbl / gg-ch-tag
+   gg-stats-float / gg-legend-section / gg-leg-row
    ══════════════════════════════════════════════════════════════════════ */
 @media (max-width: 768px) {
   /* City label col narrower */
-  .gg-city-label { width: 90px !important; padding: 0 6px 0 8px; }
+  .gg-city-lbl  { width: 90px !important; padding: 0 6px 0 8px; }
   .gg-ruler-label { width: 90px !important; font-size: 7px; padding: 6px 4px; }
-  .gg-city-name   { font-size: 10px; }
-  .gg-city-meta   { font-size: 8px; gap: 3px; }
+  .gg-city-name { font-size: 10px; }
+  .gg-city-meta { font-size: 8px; gap: 3px; }
 
-  /* Channel cells — even thinner */
-  .gg-ch { min-height: 40px; }
-  .gg-freq  { font-size: 7px; }
-  .gg-label { display: none; }
-  .gg-tag   { display: none; }
+  /* Channel cells — touch-friendly */
+  .gg-ch        { min-height: 40px; }
+  .gg-ch-freq   { font-size: 7px; }
+  .gg-ch-lbl    { display: none; }
+  .gg-ch-tag    { display: none; }
 
-  /* Stats bar — 2 col */
-  .gg-statsbar { flex-wrap: wrap; }
-  .gg-stat { flex: 1 1 50%; min-width: 0; padding: 10px 12px; }
-  .gg-stat-val { font-size: 18px; }
+  /* Floating stats pill */
+  .gg-stats-float { left: 50%; transform: translateX(-50%); bottom: 6px; }
+  .gg-stat-val    { font-size: 14px; }
 
-  /* Legend — scroll */
-  .gg-legend {
+  /* Legend section — scroll horizontal */
+  .gg-legend-section {
     overflow-x: auto;
     flex-wrap: nowrap;
     gap: 8px;
     -webkit-overflow-scrolling: touch;
+    padding: 0 12px 10px;
   }
-  .gg-leg-item { flex-shrink: 0; }
-  .gg-leg-sep  { display: none; }
+  .gg-leg-row { flex-shrink: 0; }
 
-  /* Slot bar — wrap chips */
-  .gg-slot-bar { gap: 5px; }
+  /* Slot bar — compact chips */
+  .gg-slot-bar  { gap: 5px; }
   .gg-slot-chip { font-size: 9px; padding: 3px 6px; }
+
+  /* Drawer narrower */
+  .gg-drawer { width: 240px; }
 }
 
 @media (max-width: 480px) {
-  .gg-city-label { width: 72px !important; }
+  .gg-city-lbl  { width: 72px !important; }
   .gg-ruler-label { width: 72px !important; }
-  .gg-city-name   { font-size: 9px; }
-  .gg-city-meta   { display: none; }
-  .gg-ch { min-height: 36px; }
+  .gg-city-name { font-size: 9px; }
+  .gg-city-meta { display: none; }
+  .gg-ch        { min-height: 36px; }
+  .gg-drawer    { width: 100%; border-left: none; border-top: 1px solid var(--border-mid); top: auto; height: 70vh; }
 }
 
 /* ══════════════════════════════════════════════════════════════════════
