@@ -407,7 +407,7 @@ function renderContent() {
     };
     renderGeoGridView(
       document.getElementById('geoGridContainer'),
-      state.province,
+      '',   // '' = semua provinsi; geo grid punya dropdown sendiri untuk filter
       filters
     );
     return;
