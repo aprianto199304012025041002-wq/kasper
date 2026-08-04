@@ -850,7 +850,7 @@ export async function renderGeoGridView(container, currentProvince, currentFilte
 
   // ── Load provinces ──
   try {
-    const { fetchProvinces } = await import('./apiClient.js');
+    // fetchProvinces sudah di-import static di baris atas
     const provinces = await fetchProvinces();
     const allOpt = `<option value="" ${!province ? 'selected' : ''}>🌐 Semua Provinsi</option>`;
     selProvince.innerHTML = allOpt + provinces.map(p =>
