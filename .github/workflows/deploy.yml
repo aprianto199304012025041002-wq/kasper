@@ -23,41 +23,45 @@ jobs:
         run: npm install && npm run build
 
       - name: Generate config.php dari secrets
-        run: |
-          mkdir -p /tmp/config_only
-          cat > /tmp/config_template.php << 'PHPEOF'
-<?php
-return [
-    'db' => [
-        'host'    => '__DB_HOST__',
-        'port'    => '3306',
-        'name'    => '__DB_NAME__',
-        'user'    => '__DB_USER__',
-        'pass'    => '__DB_PASS__',
-        'charset' => 'utf8mb4',
-    ],
-    'cors'  => ['allowed_origin' => '*'],
-    'cache' => ['enabled' => true, 'dir' => __DIR__ . '/../cache', 'ttl' => 300],
-];
-PHPEOF
-          sed \
-            -e "s|__DB_HOST__|${DB_HOST}|g" \
-            -e "s|__DB_NAME__|${DB_NAME}|g" \
-            -e "s|__DB_USER__|${DB_USER}|g" \
-            -e "s|__DB_PASS__|${DB_PASS}|g" \
-            /tmp/config_template.php > /tmp/config_only/config.php
-          echo "=== config.php baris pertama ===" && head -1 /tmp/config_only/config.php | cat -A
-          echo "=== placeholder check ===" && (grep '__DB_' /tmp/config_only/config.php && echo "ERROR: placeholder belum terganti!" && exit 1) || echo "OK"
         env:
           DB_HOST: ${{ secrets.DB_HOST }}
           DB_NAME: ${{ secrets.DB_NAME }}
           DB_USER: ${{ secrets.DB_USER }}
           DB_PASS: ${{ secrets.DB_PASS }}
+        run: |
+          mkdir -p /tmp/config_only
+          python3 - <<'PYEOF'
+          import os, sys
+          host = os.environ['DB_HOST']
+          name = os.environ['DB_NAME']
+          user = os.environ['DB_USER']
+          pw   = os.environ['DB_PASS']
+          if not all([host, name, user, pw]):
+              print("ERROR: satu atau lebih DB secrets kosong!", file=sys.stderr)
+              sys.exit(1)
+          cfg = (
+              "<?php\nreturn [\n"
+              "    'db' => [\n"
+              f"        'host'    => '{host}',\n"
+              "        'port'    => '3306',\n"
+              f"        'name'    => '{name}',\n"
+              f"        'user'    => '{user}',\n"
+              f"        'pass'    => '{pw}',\n"
+              "        'charset' => 'utf8mb4',\n"
+              "    ],\n"
+              "    'cors'  => ['allowed_origin' => '*'],\n"
+              "    'cache' => ['enabled' => true, 'dir' => __DIR__ . '/../cache', 'ttl' => 300],\n"
+              "];\n"
+          )
+          with open('/tmp/config_only/config.php', 'w') as f:
+              f.write(cfg)
+          print("OK: config.php generated, host=" + host)
+          PYEOF
 
       # Urutan deploy KRITIS:
-      # 1) dist/ dengan clean-slate → hapus semua file lama di public_html/
-      # 2) api/ tanpa clean-slate  → tambah folder api/ ke public_html/ (dist/ tetap ada)
-      # 3) config.php dari /tmp    → override placeholder yang ada di repo
+      # 1) dist/ dengan clean-slate -> hapus semua file lama di public_html/
+      # 2) api/ tanpa clean-slate   -> tambah folder api/ ke public_html/
+      # 3) config.php dari /tmp     -> override placeholder yang ada di repo
 
       - name: Deploy frontend (dist/) via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
