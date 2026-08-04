@@ -85,6 +85,7 @@ async function boot() {
       else renderContent();
     },
     (filters) => {
+      if (filters.province       !== undefined) { state.province = filters.province; state.filterCity='all'; }
       if (filters.filterCity     !== undefined) state.filterCity     = filters.filterCity;
       if (filters.filterJenis    !== undefined) state.filterJenis    = filters.filterJenis;
       if (filters.filterChanView !== undefined) state.filterChanView = filters.filterChanView;
@@ -94,6 +95,7 @@ async function boot() {
   );
   window.__openMobFilter = () => openFilterDrawer(state);
   window.__mobSync = mob;
+  window._kasperFallback = false; // diupdate setelah loadData
 }
 
 // ── Shell ─────────────────────────────────────────────────────────────
@@ -181,6 +183,7 @@ async function loadData() {
   try {
     state.data    = await fetchSpectrum(filters);
     state.loading = false;
+    window._kasperFallback = isUsingFallback();
     Object.keys(_cityColorMap).forEach(k=>delete _cityColorMap[k]);
     _colorIdx = 0;
   } catch(e) { state.error=e.message; state.loading=false; }

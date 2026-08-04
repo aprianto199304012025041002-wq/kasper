@@ -1,185 +1,299 @@
-// src/mobile.js
-// Mobile UI enhancements: bottom nav, filter drawer, scroll hints
+// src/mobile.js — Universal Drawer: semua kontrol masuk satu drawer, FAB kiri bawah
 
-export function initMobileUI(getState, onViewChange, onPageChange, onFilterChange) {
+const JENIS_LABELS = {
+  swasta: 'Swasta', publik: 'Publik (RRI)',
+  publik_lokal: 'Publik Lokal (LPPL)', komunitas: 'Komunitas',
+};
 
-  injectBottomNav(getState, onViewChange, onPageChange);
-  injectFilterDrawer(getState, onFilterChange);
-  injectScrollHints();
-
-  // Update bottom nav active state when state changes
-  return {
-    syncNav: () => syncBottomNav(getState()),
-  };
+// ── FAB kiri bawah ───────────────────────────────────────────────────
+function injectFAB() {
+  if (document.getElementById('kasperFAB')) return;
+  const fab = document.createElement('button');
+  fab.id = 'kasperFAB';
+  fab.className = 'kasper-fab';
+  fab.setAttribute('aria-label', 'Buka panel kontrol');
+  fab.innerHTML = `<span class="kasper-fab__icon">⚙</span><span class="kasper-fab__badge" id="fabBadge"></span>`;
+  document.body.appendChild(fab);
+  fab.addEventListener('click', openDrawer);
 }
 
-// ── Bottom nav ────────────────────────────────────────────────────────
-function injectBottomNav(getState, onViewChange, onPageChange) {
-  if (document.getElementById('mobBottomNav')) return;
+// ── Drawer utama ─────────────────────────────────────────────────────
+function injectDrawer() {
+  if (document.getElementById('kasperDrawer')) return;
+  const el = document.createElement('div');
+  el.id = 'kasperDrawer';
+  el.className = 'kasper-drawer';
+  el.innerHTML = `
+    <div class="kasper-drawer__backdrop"></div>
+    <div class="kasper-drawer__panel" role="dialog" aria-modal="true" aria-label="Panel Kontrol">
+      <div class="kasper-drawer__handle"></div>
 
-  const nav = document.createElement('div');
-  nav.className = 'mob-bottom-nav';
-  nav.id = 'mobBottomNav';
-  nav.innerHTML = `
-    <button data-nav-view="grid">
-      <span class="mob-nav-icon">⊞</span>
-      <span>Grid</span>
-    </button>
-    <button data-nav-view="band">
-      <span class="mob-nav-icon">▬</span>
-      <span>Pita</span>
-    </button>
-    <button data-nav-view="geo">
-      <span class="mob-nav-icon">⊟</span>
-      <span>Geo</span>
-    </button>
-    <button data-nav-page="interference">
-      <span class="mob-nav-icon">⚡</span>
-      <span>Interferensi</span>
-    </button>`;
-
-  document.body.appendChild(nav);
-  syncBottomNav(getState());
-
-  nav.addEventListener('click', (e) => {
-    const btn = e.target.closest('button');
-    if (!btn) return;
-    if (btn.dataset.navView) onViewChange(btn.dataset.navView);
-    if (btn.dataset.navPage) onPageChange(btn.dataset.navPage);
-    syncBottomNav(getState());
-  });
-}
-
-function syncBottomNav(state) {
-  const nav = document.getElementById('mobBottomNav');
-  if (!nav) return;
-  nav.querySelectorAll('button').forEach((btn) => {
-    const isView = btn.dataset.navView;
-    const isPage = btn.dataset.navPage;
-    btn.classList.toggle('is-active',
-      (isView && state.view === isView && state.page === 'main') ||
-      (isPage && state.page === isPage)
-    );
-  });
-}
-
-// ── Filter drawer ─────────────────────────────────────────────────────
-function injectFilterDrawer(getState, onFilterChange) {
-  if (document.getElementById('mobFilterDrawer')) return;
-
-  const drawer = document.createElement('div');
-  drawer.className = 'mob-filter-drawer';
-  drawer.id = 'mobFilterDrawer';
-  drawer.innerHTML = `
-    <div class="mob-drawer-backdrop"></div>
-    <div class="mob-drawer-panel">
-      <div class="mob-drawer-handle"></div>
-      <div class="mob-drawer-title">Filter & Pencarian</div>
-      <div class="mob-drawer-body" id="mobDrawerBody">
-        <div class="mob-filter-row">
-          <label>Wilayah / Kota</label>
-          <select id="mobFCity"><option value="all">Semua</option></select>
-        </div>
-        <div class="mob-filter-row">
-          <label>Jenis Siaran</label>
-          <select id="mobFJenis">
-            <option value="all">Semua</option>
-            <option value="swasta">Swasta</option>
-            <option value="publik">Publik (RRI)</option>
-            <option value="publik_lokal">Publik Lokal (LPPL)</option>
-            <option value="komunitas">Komunitas</option>
-          </select>
-        </div>
-        <div class="mob-filter-row">
-          <label>Tampilkan</label>
-          <select id="mobFChanView">
-            <option value="all">Semua kanal</option>
-            <option value="free">Kosong saja</option>
-            <option value="used">Terpakai saja</option>
-          </select>
-        </div>
-        <div class="mob-filter-row">
-          <label>Cari Stasiun</label>
-          <input type="search" id="mobFSearch" placeholder="Nama stasiun / frekuensi…">
-        </div>
+      <div class="kasper-drawer__header">
+        <span class="kasper-drawer__title">KONTROL</span>
+        <button class="kasper-drawer__close" id="drawerClose" aria-label="Tutup">✕</button>
       </div>
-      <button class="mob-drawer-apply" id="mobDrawerApply">Terapkan Filter</button>
+
+      <div class="kasper-drawer__body">
+
+        <!-- ── PROVINSI ── -->
+        <section class="kd-section">
+          <div class="kd-section__label">Wilayah</div>
+          <div class="kd-province-chips" id="drawerProvince"></div>
+        </section>
+
+        <!-- ── VIEW MODE ── -->
+        <section class="kd-section">
+          <div class="kd-section__label">Mode Tampilan</div>
+          <div class="kd-view-grid" id="drawerViewGrid">
+            <button class="kd-view-btn" data-dview="grid">⊞<span>Grid</span></button>
+            <button class="kd-view-btn" data-dview="band">▬<span>Pita</span></button>
+            <button class="kd-view-btn" data-dview="geo">⊟<span>Geo Grid</span></button>
+            <button class="kd-view-btn" data-dpage="interference">⚡<span>Interferensi</span></button>
+          </div>
+        </section>
+
+        <!-- ── FILTER KOTA ── -->
+        <section class="kd-section" id="drawerSectionCity">
+          <div class="kd-section__label">Kota / Kabupaten</div>
+          <select class="kd-select" id="drawerFCity">
+            <option value="all">Semua wilayah</option>
+          </select>
+        </section>
+
+        <!-- ── FILTER JENIS ── -->
+        <section class="kd-section">
+          <div class="kd-section__label">Jenis Siaran</div>
+          <select class="kd-select" id="drawerFJenis">
+            <option value="all">Semua jenis</option>
+            ${Object.entries(JENIS_LABELS).map(([k,v]) => `<option value="${k}">${v}</option>`).join('')}
+          </select>
+        </section>
+
+        <!-- ── FILTER TAMPILAN KANAL ── -->
+        <section class="kd-section" id="drawerSectionChanView">
+          <div class="kd-section__label">Tampilkan Kanal</div>
+          <div class="kd-segmented" id="drawerChanView">
+            <button class="kd-seg-btn is-active" data-chanview="all">Semua</button>
+            <button class="kd-seg-btn" data-chanview="free">Kosong ★</button>
+            <button class="kd-seg-btn" data-chanview="used">Terpakai</button>
+          </div>
+        </section>
+
+        <!-- ── SEARCH ── -->
+        <section class="kd-section">
+          <div class="kd-section__label">Cari Stasiun / Frekuensi</div>
+          <div class="kd-search-wrap">
+            <input type="search" class="kd-search" id="drawerSearch"
+              placeholder="contoh: 101.7 atau Radio…" autocomplete="off" spellcheck="false">
+            <span class="kd-search__icon">⌕</span>
+          </div>
+        </section>
+
+        <!-- ── STATUS API ── -->
+        <section class="kd-section kd-section--api">
+          <div class="kd-api-status" id="drawerApiStatus">
+            <span class="live-dot"></span> Memeriksa API…
+          </div>
+        </section>
+
+      </div>
+
+      <div class="kasper-drawer__footer">
+        <button class="kd-btn-reset" id="drawerReset">Reset Filter</button>
+        <button class="kd-btn-apply" id="drawerApply">Terapkan ✓</button>
+      </div>
     </div>`;
+  document.body.appendChild(el);
 
-  document.body.appendChild(drawer);
-
-  // Backdrop close
-  drawer.querySelector('.mob-drawer-backdrop').addEventListener('click', closeDrawer);
-
-  // Apply button
-  document.getElementById('mobDrawerApply').addEventListener('click', () => {
-    onFilterChange({
-      filterCity:     document.getElementById('mobFCity').value,
-      filterJenis:    document.getElementById('mobFJenis').value,
-      filterChanView: document.getElementById('mobFChanView').value,
-      searchTerm:     document.getElementById('mobFSearch').value,
-    });
-    closeDrawer();
-    updateFilterBadge(getState());
-  });
+  el.querySelector('.kasper-drawer__backdrop').addEventListener('click', closeDrawer);
+  document.getElementById('drawerClose').addEventListener('click', closeDrawer);
 
   // Swipe down to close
-  let startY = 0;
-  const panel = drawer.querySelector('.mob-drawer-panel');
-  panel.addEventListener('touchstart', (e) => { startY = e.touches[0].clientY; }, { passive: true });
-  panel.addEventListener('touchmove', (e) => {
-    const dy = e.touches[0].clientY - startY;
-    if (dy > 60) closeDrawer();
+  const panel = el.querySelector('.kasper-drawer__panel');
+  let _sy = 0;
+  panel.addEventListener('touchstart', e => { _sy = e.touches[0].clientY; }, { passive: true });
+  panel.addEventListener('touchmove', e => {
+    if (e.touches[0].clientY - _sy > 60) closeDrawer();
   }, { passive: true });
+
+  // Escape key
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') closeDrawer();
+  });
+
+  // ChanView segmented buttons
+  el.querySelectorAll('.kd-seg-btn[data-chanview]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      el.querySelectorAll('.kd-seg-btn[data-chanview]').forEach(b => b.classList.remove('is-active'));
+      btn.classList.add('is-active');
+    });
+  });
 }
 
-export function openFilterDrawer(state) {
-  const drawer = document.getElementById('mobFilterDrawer');
-  if (!drawer) return;
-
-  // Sync values
-  const cityEl   = document.getElementById('mobFCity');
-  const jenisEl  = document.getElementById('mobFJenis');
-  const chanEl   = document.getElementById('mobFChanView');
-  const searchEl = document.getElementById('mobFSearch');
-
-  // Populate city options if data available
-  if (state.data) {
-    const cities = [...new Set(state.data.stations.map(s => s.kota || s.city).filter(Boolean))].sort();
-    cityEl.innerHTML = `<option value="all">Semua</option>` +
-      cities.map(c => `<option value="${c}" ${state.filterCity === c ? 'selected' : ''}>${c}</option>`).join('');
-  }
-
-  if (jenisEl)  jenisEl.value  = state.filterJenis    || 'all';
-  if (chanEl)   chanEl.value   = state.filterChanView  || 'all';
-  if (searchEl) searchEl.value = state.searchTerm      || '';
-
-  drawer.classList.add('is-open');
-  document.body.style.overflow = 'hidden';
+// ── Open / Close ──────────────────────────────────────────────────────
+export function openDrawer() {
+  document.getElementById('kasperDrawer')?.classList.add('is-open');
+  document.body.classList.add('drawer-open');
 }
 
 function closeDrawer() {
-  const drawer = document.getElementById('mobFilterDrawer');
-  if (drawer) drawer.classList.remove('is-open');
-  document.body.style.overflow = '';
+  document.getElementById('kasperDrawer')?.classList.remove('is-open');
+  document.body.classList.remove('drawer-open');
 }
 
-function updateFilterBadge(state) {
-  const badge = document.querySelector('.mob-badge');
+// ── Sync drawer values dari state ─────────────────────────────────────
+function syncDrawer(state) {
+  // Province chips
+  const provEl = document.getElementById('drawerProvince');
+  if (provEl) {
+    const items = state.provinces || [];
+    provEl.innerHTML =
+      `<button class="kd-prov-chip ${!state.province ? 'is-active' : ''}" data-prov="">
+        Semua<span class="kd-prov-chip__cnt">${items.reduce((a,p) => a + (p.total_fm||0), 0) || ''}</span>
+      </button>` +
+      items.map(p => `
+        <button class="kd-prov-chip ${p.name === state.province ? 'is-active' : ''}" data-prov="${p.name}">
+          ${shortName(p.name)}<span class="kd-prov-chip__cnt">${p.total_fm||0}</span>
+        </button>`).join('');
+
+    provEl.querySelectorAll('.kd-prov-chip').forEach(btn => {
+      btn.addEventListener('click', () => {
+        provEl.querySelectorAll('.kd-prov-chip').forEach(b => b.classList.remove('is-active'));
+        btn.classList.add('is-active');
+      });
+    });
+  }
+
+  // View mode buttons
+  document.querySelectorAll('.kd-view-btn[data-dview]').forEach(btn => {
+    btn.classList.toggle('is-active',
+      btn.dataset.dview === state.view && state.page === 'main');
+  });
+  document.querySelectorAll('.kd-view-btn[data-dpage]').forEach(btn => {
+    btn.classList.toggle('is-active', btn.dataset.dpage === state.page);
+  });
+
+  // City select
+  const cityEl = document.getElementById('drawerFCity');
+  if (cityEl && state.data) {
+    const cities = [...new Set(state.data.stations.map(s => s.kota||s.city).filter(Boolean))].sort();
+    cityEl.innerHTML = `<option value="all">Semua wilayah</option>` +
+      cities.map(c => `<option value="${c}" ${state.filterCity===c?'selected':''}>${c}</option>`).join('');
+  } else if (cityEl) {
+    cityEl.value = state.filterCity || 'all';
+  }
+
+  // Jenis select
+  const jenisEl = document.getElementById('drawerFJenis');
+  if (jenisEl) jenisEl.value = state.filterJenis || 'all';
+
+  // ChanView segmented
+  document.querySelectorAll('.kd-seg-btn[data-chanview]').forEach(btn => {
+    btn.classList.toggle('is-active', btn.dataset.chanview === (state.filterChanView || 'all'));
+  });
+
+  // Search
+  const searchEl = document.getElementById('drawerSearch');
+  if (searchEl) searchEl.value = state.searchTerm || '';
+
+  // Hide chanview + city filter on geo/interference
+  const sectionChan = document.getElementById('drawerSectionChanView');
+  const sectionCity = document.getElementById('drawerSectionCity');
+  const isGeoOrInterf = state.view === 'geo' || state.page === 'interference';
+  if (sectionChan) sectionChan.style.display = isGeoOrInterf ? 'none' : '';
+  if (sectionCity) sectionCity.style.display = state.page === 'interference' ? 'none' : '';
+
+  // API status
+  const apiEl = document.getElementById('drawerApiStatus');
+  if (apiEl) {
+    const live = !window._kasperFallback;
+    apiEl.innerHTML = live
+      ? `<span class="live-dot"></span> API live — kasper.balmonjogja.info`
+      : `<span style="color:var(--signal-warn)">⬡</span> Mode offline — data lokal`;
+  }
+
+  // Update FAB badge
+  updateFabBadge(state);
+}
+
+function updateFabBadge(state) {
+  const badge = document.getElementById('fabBadge');
   if (!badge) return;
-  const active = (state.filterCity !== 'all' ? 1 : 0)
+  const n = (state.filterCity !== 'all' ? 1 : 0)
     + (state.filterJenis !== 'all' ? 1 : 0)
     + (state.filterChanView !== 'all' ? 1 : 0)
-    + (state.searchTerm ? 1 : 0);
-  badge.textContent = active;
-  badge.classList.toggle('has-filter', active > 0);
+    + (state.searchTerm ? 1 : 0)
+    + (state.province ? 1 : 0);
+  badge.textContent = n || '';
+  badge.classList.toggle('has-filter', n > 0);
 }
 
-export function syncFilterBadge(state) { updateFilterBadge(state); }
+// ── Init utama ────────────────────────────────────────────────────────
+export function initMobileUI(getState, onViewChange, onPageChange, onFilterChange) {
+  injectFAB();
+  injectDrawer();
+  injectScrollHints();
+
+  // Apply button
+  document.getElementById('drawerApply').addEventListener('click', () => {
+    const state = getState();
+    const newProvince = document.querySelector('.kd-prov-chip.is-active')?.dataset.prov ?? state.province;
+    const newView     = document.querySelector('.kd-view-btn[data-dview].is-active')?.dataset.dview;
+    const newPage     = document.querySelector('.kd-view-btn[data-dpage].is-active')?.dataset.dpage;
+    const newChan     = document.querySelector('.kd-seg-btn[data-chanview].is-active')?.dataset.chanview || 'all';
+
+    closeDrawer();
+
+    // Province changed?
+    if (newProvince !== state.province) {
+      onFilterChange({ province: newProvince });
+    }
+
+    // View/page changed?
+    if (newView && (newView !== state.view || state.page !== 'main')) {
+      onViewChange(newView);
+    } else if (newPage && newPage !== state.page) {
+      onPageChange(newPage);
+    }
+
+    // Filters
+    onFilterChange({
+      filterCity:     document.getElementById('drawerFCity').value,
+      filterJenis:    document.getElementById('drawerFJenis').value,
+      filterChanView: newChan,
+      searchTerm:     document.getElementById('drawerSearch').value,
+    });
+  });
+
+  // Reset button
+  document.getElementById('drawerReset').addEventListener('click', () => {
+    document.getElementById('drawerFCity').value = 'all';
+    document.getElementById('drawerFJenis').value = 'all';
+    document.querySelectorAll('.kd-seg-btn[data-chanview]').forEach(b =>
+      b.classList.toggle('is-active', b.dataset.chanview === 'all'));
+    const searchEl = document.getElementById('drawerSearch');
+    if (searchEl) searchEl.value = '';
+    document.querySelectorAll('.kd-prov-chip').forEach((b,i) =>
+      b.classList.toggle('is-active', i === 0));
+  });
+
+  return {
+    syncNav: () => syncDrawer(getState()),
+    syncDrawer: () => syncDrawer(getState()),
+  };
+}
+
+export function openFilterDrawer(state) {
+  syncDrawer(state);
+  openDrawer();
+}
+
+export function syncFilterBadge(state) {
+  updateFabBadge(state);
+}
 
 // ── Scroll hints ──────────────────────────────────────────────────────
 function injectScrollHints() {
-  // Add scroll hint after band view renders
   const observer = new MutationObserver(() => {
     const trackWrap = document.querySelector('.band-track-wrap');
     if (trackWrap && !trackWrap.previousElementSibling?.classList.contains('band-scroll-hint')) {
@@ -188,8 +302,6 @@ function injectScrollHints() {
       hint.textContent = '← geser untuk lihat spektrum penuh →';
       trackWrap.parentNode.insertBefore(hint, trackWrap);
     }
-
-    // Add geo grid scroll hint
     const geoScroll = document.querySelector('.gg-scroll-wrap');
     if (geoScroll && !geoScroll.previousElementSibling?.classList.contains('band-scroll-hint')) {
       const hint = document.createElement('div');
@@ -198,46 +310,19 @@ function injectScrollHints() {
       geoScroll.parentNode.insertBefore(hint, geoScroll);
     }
   });
-
-  observer.observe(document.getElementById('app') || document.body, {
-    childList: true, subtree: true,
-  });
+  observer.observe(document.getElementById('app') || document.body, { childList: true, subtree: true });
 }
 
-// ── Mobile tap info (replace tooltip) ────────────────────────────────
-export function initMobileTap(container, data) {
-  if (window.matchMedia('(pointer: coarse)').matches) {
-    container.querySelectorAll('.gg-ch.gg-used').forEach((cell) => {
-      cell.addEventListener('click', () => {
-        const freq = parseFloat(cell.dataset.freq);
-        const city = cell.dataset.city;
-        showMobileSnack(`${freq.toFixed(1)} MHz · ${city}`);
-      });
-    });
-  }
+function shortName(name) {
+  const map = {
+    'DAERAH ISTIMEWA YOGYAKARTA': 'D.I. Yogyakarta',
+    'JAWA TENGAH': 'Jawa Tengah', 'JAWA TIMUR': 'Jawa Timur',
+    'JAWA BARAT': 'Jawa Barat', 'DKI JAKARTA': 'DKI Jakarta',
+    'SUMATERA UTARA': 'Sumut', 'BALI': 'Bali',
+    'KALIMANTAN SELATAN': 'Kalsel', 'SULAWESI SELATAN': 'Sulsel',
+    'NUSA TENGGARA BARAT': 'NTB',
+  };
+  return map[name] || name.split(' ').slice(0, 2).join(' ');
 }
 
-function showMobileSnack(msg) {
-  let snack = document.getElementById('mobSnack');
-  if (!snack) {
-    snack = document.createElement('div');
-    snack.id = 'mobSnack';
-    snack.style.cssText = `
-      position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(20px);
-      background:var(--bg-panel-raised);border:1px solid var(--border-mid);
-      color:var(--text-primary);font-family:var(--font-mono);font-size:12px;
-      padding:10px 18px;border-radius:20px;z-index:300;
-      box-shadow:0 4px 20px rgba(0,0,0,.5);
-      opacity:0;transition:opacity .2s,transform .2s;white-space:nowrap;
-    `;
-    document.body.appendChild(snack);
-  }
-  snack.textContent = msg;
-  snack.style.opacity = '1';
-  snack.style.transform = 'translateX(-50%) translateY(0)';
-  clearTimeout(snack._t);
-  snack._t = setTimeout(() => {
-    snack.style.opacity = '0';
-    snack.style.transform = 'translateX(-50%) translateY(20px)';
-  }, 2500);
-}
+export function initMobileTap() {}
