@@ -42,7 +42,7 @@
   font-family: var(--font-mono);
   font-size: 48px;
   font-weight: 600;
-  color: var(--signal-phosphor);
+  color: var(--accent);
   line-height: 1;
   margin-bottom: 4px;
 }
@@ -91,7 +91,7 @@
   font-weight: 500;
 }
 
-.dmeta__val.is-granted { color: var(--signal-phosphor); }
+.dmeta__val.is-granted { color: var(--accent); }
 .dmeta__val.is-expired { color: var(--signal-danger); }
 
 /* Freq band strip */
@@ -250,7 +250,7 @@
 }
 .level-dot.critical { background: var(--signal-danger); box-shadow: 0 0 6px var(--signal-danger); }
 .level-dot.warning  { background: var(--signal-warn); }
-.level-dot.ok       { background: var(--signal-phosphor); }
+.level-dot.ok       { background: var(--accent); }
 
 @media (max-width: 760px) {
   .page-detail { padding: 16px 14px 48px; }
