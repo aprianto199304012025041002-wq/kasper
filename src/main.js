@@ -43,7 +43,7 @@ let state = {
   province:       '',
   provinces:      [],
   filterCity:     'all',
-  filterJenis:    'all',
+
   filterChanView: 'all',
   searchTerm:     '',
   data:           null,
@@ -91,7 +91,7 @@ async function boot() {
         if (filters.filterCity === undefined) state.filterCity = 'all';
       }
       if (filters.filterCity     !== undefined) state.filterCity     = filters.filterCity;
-      if (filters.filterJenis    !== undefined) state.filterJenis    = filters.filterJenis;
+
       if (filters.filterChanView !== undefined) state.filterChanView = filters.filterChanView;
       if (filters.searchTerm     !== undefined) state.searchTerm     = filters.searchTerm;
       renderProvinceTabs();
@@ -128,7 +128,7 @@ function attachEvents() {
 
 function handleChange(e) {
   if (e.target.id==='fCity')     { state.filterCity=e.target.value; loadData(); }
-  if (e.target.id==='fJenis')    { state.filterJenis=e.target.value; loadData(); }
+
   if (e.target.id==='fChanView') { state.filterChanView=e.target.value; renderContent(); }
 }
 
@@ -144,7 +144,7 @@ async function handleClick(e) {
   const ptab = e.target.closest('[data-province]');
   if (ptab) {
     state.province=ptab.dataset.province;
-    state.filterCity='all'; state.filterJenis='all'; state.searchTerm='';
+    state.filterCity='all'; state.searchTerm='';
     renderProvinceTabs(); renderControls();
     await loadData(); return;
   }
@@ -184,7 +184,7 @@ async function loadData() {
   const filters = {};
   // province tidak dikirim = ambil semua provinsi; filter kota dilakukan di FE
   if (state.filterCity!=='all')  filters.city     = state.filterCity;
-  if (state.filterJenis!=='all') filters.jenis    = state.filterJenis;
+
   if (state.searchTerm)          filters.search   = state.searchTerm;
   try {
     state.data    = await fetchSpectrum(filters);
@@ -330,13 +330,7 @@ function renderControls() {
         ${cities.map(c=>`<option value="${c}" ${state.filterCity===c?'selected':''}>${c}</option>`).join('')}
       </select>
     </div>` : ''}
-    <div class="control-group">
-      <span class="control-group__label">Jenis</span>
-      <select class="control-input" id="fJenis">
-        <option value="all">Semua</option>
-        ${Object.entries(JENIS_LABELS).map(([k,v])=>`<option value="${k}" ${state.filterJenis===k?'selected':''}>${v}</option>`).join('')}
-      </select>
-    </div>
+
     ${state.view !== 'geo' ? `<div class="control-group">
       <span class="control-group__label">Tampilkan</span>
       <select class="control-input" id="fChanView">
@@ -411,7 +405,6 @@ function renderContent() {
     renderLegend();
     el.innerHTML = '<div id="geoGridContainer"></div>';
     const filters = {
-      jenis: state.filterJenis,
       search: state.searchTerm,
       showAdj: true,
       showLabel: true,
