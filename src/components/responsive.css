@@ -254,7 +254,46 @@ body.drawer-open { overflow: hidden; }
 }
 .kd-seg-btn:active { opacity: .75; }
 
-/* ── Search ──────────────────────────────────────────────────────────── */
+/* ── Geo toggles ─────────────────────────────────────────────────────── */
+.kd-toggle-list { display: flex; flex-direction: column; gap: 2px; }
+
+.kd-toggle-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border-hairline);
+  cursor: pointer;
+  font-family: var(--font-mono); font-size: 12px;
+  color: var(--text-secondary);
+}
+.kd-toggle-row:last-child { border-bottom: none; }
+.kd-toggle-row input[type="checkbox"] { display: none; }
+
+.kd-tog-s {
+  position: relative;
+  width: 36px; height: 20px; flex-shrink: 0;
+  background: var(--bg-input);
+  border: 1px solid var(--border-mid);
+  border-radius: 10px;
+  transition: background .15s, border-color .15s;
+}
+.kd-tog-s::after {
+  content: '';
+  position: absolute; top: 2px; left: 2px;
+  width: 14px; height: 14px;
+  background: var(--text-tertiary);
+  border-radius: 50%;
+  transition: transform .15s, background .15s;
+}
+.kd-toggle-row input:checked ~ .kd-tog-s {
+  background: color-mix(in srgb, var(--accent) 20%, transparent);
+  border-color: var(--accent);
+}
+.kd-toggle-row input:checked ~ .kd-tog-s::after {
+  transform: translateX(16px);
+  background: var(--accent);
+}
+
+
 .kd-search-wrap {
   position: relative;
 }

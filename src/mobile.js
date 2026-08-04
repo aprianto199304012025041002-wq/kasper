@@ -47,6 +47,28 @@ function injectDrawer() {
           <div class="kd-city-chips" id="drawerCityChips"></div>
         </section>
 
+        <!-- ── PENGATURAN GEO (hanya muncul di mode GEO) ── -->
+        <section class="kd-section" id="drawerSectionGeo" style="display:none">
+          <div class="kd-section__label">PENGATURAN GEO GRID</div>
+          <div class="kd-toggle-list">
+            <label class="kd-toggle-row">
+              <span>Guard band</span>
+              <input type="checkbox" id="geoTogAdj" checked>
+              <span class="kd-tog-s"></span>
+            </label>
+            <label class="kd-toggle-row">
+              <span>Label sel</span>
+              <input type="checkbox" id="geoTogLabel" checked>
+              <span class="kd-tog-s"></span>
+            </label>
+            <label class="kd-toggle-row">
+              <span>Sorot slot kosong</span>
+              <input type="checkbox" id="geoTogFree">
+              <span class="kd-tog-s"></span>
+            </label>
+          </div>
+        </section>
+
         <!-- ── TAMPILKAN KANAL ── -->
         <section class="kd-section" id="drawerSectionChanView">
           <div class="kd-section__label">TAMPILKAN KANAL</div>
@@ -184,12 +206,25 @@ function syncDrawer(state) {
   const searchEl = document.getElementById('drawerSearch');
   if (searchEl) searchEl.value = state.searchTerm || '';
 
-  // Hide chanview + city filter on geo/interference
+  // Hide/show seksi berdasarkan mode
   const sectionChan = document.getElementById('drawerSectionChanView');
   const sectionCity = document.getElementById('drawerSectionCity');
-  const isGeoOrInterf = state.view === 'geo' || state.page === 'interference';
-  if (sectionChan) sectionChan.style.display = isGeoOrInterf ? 'none' : '';
-  if (sectionCity) sectionCity.style.display = state.page === 'interference' ? 'none' : '';
+  const sectionGeo  = document.getElementById('drawerSectionGeo');
+  const isGeo       = state.view === 'geo' && state.page === 'main';
+  const isInterf    = state.page === 'interference';
+  if (sectionChan) sectionChan.style.display = (isGeo || isInterf) ? 'none' : '';
+  if (sectionCity) sectionCity.style.display = isInterf ? 'none' : '';
+  if (sectionGeo)  sectionGeo.style.display  = isGeo ? '' : 'none';
+
+  // Sync geo toggles
+  if (isGeo && state.geoSettings) {
+    const togAdj   = document.getElementById('geoTogAdj');
+    const togLabel = document.getElementById('geoTogLabel');
+    const togFree  = document.getElementById('geoTogFree');
+    if (togAdj)   togAdj.checked   = state.geoSettings.showAdj   !== false;
+    if (togLabel) togLabel.checked = state.geoSettings.showLabel  !== false;
+    if (togFree)  togFree.checked  = state.geoSettings.onlyFree   === true;
+  }
 
   // API status
   const apiEl = document.getElementById('drawerApiStatus');
@@ -207,9 +242,12 @@ function updateFabBadge(state) {
   const badge = document.getElementById('fabBadge');
   if (!badge) return;
   const cities = state.filterCities || [];
+  const geo = state.geoSettings || {};
+  const geoChanged = !geo.showAdj || !geo.showLabel || geo.onlyFree;
   const n = (cities.length > 0 ? 1 : 0)
     + (state.filterChanView !== 'all' ? 1 : 0)
-    + (state.searchTerm ? 1 : 0);
+    + (state.searchTerm ? 1 : 0)
+    + (geoChanged ? 1 : 0);
   badge.textContent = n || '';
   badge.classList.toggle('has-filter', n > 0);
 }
@@ -234,13 +272,26 @@ export function initMobileUI(getState, onViewChange, onPageChange, onFilterChang
     const newPage = document.querySelector('.kd-view-btn[data-dpage].is-active')?.dataset.dpage;
     const newChan = document.querySelector('.kd-seg-btn[data-chanview].is-active')?.dataset.chanview || 'all';
 
-    closeDrawer();
+    const isGeo = document.querySelector('.kd-view-btn[data-dview="geo"].is-active') !== null
+      || (state.view === 'geo' && !newView && !newPage);
 
-    onFilterChange({
+    const filterPayload = {
       filterCities:   getSelectedCities(),
       filterChanView: newChan,
       searchTerm:     document.getElementById('drawerSearch').value,
-    });
+    };
+
+    if (isGeo) {
+      filterPayload.geoSettings = {
+        showAdj:   document.getElementById('geoTogAdj')?.checked   !== false,
+        showLabel: document.getElementById('geoTogLabel')?.checked  !== false,
+        onlyFree:  document.getElementById('geoTogFree')?.checked   === true,
+      };
+    }
+
+    closeDrawer();
+
+    onFilterChange(filterPayload);
 
     if (newView && (newView !== state.view || state.page !== 'main')) {
       onViewChange(newView);

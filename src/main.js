@@ -42,9 +42,10 @@ let state = {
   view:           'grid',
   province:       '',
   provinces:      [],
-  filterCities:   [],       // [] = semua, [...] = multi-select kabupaten
+  filterCities:   [],
   filterChanView: 'all',
   searchTerm:     '',
+  geoSettings:    { showAdj: true, showLabel: true, onlyFree: false },
   data:           null,
   interfData:     null,
   loading:        false,
@@ -87,6 +88,7 @@ async function boot() {
       if (filters.filterCities   !== undefined) state.filterCities   = filters.filterCities;
       if (filters.filterChanView !== undefined) state.filterChanView = filters.filterChanView;
       if (filters.searchTerm     !== undefined) state.searchTerm     = filters.searchTerm;
+      if (filters.geoSettings    !== undefined) state.geoSettings    = { ...state.geoSettings, ...filters.geoSettings };
       renderControls();
       loadData();
     }
@@ -389,12 +391,12 @@ function renderContent() {
     el.innerHTML = '<div id="geoGridContainer"></div>';
     const filters = {
       search: state.searchTerm,
-      showAdj: true,
-      showLabel: true,
+      filterCities: state.filterCities,
+      ...state.geoSettings,
     };
     renderGeoGridView(
       document.getElementById('geoGridContainer'),
-      '',   // '' = semua provinsi; geo grid punya dropdown sendiri untuk filter
+      '',
       filters
     );
     return;

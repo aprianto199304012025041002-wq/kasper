@@ -1,6 +1,6 @@
 // src/geoGridView.js — Geo Grid FM · Design language KOMENK
 import { FM_MIN, FM_MAX, CHANNEL_SPACING, ADJACENT_GUARD } from './channelEngine.js';
-import { fetchSpectrum, fetchCities } from './apiClient.js';
+import { fetchSpectrum } from './apiClient.js';
 
 const GRID = (() => {
   const chs = [], steps = Math.round((FM_MAX - FM_MIN) / CHANNEL_SPACING);
@@ -82,27 +82,6 @@ const CSS = `
 .gg-logo-sub{font-size:8px;color:var(--muted-hi,#6b8099);letter-spacing:1.5px;text-transform:uppercase;}
 
 /* ── FAB / Floating action buttons ── */
-.gg-fab{
-  position:absolute;z-index:60;
-  display:flex;align-items:center;justify-content:center;
-  width:36px;height:36px;border-radius:var(--radius,8px);
-  background:var(--glass-hi,rgba(15,21,32,.92));
-  backdrop-filter:blur(16px) saturate(160%);
-  border:1px solid var(--border-hi,#2a3a50);
-  box-shadow:var(--shadow-float,0 8px 32px rgba(0,0,0,.7));
-  color:var(--accent,#00e5ff);
-  font-size:16px;cursor:pointer;
-  transition:border-color .12s,box-shadow .12s,transform .12s;
-  -webkit-tap-highlight-color:transparent;
-}
-.gg-fab:hover{
-  border-color:var(--accent,#00e5ff);
-  box-shadow:var(--shadow-float,0 8px 32px rgba(0,0,0,.7)),0 0 12px var(--accent-glow,rgba(0,229,255,.18));
-  transform:translateY(-1px);
-}
-.gg-fab:active{transform:translateY(0);}
-.gg-fab-group{position:absolute;top:10px;right:10px;z-index:60;display:flex;gap:6px;}
-
 /* ── Float stats pill ── */
 .gg-stats-float{
   position:absolute;bottom:10px;left:50%;transform:translateX(-50%);z-index:60;
@@ -501,11 +480,6 @@ function createHTML() {
     <span class="gg-logo-sub">87.5–108.0 MHz</span>
   </div>
 
-  <!-- FAB -->
-  <div class="gg-fab-group">
-    <button class="gg-fab" id="ggDrawerBtn" title="Pengaturan & Filter" style="font-size:15px">⚙</button>
-  </div>
-
   <!-- Stats float -->
   <div class="gg-stats-float" id="ggStats">
     <div class="gg-stat"><span class="gg-stat-val" id="ggStUsed">—</span><span class="gg-stat-lbl">Terpakai</span></div>
@@ -517,77 +491,6 @@ function createHTML() {
   <!-- Grid area -->
   <div class="gg-grid-area" id="ggGridArea">
     <div class="gg-state"><div class="gg-spinner"></div><span>Memuat data spektrum…</span></div>
-  </div>
-
-  <!-- Drawer scrim -->
-  <div class="gg-drawer-scrim" id="ggScrim"></div>
-
-  <!-- Drawer -->
-  <div class="gg-drawer" id="ggDrawer">
-    <div class="gg-drawer-head">
-      <span class="gg-drawer-title">Filter &amp; Pengaturan</span>
-      <button class="gg-drawer-close" id="ggDrawerClose">✕</button>
-    </div>
-    <div class="gg-drawer-body" id="ggDrawerBody">
-
-      <!-- Provinsi -->
-      <div class="gg-drawer-section">
-        <div class="gg-drawer-label">Provinsi</div>
-        <select class="gg-select" id="ggSelProvince"></select>
-      </div>
-
-      <!-- Jenis -->
-      <div class="gg-drawer-section">
-        <div class="gg-drawer-label">Jenis Siaran</div>
-        <select class="gg-select" id="ggSelJenis">
-          <option value="all">Semua jenis</option>
-          <option value="swasta">Swasta</option>
-          <option value="publik">Publik (RRI)</option>
-          <option value="publik_lokal">Publik Lokal (LPPL)</option>
-          <option value="komunitas">Komunitas</option>
-        </select>
-      </div>
-
-      <!-- Tampilan -->
-      <div class="gg-drawer-section">
-        <div class="gg-drawer-label">Tampilan</div>
-        <div class="gg-toggle-row">
-          <span>Guard band</span>
-          <label class="gg-tog"><input type="checkbox" id="ggTogAdj" checked><span class="gg-tog-s"></span></label>
-        </div>
-        <div class="gg-toggle-row">
-          <span>Label sel</span>
-          <label class="gg-tog"><input type="checkbox" id="ggTogLabel" checked><span class="gg-tog-s"></span></label>
-        </div>
-        <div class="gg-toggle-row">
-          <span>Sorot slot kosong</span>
-          <label class="gg-tog"><input type="checkbox" id="ggTogFree"><span class="gg-tog-s"></span></label>
-        </div>
-      </div>
-
-      <!-- Slot kosong semua kota -->
-      <div class="gg-slot-bar" id="ggSlotBar" style="display:none">
-        <div class="gg-slot-label">KOSONG DI SEMUA KOTA</div>
-        <div class="gg-slot-chips" id="ggSlotChips"></div>
-      </div>
-
-      <!-- Legend -->
-      <div class="gg-legend-section" id="ggLegendSection">
-        <div class="gg-drawer-label">Kota Aktif</div>
-        <div class="gg-leg-rows" id="ggLegRows"></div>
-        <div style="margin-top:10px;border-top:1px solid var(--border,#1e2a3a);padding-top:10px;">
-          <div class="gg-leg-adj">
-            <div class="gg-leg-swatch" style="background:rgba(234,179,8,.1);border-color:rgba(234,179,8,.35);border-style:dashed"></div>
-            Guard / Adjacent
-          </div>
-          <div class="gg-leg-free">
-            <div class="gg-leg-swatch" style="background:rgba(34,197,94,.1);border-color:rgba(34,197,94,.3)"></div>
-            Kosong ★
-          </div>
-        </div>
-      </div>
-
-    </div>
   </div>
 
   <!-- Tooltip -->
@@ -817,6 +720,7 @@ function attachCellEvents(container, cityRows) {
 }
 
 // ── Main export ───────────────────────────────────────────────────────
+// geoSettings: { showAdj, showLabel, onlyFree, filterCities }
 export async function renderGeoGridView(container, currentProvince, currentFilters) {
   injectCSS();
   resetColors();
@@ -825,49 +729,24 @@ export async function renderGeoGridView(container, currentProvince, currentFilte
   container.innerHTML = createHTML();
 
   const area = document.getElementById('ggGridArea');
-  const drawer = document.getElementById('ggDrawer');
-  const scrim = document.getElementById('ggScrim');
-  const drawerBtn = document.getElementById('ggDrawerBtn');
-  const drawerClose = document.getElementById('ggDrawerClose');
-  const selProvince = document.getElementById('ggSelProvince');
-  const selJenis = document.getElementById('ggSelJenis');
-  const togAdj = document.getElementById('ggTogAdj');
-  const togLabel = document.getElementById('ggTogLabel');
-  const togFree = document.getElementById('ggTogFree');
 
-  let province = currentProvince || '';
-  let filterJenis = currentFilters?.jenis || 'all';
-  let showAdj = true, showLabel = true, onlyFree = false;
-  let cityRows = [];
+  const showAdj   = currentFilters?.showAdj   !== false;
+  const showLabel = currentFilters?.showLabel  !== false;
+  const onlyFree  = currentFilters?.onlyFree   === true;
+  const filterCities = currentFilters?.filterCities || []; // [] = semua
+
   let allStations = [];
-
-  // ── Drawer open/close ──
-  function openDrawer() { drawer.classList.add('open'); scrim.classList.add('open'); }
-  function closeDrawer() { drawer.classList.remove('open'); scrim.classList.remove('open'); }
-  drawerBtn.addEventListener('click', openDrawer);
-  drawerClose.addEventListener('click', closeDrawer);
-  scrim.addEventListener('click', closeDrawer);
-
-  // ── Load provinces ──
-  try {
-    // fetchProvinces sudah di-import static di baris atas
-    const provinces = await fetchProvinces();
-    const allOpt = `<option value="" ${!province ? 'selected' : ''}>🌐 Semua Provinsi</option>`;
-    selProvince.innerHTML = allOpt + provinces.map(p =>
-      `<option value="${esc(p.name)}" ${p.name === province ? 'selected' : ''}>${p.name.replace(/DAERAH ISTIMEWA /gi,'D.I. ').replace(/PROVINSI /gi,'')}</option>`
-    ).join('');
-    // Kalau tidak ada province awal, default ke "Semua Provinsi"
-    if (!province) province = '';
-  } catch {
-    const allOpt = `<option value="" ${!province ? 'selected' : ''}>🌐 Semua Provinsi</option>`;
-    selProvince.innerHTML = allOpt + (province ? `<option value="${esc(province)}" selected>${province}</option>` : '');
-  }
 
   // ── Apply filters + re-render ──
   function applyFilters() {
     let stations = [...allStations];
-    if (filterJenis !== 'all') stations = stations.filter(s => s.jenis === filterJenis);
-    cityRows = buildCityRows(stations);
+    if (filterCities.length > 0) {
+      stations = stations.filter(s =>
+        filterCities.includes((s.kota || s.city || '').toUpperCase().trim()) ||
+        filterCities.includes(s.kota || s.city || '')
+      );
+    }
+    const cityRows = buildCityRows(stations);
     if (!stations.length) {
       area.innerHTML = `<div class="gg-state"><span>Tidak ada stasiun untuk filter ini.</span></div>`;
       return;
@@ -876,34 +755,12 @@ export async function renderGeoGridView(container, currentProvince, currentFilte
   }
 
   // ── Load data ──
-  async function loadData() {
-    area.innerHTML = `<div class="gg-state"><div class="gg-spinner"></div><span>Memuat data spektrum${province ? ' — ' + province.replace(/DAERAH ISTIMEWA /gi,'D.I. ').replace(/PROVINSI /gi,'') : ' semua provinsi'}…</span></div>`;
-    try {
-      // province kosong = ambil semua provinsi dari API
-      const params = province ? { province } : {};
-      const data = await fetchSpectrum(params);
-      allStations = (data.stations || []).map(s => ({ ...s, freq: parseFloat(s.freq) }));
-      applyFilters();
-    } catch (err) {
-      area.innerHTML = `<div class="gg-state"><span style="color:var(--red,#ef4444)">Gagal memuat: ${esc(err.message)}</span></div>`;
-    }
+  area.innerHTML = `<div class="gg-state"><div class="gg-spinner"></div><span>Memuat data spektrum…</span></div>`;
+  try {
+    const data = await fetchSpectrum({});
+    allStations = (data.stations || []).map(s => ({ ...s, freq: parseFloat(s.freq) }));
+    applyFilters();
+  } catch (err) {
+    area.innerHTML = `<div class="gg-state"><span style="color:var(--red,#ef4444)">Gagal memuat: ${esc(err.message)}</span></div>`;
   }
-
-  // ── Events ──
-  selProvince.addEventListener('change', () => { province = selProvince.value; loadData(); });
-  selJenis.value = filterJenis;
-  selJenis.addEventListener('change', () => { filterJenis = selJenis.value; applyFilters(); });
-  togAdj.addEventListener('change', () => { showAdj = togAdj.checked; applyFilters(); });
-  togLabel.addEventListener('change', () => { showLabel = togLabel.checked; applyFilters(); });
-  togFree.addEventListener('change', () => {
-    onlyFree = togFree.checked;
-    // Just dim non-free visually without re-render
-    const cells = area.querySelectorAll('.gg-ch:not(.free)');
-    cells.forEach(c => { c.style.opacity = onlyFree ? '0.08' : ''; });
-    area.querySelectorAll('.gg-ch.free').forEach(c => {
-      c.style.outline = onlyFree ? '1px solid rgba(34,197,94,.35)' : '';
-    });
-  });
-
-  await loadData();
 }
