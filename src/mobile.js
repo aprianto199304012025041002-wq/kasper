@@ -1,10 +1,5 @@
 // src/mobile.js — Universal Drawer: semua kontrol masuk satu drawer, FAB kiri bawah
 
-const JENIS_LABELS = {
-  swasta: 'Swasta', publik: 'Publik (RRI)',
-  publik_lokal: 'Publik Lokal (LPPL)', komunitas: 'Komunitas',
-};
-
 // ── FAB kiri bawah ───────────────────────────────────────────────────
 function injectFAB() {
   if (document.getElementById('kasperFAB')) return;
@@ -57,15 +52,6 @@ function injectDrawer() {
           <div class="kd-section__label">Kota / Kabupaten</div>
           <select class="kd-select" id="drawerFCity">
             <option value="all">Semua wilayah</option>
-          </select>
-        </section>
-
-        <!-- ── FILTER JENIS ── -->
-        <section class="kd-section">
-          <div class="kd-section__label">Jenis Siaran</div>
-          <select class="kd-select" id="drawerFJenis">
-            <option value="all">Semua jenis</option>
-            ${Object.entries(JENIS_LABELS).map(([k,v]) => `<option value="${k}">${v}</option>`).join('')}
           </select>
         </section>
 
@@ -196,10 +182,6 @@ function syncDrawer(state) {
     cityEl.value = state.filterCity || 'all';
   }
 
-  // Jenis select
-  const jenisEl = document.getElementById('drawerFJenis');
-  if (jenisEl) jenisEl.value = state.filterJenis || 'all';
-
   // ChanView segmented
   document.querySelectorAll('.kd-seg-btn[data-chanview]').forEach(btn => {
     btn.classList.toggle('is-active', btn.dataset.chanview === (state.filterChanView || 'all'));
@@ -233,7 +215,6 @@ function updateFabBadge(state) {
   const badge = document.getElementById('fabBadge');
   if (!badge) return;
   const n = (state.filterCity !== 'all' ? 1 : 0)
-    + (state.filterJenis !== 'all' ? 1 : 0)
     + (state.filterChanView !== 'all' ? 1 : 0)
     + (state.searchTerm ? 1 : 0)
     + (state.province ? 1 : 0);
@@ -261,7 +242,6 @@ export function initMobileUI(getState, onViewChange, onPageChange, onFilterChang
     // Kirim semua filter sekaligus dalam satu call — hindari race condition
     const filterPayload = {
       filterCity:     document.getElementById('drawerFCity').value,
-      filterJenis:    document.getElementById('drawerFJenis').value,
       filterChanView: newChan,
       searchTerm:     document.getElementById('drawerSearch').value,
     };
@@ -282,7 +262,6 @@ export function initMobileUI(getState, onViewChange, onPageChange, onFilterChang
   // Reset button
   document.getElementById('drawerReset').addEventListener('click', () => {
     document.getElementById('drawerFCity').value = 'all';
-    document.getElementById('drawerFJenis').value = 'all';
     document.querySelectorAll('.kd-seg-btn[data-chanview]').forEach(b =>
       b.classList.toggle('is-active', b.dataset.chanview === 'all'));
     const searchEl = document.getElementById('drawerSearch');
