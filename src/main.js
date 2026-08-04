@@ -62,9 +62,7 @@ async function boot() {
 
   try {
     state.provinces = await fetchProvinces();
-    if (state.provinces.length > 0) {
-      state.province = state.provinces[0].name;
-    }
+    // state.province tetap '' = semua provinsi; user pilih via tab jika perlu
   } catch(e) { state.provinces = []; }
 
   renderShell();
@@ -176,7 +174,7 @@ async function loadData() {
   state.loading=true; state.error=null; state.data=null;
   renderContent();
   const filters = {};
-  if (state.province)            filters.province = state.province;
+  // province tidak dikirim = ambil semua provinsi; filter kota dilakukan di FE
   if (state.filterCity!=='all')  filters.city     = state.filterCity;
   if (state.filterJenis!=='all') filters.jenis    = state.filterJenis;
   if (state.searchTerm)          filters.search   = state.searchTerm;
@@ -192,7 +190,7 @@ async function loadData() {
 async function loadInterference() {
   state.loading=true; renderContent();
   try {
-    state.interfData = await fetchInterference({province:state.province});
+    state.interfData = await fetchInterference({});
   } catch(e) {
     state.interfData = {pairs:[],summary:{},stations_evaluated:0,model:'error:'+e.message};
   }
@@ -247,10 +245,14 @@ function renderHeader() {
 function renderProvinceTabs() {
   const el = document.getElementById('provinceTabs');
   if (!el) return;
-  const items = state.provinces.length
-    ? state.provinces
-    : [{name: state.province || 'DAERAH ISTIMEWA YOGYAKARTA', total_fm: 0}];
+  const items = state.provinces.length ? state.provinces : [];
+  const semua = !state.province; // aktif kalau province = ''
   el.innerHTML = `<div class="province-bar" role="tablist">
+    <button class="province-tab ${semua?'is-active':''}"
+      data-province="" role="tab">
+      Semua Wilayah
+      <span class="province-tab__count">${items.reduce((a,p)=>a+(p.total_fm||0),0)||''}</span>
+    </button>
     ${items.map(p=>`
       <button class="province-tab ${p.name===state.province?'is-active':''}"
         data-province="${p.name}" role="tab">
