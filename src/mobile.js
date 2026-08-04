@@ -131,7 +131,12 @@ function injectDrawer() {
 }
 
 // ── Open / Close ──────────────────────────────────────────────────────
+// _getStateFn disimpan saat initMobileUI dipanggil
+let _getStateFn = null;
+
 export function openDrawer() {
+  // Sync state terbaru sebelum drawer muncul
+  if (_getStateFn) syncDrawer(_getStateFn());
   document.getElementById('kasperDrawer')?.classList.add('is-open');
   document.body.classList.add('drawer-open');
 }
@@ -230,6 +235,7 @@ function updateFabBadge(state) {
 
 // ── Init utama ────────────────────────────────────────────────────────
 export function initMobileUI(getState, onViewChange, onPageChange, onFilterChange) {
+  _getStateFn = getState;
   injectFAB();
   injectDrawer();
   injectScrollHints();
@@ -244,25 +250,25 @@ export function initMobileUI(getState, onViewChange, onPageChange, onFilterChang
 
     closeDrawer();
 
-    // Province changed?
+    // Kirim semua filter sekaligus dalam satu call — hindari race condition
+    const filterPayload = {
+      filterCity:     document.getElementById('drawerFCity').value,
+      filterJenis:    document.getElementById('drawerFJenis').value,
+      filterChanView: newChan,
+      searchTerm:     document.getElementById('drawerSearch').value,
+    };
+    // Tambahkan province ke payload yang sama jika berubah
     if (newProvince !== state.province) {
-      onFilterChange({ province: newProvince });
+      filterPayload.province = newProvince;
     }
+    onFilterChange(filterPayload);
 
-    // View/page changed?
+    // View/page change dilakukan SETELAH filter (tidak trigger loadData ganda)
     if (newView && (newView !== state.view || state.page !== 'main')) {
       onViewChange(newView);
     } else if (newPage && newPage !== state.page) {
       onPageChange(newPage);
     }
-
-    // Filters
-    onFilterChange({
-      filterCity:     document.getElementById('drawerFCity').value,
-      filterJenis:    document.getElementById('drawerFJenis').value,
-      filterChanView: newChan,
-      searchTerm:     document.getElementById('drawerSearch').value,
-    });
   });
 
   // Reset button
@@ -277,14 +283,17 @@ export function initMobileUI(getState, onViewChange, onPageChange, onFilterChang
       b.classList.toggle('is-active', i === 0));
   });
 
+  // Sync awal — isi drawer dengan state saat ini
+  syncDrawer(getState());
+
   return {
     syncNav: () => syncDrawer(getState()),
     syncDrawer: () => syncDrawer(getState()),
   };
 }
 
-export function openFilterDrawer(state) {
-  syncDrawer(state);
+export function openFilterDrawer() {
+  // openDrawer sudah handle sync state terbaru via _getStateFn
   openDrawer();
 }
 

@@ -85,15 +85,21 @@ async function boot() {
       else renderContent();
     },
     (filters) => {
-      if (filters.province       !== undefined) { state.province = filters.province; state.filterCity='all'; }
+      // Province change → reset filterCity HANYA jika tidak ada filterCity eksplisit dalam payload
+      if (filters.province !== undefined) {
+        state.province = filters.province;
+        if (filters.filterCity === undefined) state.filterCity = 'all';
+      }
       if (filters.filterCity     !== undefined) state.filterCity     = filters.filterCity;
       if (filters.filterJenis    !== undefined) state.filterJenis    = filters.filterJenis;
       if (filters.filterChanView !== undefined) state.filterChanView = filters.filterChanView;
       if (filters.searchTerm     !== undefined) state.searchTerm     = filters.searchTerm;
+      renderProvinceTabs();
+      renderControls();
       loadData();
     }
   );
-  window.__openMobFilter = () => openFilterDrawer(state);
+  window.__openMobFilter = () => openFilterDrawer();
   window.__mobSync = mob;
   window._kasperFallback = false; // diupdate setelah loadData
 }
