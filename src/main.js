@@ -42,8 +42,7 @@ let state = {
   view:           'grid',
   province:       '',
   provinces:      [],
-  filterCity:     'all',
-
+  filterCities:   [],       // [] = semua, [...] = multi-select kabupaten
   filterChanView: 'all',
   searchTerm:     '',
   data:           null,
@@ -85,16 +84,9 @@ async function boot() {
       else renderContent();
     },
     (filters) => {
-      // Province change → reset filterCity HANYA jika tidak ada filterCity eksplisit dalam payload
-      if (filters.province !== undefined) {
-        state.province = filters.province;
-        if (filters.filterCity === undefined) state.filterCity = 'all';
-      }
-      if (filters.filterCity     !== undefined) state.filterCity     = filters.filterCity;
-
+      if (filters.filterCities   !== undefined) state.filterCities   = filters.filterCities;
       if (filters.filterChanView !== undefined) state.filterChanView = filters.filterChanView;
       if (filters.searchTerm     !== undefined) state.searchTerm     = filters.searchTerm;
-      renderProvinceTabs();
       renderControls();
       loadData();
     }
@@ -127,7 +119,7 @@ function attachEvents() {
 }
 
 function handleChange(e) {
-  if (e.target.id==='fCity')     { state.filterCity=e.target.value; loadData(); }
+  // filterCity dihapus — filter kabupaten via drawer chips
 
   if (e.target.id==='fChanView') { state.filterChanView=e.target.value; renderContent(); }
 }
@@ -144,7 +136,7 @@ async function handleClick(e) {
   const ptab = e.target.closest('[data-province]');
   if (ptab) {
     state.province=ptab.dataset.province;
-    state.filterCity='all'; state.searchTerm='';
+    state.filterCities=[]; state.searchTerm='';
     renderProvinceTabs(); renderControls();
     await loadData(); return;
   }
@@ -182,10 +174,8 @@ async function loadData() {
   state.loading=true; state.error=null; state.data=null;
   renderContent();
   const filters = {};
-  // province tidak dikirim = ambil semua provinsi; filter kota dilakukan di FE
-  if (state.filterCity!=='all')  filters.city     = state.filterCity;
-
-  if (state.searchTerm)          filters.search   = state.searchTerm;
+  // filterCities = [] artinya semua; jika ada isi, kirim sebagai city (FE filter post-load)
+  if (state.searchTerm) filters.search = state.searchTerm;
   try {
     state.data    = await fetchSpectrum(filters);
     state.loading = false;
@@ -323,13 +313,6 @@ function renderControls() {
   const hideCity = state.view === 'geo';
 
   el.innerHTML = `
-    ${!hideCity ? `<div class="control-group">
-      <span class="control-group__label">Wilayah</span>
-      <select class="control-input" id="fCity">
-        <option value="all">Semua</option>
-        ${cities.map(c=>`<option value="${c}" ${state.filterCity===c?'selected':''}>${c}</option>`).join('')}
-      </select>
-    </div>` : ''}
 
     ${state.view !== 'geo' ? `<div class="control-group">
       <span class="control-group__label">Tampilkan</span>
@@ -418,10 +401,21 @@ function renderContent() {
   }
 
   if (!state.data) return;
+
+  // Apply filterCities multi-select di FE
+  const activeCities = state.filterCities || [];
+  const baseMap = activeCities.length === 0
+    ? state.data.channel_map
+    : state.data.channel_map.map(c => {
+        if (c.type !== 'used') return c;
+        const kota = c.station?.kota || c.station?.city;
+        return activeCities.includes(kota) ? c : { ...c, type: 'free', station: null };
+      });
+
   updateStatsBar(state.data.summary);
   renderLegend();
 
-  let chMap = state.data.channel_map;
+  let chMap = baseMap;
   if (state.filterChanView==='free') chMap=chMap.filter(c=>c.type==='free');
   if (state.filterChanView==='used') chMap=chMap.filter(c=>c.type==='used');
 
@@ -447,7 +441,7 @@ function renderContent() {
       <div class="detail-panel" id="detailPanel"></div>`;
     renderBandRuler();
     renderBandView(
-      state.filterChanView==='all' ? state.data.channel_map : chMap,
+      state.filterChanView==='all' ? baseMap : chMap,
       handleBandHover,
       info=>{ if(info.type==='used') openDetailPage(info.station); else openInlineDetail(info); }
     );
