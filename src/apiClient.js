@@ -64,7 +64,8 @@ export async function fetchProvinces() {
     const d = await r.json();
     return d.provinces || [];
   }
-  return [{ name:'DAERAH ISTIMEWA YOGYAKARTA', code:'DIY', total_fm: fallbackStations.length }];
+  // API mati: return [] supaya hanya tab "Semua Wilayah" yang aktif
+  return [];
 }
 
 export async function fetchStationDetail(freq) {
