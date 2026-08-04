@@ -121,6 +121,14 @@ function injectDrawer() {
     if (e.key === 'Escape') closeDrawer();
   });
 
+  // View mode buttons — toggle is-active (dview dan dpage saling eksklusif)
+  el.querySelectorAll('.kd-view-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      el.querySelectorAll('.kd-view-btn').forEach(b => b.classList.remove('is-active'));
+      btn.classList.add('is-active');
+    });
+  });
+
   // ChanView segmented buttons
   el.querySelectorAll('.kd-seg-btn[data-chanview]').forEach(btn => {
     btn.addEventListener('click', () => {
