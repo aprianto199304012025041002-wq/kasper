@@ -23,28 +23,41 @@ jobs:
         run: npm install && npm run build
 
       - name: Generate config.php dari secrets
+        run: |
+          mkdir -p /tmp/config_only
+          cat > /tmp/config_template.php << 'PHPEOF'
+<?php
+return [
+    'db' => [
+        'host'    => '__DB_HOST__',
+        'port'    => '3306',
+        'name'    => '__DB_NAME__',
+        'user'    => '__DB_USER__',
+        'pass'    => '__DB_PASS__',
+        'charset' => 'utf8mb4',
+    ],
+    'cors'  => ['allowed_origin' => '*'],
+    'cache' => ['enabled' => true, 'dir' => __DIR__ . '/../cache', 'ttl' => 300],
+];
+PHPEOF
+          sed \
+            -e "s|__DB_HOST__|${DB_HOST}|g" \
+            -e "s|__DB_NAME__|${DB_NAME}|g" \
+            -e "s|__DB_USER__|${DB_USER}|g" \
+            -e "s|__DB_PASS__|${DB_PASS}|g" \
+            /tmp/config_template.php > /tmp/config_only/config.php
+          echo "=== config.php baris pertama ===" && head -1 /tmp/config_only/config.php | cat -A
+          echo "=== placeholder check ===" && (grep '__DB_' /tmp/config_only/config.php && echo "ERROR: placeholder belum terganti!" && exit 1) || echo "OK"
         env:
           DB_HOST: ${{ secrets.DB_HOST }}
           DB_NAME: ${{ secrets.DB_NAME }}
           DB_USER: ${{ secrets.DB_USER }}
           DB_PASS: ${{ secrets.DB_PASS }}
-        run: |
-          mkdir -p api/src
-          cat > api/src/config.php << PHPEOF
-          <?php
-          return [
-              'db' => [
-                  'host'    => '${DB_HOST}',
-                  'port'    => '3306',
-                  'name'    => '${DB_NAME}',
-                  'user'    => '${DB_USER}',
-                  'pass'    => '${DB_PASS}',
-                  'charset' => 'utf8mb4',
-              ],
-              'cors' => ['allowed_origin' => '*'],
-              'cache' => ['enabled' => true, 'dir' => __DIR__ . '/../cache', 'ttl' => 300],
-          ];
-          PHPEOF
+
+      # Urutan deploy KRITIS:
+      # 1) dist/ dengan clean-slate → hapus semua file lama di public_html/
+      # 2) api/ tanpa clean-slate  → tambah folder api/ ke public_html/ (dist/ tetap ada)
+      # 3) config.php dari /tmp    → override placeholder yang ada di repo
 
       - name: Deploy frontend (dist/) via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
@@ -62,18 +75,16 @@ jobs:
           server: ${{ secrets.FTP_HOST }}
           username: ${{ secrets.FTP_USER }}
           password: ${{ secrets.FTP_PASS }}
-          local-dir: ./
-          server-dir: /public_html/
+          local-dir: ./api/
+          server-dir: /public_html/api/
           exclude: |
-            **/.git*
-            **/.git*/**
-            **/node_modules/**
-            **/src/**
-            **/dist/**
-            .env*
-            .gitignore
-            README.md
-            package*.json
-            vite.config.js
-            isr-spectrum.code-workspace
-            index.html
+            **/src/config.php
+
+      - name: Upload config.php (generated dari secrets, bukan dari repo)
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_HOST }}
+          username: ${{ secrets.FTP_USER }}
+          password: ${{ secrets.FTP_PASS }}
+          local-dir: /tmp/config_only/
+          server-dir: /public_html/api/src/
