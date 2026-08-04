@@ -54,11 +54,9 @@ jobs:
           password: ${{ secrets.FTP_PASS }}
           local-dir: ./dist/
           server-dir: /public_html/
-          exclude: |
-            **/.git*
-            **/.git*/**
+          dangerous-clean-slate: true
 
-      - name: Deploy API & config via FTP
+      - name: Deploy API via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: ${{ secrets.FTP_HOST }}
