@@ -46,7 +46,19 @@ jobs:
           ];
           PHPEOF
 
-      - name: Deploy via FTP
+      - name: Deploy frontend (dist/) via FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_HOST }}
+          username: ${{ secrets.FTP_USER }}
+          password: ${{ secrets.FTP_PASS }}
+          local-dir: ./dist/
+          server-dir: /public_html/
+          exclude: |
+            **/.git*
+            **/.git*/**
+
+      - name: Deploy API & config via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: ${{ secrets.FTP_HOST }}
@@ -59,6 +71,7 @@ jobs:
             **/.git*/**
             **/node_modules/**
             **/src/**
+            **/dist/**
             .env*
             .gitignore
             README.md
