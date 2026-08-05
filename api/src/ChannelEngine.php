@@ -1,20 +1,25 @@
 <?php
 // ChannelEngine.php
-// Aturan proteksi kanal FM (ITU-R BS.412 / PPDR FM):
-//   Co-channel   : |Δf| < 0.09 MHz  → used        (30 dB)
-//   1st adjacent : |Δf| ≈ 0.2 MHz   → adjacent_1  (20 dB)
-//   2nd adjacent : |Δf| ≈ 0.4 MHz   → adjacent_2  (10 dB)
-//   > 0.4 MHz    : free
+// Grid FM Indonesia: 100 kHz step (87.5–108.0 MHz), 206 slot
+// Regulasi Indonesia izinkan alokasi tiap 100 kHz.
+//
+// Aturan proteksi kanal (ITU-R BS.412):
+//   Co-channel     : |Δf| < 0.055 MHz → used        (30 dB)
+//   1st adjacent   : |Δf| ≈ 0.1 MHz   → adjacent_1  (20 dB)
+//   2nd adjacent   : |Δf| ≈ 0.2 MHz   → adjacent_2  (10 dB)
+//   > 0.2 MHz      : free
+
 class ChannelEngine {
     const FM_MIN          = 87.5;
     const FM_MAX          = 108.0;
-    const CHANNEL_SPACING = 0.2;
-    const MATCH_TOLERANCE = 0.09;
+    const CHANNEL_SPACING = 0.1;
+    const MATCH_TOLERANCE = 0.055;
 
     public static function buildGrid(): array {
         $channels = [];
         $steps = round((self::FM_MAX - self::FM_MIN) / self::CHANNEL_SPACING);
-        for ($i = 0; $i <= $steps; $i++) $channels[] = round((self::FM_MIN + $i * self::CHANNEL_SPACING) * 10) / 10;
+        for ($i = 0; $i <= $steps; $i++)
+            $channels[] = round((self::FM_MIN + $i * self::CHANNEL_SPACING) * 10) / 10;
         return $channels;
     }
 
@@ -35,7 +40,7 @@ class ChannelEngine {
                 continue;
             }
 
-            // 1st adjacent (±0.2 MHz)
+            // 1st adjacent (±0.1 MHz)
             $adj1L = $adj1R = null;
             foreach ($stations as $s) {
                 $f = (float)$s['freq'];
@@ -43,11 +48,12 @@ class ChannelEngine {
                 if (abs($f - ($ch + self::CHANNEL_SPACING)) < self::MATCH_TOLERANCE) $adj1R = $s;
             }
             if ($adj1L || $adj1R) {
-                $map[] = ['freq'=>$ch,'lower'=>$lower,'upper'=>$upper,'type'=>'adjacent_1','adj_left'=>$adj1L,'adj_right'=>$adj1R];
+                $map[] = ['freq'=>$ch,'lower'=>$lower,'upper'=>$upper,'type'=>'adjacent_1',
+                          'adj_left'=>$adj1L,'adj_right'=>$adj1R];
                 continue;
             }
 
-            // 2nd adjacent (±0.4 MHz)
+            // 2nd adjacent (±0.2 MHz)
             $adj2L = $adj2R = null;
             foreach ($stations as $s) {
                 $f = (float)$s['freq'];
@@ -55,7 +61,8 @@ class ChannelEngine {
                 if (abs($f - ($ch + 2 * self::CHANNEL_SPACING)) < self::MATCH_TOLERANCE) $adj2R = $s;
             }
             if ($adj2L || $adj2R) {
-                $map[] = ['freq'=>$ch,'lower'=>$lower,'upper'=>$upper,'type'=>'adjacent_2','adj_left'=>$adj2L,'adj_right'=>$adj2R];
+                $map[] = ['freq'=>$ch,'lower'=>$lower,'upper'=>$upper,'type'=>'adjacent_2',
+                          'adj_left'=>$adj2L,'adj_right'=>$adj2R];
                 continue;
             }
 
@@ -65,11 +72,13 @@ class ChannelEngine {
     }
 
     public static function findFreeBlocks(array $channelMap): array {
-        $freeFreqs = array_values(array_map(fn($c)=>$c['freq'], array_filter($channelMap, fn($c)=>$c['type']==='free')));
+        $freeFreqs = array_values(array_map(fn($c)=>$c['freq'],
+                     array_filter($channelMap, fn($c)=>$c['type']==='free')));
         $blocks = []; $i = 0; $n = count($freeFreqs);
         while ($i < $n) {
             $j = $i;
-            while ($j < $n-1 && round(($freeFreqs[$j+1]-$freeFreqs[$j])*10)/10 === self::CHANNEL_SPACING) $j++;
+            while ($j < $n-1 &&
+                   round(($freeFreqs[$j+1]-$freeFreqs[$j])*10)/10 === self::CHANNEL_SPACING) $j++;
             $start=$freeFreqs[$i]; $end=$freeFreqs[$j]; $count=$j-$i+1;
             $center=round((($start+$end)/2)*10)/10;
             $blocks[] = [
@@ -77,7 +86,7 @@ class ChannelEngine {
                 'lower'=>round(($center-self::CHANNEL_SPACING/2)*100)/100,
                 'upper'=>round(($center+self::CHANNEL_SPACING/2)*100)/100,
                 'width_khz'=>round(($end-$start+self::CHANNEL_SPACING)*1000),
-                'priority'=>self::ratePriority($count),
+                'priority'=>$count>=4?'high':($count>=2?'medium':'low'),
             ];
             $i=$j+1;
         }
@@ -94,11 +103,5 @@ class ChannelEngine {
         return ['total'=>$total,'used'=>$used,'adjacent_1'=>$adj1,'adjacent_2'=>$adj2,'free'=>$free,
                 'pct_used'=>$total>0?round($used/$total*100,1):0,
                 'pct_free'=>$total>0?round($free/$total*100,1):0];
-    }
-
-    private static function ratePriority(int $count): string {
-        if ($count>=4) return 'high';
-        if ($count>=2) return 'medium';
-        return 'low';
     }
 }

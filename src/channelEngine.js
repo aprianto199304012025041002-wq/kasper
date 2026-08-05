@@ -1,14 +1,20 @@
 // src/channelEngine.js
-// Aturan proteksi kanal FM (ITU-R BS.412 / PPDR FM):
-//   Co-channel   : |Δf| < 0.1 MHz  → used        (30 dB separation required)
-//   1st adjacent : |Δf| ≈ 0.2 MHz  → adjacent_1  (20 dB separation required)
-//   2nd adjacent : |Δf| ≈ 0.4 MHz  → adjacent_2  (10 dB separation required)
-//   > 0.4 MHz    : free
-export const FM_MIN = 87.5, FM_MAX = 108.0, CHANNEL_SPACING = 0.2, ADJACENT_GUARD = 0.09;
+// Grid FM Indonesia: 100 kHz step (87.5–108.0 MHz), 206 slot
+// Regulasi Indonesia (Permenkominfo) izinkan alokasi tiap 100 kHz,
+// berbeda dari standar Eropa yang hanya 200 kHz.
+//
+// Aturan proteksi kanal (ITU-R BS.412):
+//   Co-channel     : |Δf| < 0.055 MHz → used        (30 dB)
+//   1st adjacent   : |Δf| ≈ 0.1 MHz   → adjacent_1  (20 dB)
+//   2nd adjacent   : |Δf| ≈ 0.2 MHz   → adjacent_2  (10 dB)
+//   > 0.2 MHz      : free
+
+export const FM_MIN = 87.5, FM_MAX = 108.0, CHANNEL_SPACING = 0.1, ADJACENT_GUARD = 0.055;
 
 export function buildChannelGrid() {
   const channels = [], steps = Math.round((FM_MAX - FM_MIN) / CHANNEL_SPACING);
-  for (let i = 0; i <= steps; i++) channels.push(Math.round((FM_MIN + i * CHANNEL_SPACING) * 10) / 10);
+  for (let i = 0; i <= steps; i++)
+    channels.push(Math.round((FM_MIN + i * CHANNEL_SPACING) * 10) / 10);
   return channels;
 }
 
@@ -17,12 +23,12 @@ export function getChannelStatus(ch, stations) {
   const used = stations.find((s) => Math.abs(s.freq - ch) < ADJACENT_GUARD);
   if (used) return { type: 'used', station: used };
 
-  // 1st adjacent (±0.2 MHz)
+  // 1st adjacent (±0.1 MHz)
   const adj1L = stations.find((s) => Math.abs(s.freq - (ch - CHANNEL_SPACING)) < ADJACENT_GUARD);
   const adj1R = stations.find((s) => Math.abs(s.freq - (ch + CHANNEL_SPACING)) < ADJACENT_GUARD);
   if (adj1L || adj1R) return { type: 'adjacent_1', adj_left: adj1L, adj_right: adj1R };
 
-  // 2nd adjacent (±0.4 MHz)
+  // 2nd adjacent (±0.2 MHz)
   const adj2L = stations.find((s) => Math.abs(s.freq - (ch - 2 * CHANNEL_SPACING)) < ADJACENT_GUARD);
   const adj2R = stations.find((s) => Math.abs(s.freq - (ch + 2 * CHANNEL_SPACING)) < ADJACENT_GUARD);
   if (adj2L || adj2R) return { type: 'adjacent_2', adj_left: adj2L, adj_right: adj2R };
@@ -45,7 +51,8 @@ export function findFreeBlocks(channelMap) {
   let i = 0;
   while (i < freeFreqs.length) {
     let j = i;
-    while (j < freeFreqs.length - 1 && Math.round((freeFreqs[j + 1] - freeFreqs[j]) * 10) / 10 === CHANNEL_SPACING) j++;
+    while (j < freeFreqs.length - 1 &&
+      Math.round((freeFreqs[j + 1] - freeFreqs[j]) * 10) / 10 === CHANNEL_SPACING) j++;
     const start = freeFreqs[i], end = freeFreqs[j], count = j - i + 1;
     const center = Math.round(((start + end) / 2) * 10) / 10;
     blocks.push({
