@@ -129,25 +129,23 @@ function injectDrawer() {
     });
   });
 
+  // ChanView segmented buttons
+  el.querySelectorAll('.kd-seg-btn[data-chanview]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      el.querySelectorAll('.kd-seg-btn[data-chanview]').forEach(b => b.classList.remove('is-active'));
+      btn.classList.add('is-active');
+    });
+  });
+
   // Live search dari drawer — re-render tanpa re-fetch
   let _searchTimer = null;
   document.getElementById('drawerSearch').addEventListener('input', (e) => {
     clearTimeout(_searchTimer);
     _searchTimer = setTimeout(() => {
-      if (_getStateFn) {
-        // Update state langsung via onFilterChange jika tersedia
-        // tapi drawer belum punya akses onFilterChange di sini
-        // → dispatch custom event yang ditangkap main.js
-        document.dispatchEvent(new CustomEvent('kasper:search', {
-          detail: { searchTerm: e.target.value }
-        }));
-      }
+      document.dispatchEvent(new CustomEvent('kasper:search', {
+        detail: { searchTerm: e.target.value }
+      }));
     }, 280);
-  });
-    btn.addEventListener('click', () => {
-      el.querySelectorAll('.kd-seg-btn[data-chanview]').forEach(b => b.classList.remove('is-active'));
-      btn.classList.add('is-active');
-    });
   });
 }
 
