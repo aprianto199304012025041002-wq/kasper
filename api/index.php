@@ -163,6 +163,18 @@ switch ($route) {
         Response::json($result);
         break;
 
+    // ── GET /flush-cache ──────────────────────────────────────────────────
+    case 'flush-cache':
+        $cacheDir = __DIR__ . '/cache';
+        $deleted = 0;
+        if (is_dir($cacheDir)) {
+            foreach (glob("$cacheDir/*.cache") as $f) {
+                unlink($f); $deleted++;
+            }
+        }
+        Response::json(['status'=>'ok','deleted'=>$deleted,'time'=>date('c')]);
+        break;
+
     // ── GET /health ───────────────────────────────────────────────────────
     case 'health':
         try {
