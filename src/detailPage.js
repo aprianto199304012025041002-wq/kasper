@@ -150,9 +150,6 @@ export function renderDetailPage(data, onBack, allData) {
 
   document.getElementById('backBtn').addEventListener('click', onBack);
 
-  // Mini band strip
-  renderMiniBand(freq, nbr, lowerMhz, upperMhz, color);
-
   // Peta Leaflet
   initMap(lat, lon, stnName, freq, nbr);
 }

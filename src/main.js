@@ -411,9 +411,19 @@ function renderContent() {
   const baseMap = activeCities.length === 0
     ? state.data.channel_map
     : state.data.channel_map.map(c => {
-        if (c.type !== 'used') return c;
-        const kota = c.station?.kota || c.station?.city;
-        return activeCities.includes(kota) ? c : { ...c, type: 'free', station: null };
+        if (c.type === 'used') {
+          const kota = c.station?.kota || c.station?.city;
+          return activeCities.includes(kota) ? c : { ...c, type: 'free', station: null };
+        }
+        if (c.type === 'adjacent_1' || c.type === 'adjacent_2') {
+          const kotaL = c.adj_left?.kota  || c.adj_left?.city;
+          const kotaR = c.adj_right?.kota || c.adj_right?.city;
+          const keepL = kotaL && activeCities.includes(kotaL) ? c.adj_left  : null;
+          const keepR = kotaR && activeCities.includes(kotaR) ? c.adj_right : null;
+          if (keepL || keepR) return { ...c, adj_left: keepL, adj_right: keepR };
+          return { ...c, type: 'free', adj_left: null, adj_right: null };
+        }
+        return c;
       });
 
   updateStatsBar(state.data.summary);
@@ -421,7 +431,7 @@ function renderContent() {
 
   let chMap = baseMap;
   if (state.filterChanView==='free') chMap=chMap.filter(c=>c.type==='free');
-  if (state.filterChanView==='used') chMap=chMap.filter(c=>c.type==='used');
+  if (state.filterChanView==='used') chMap=chMap.filter(c=>c.type==='used'||c.type==='adjacent_1'||c.type==='adjacent_2');
 
   const freeBlocks = (state.data.free_blocks||[]).filter(b=>b.count>=2);
 
@@ -507,11 +517,18 @@ function renderCell(c) {
       <span class="ch-cell__name">${esc(label)}</span>
     </div>`;
   }
-  if (c.type==='adjacent') {
-    const dir=c.adj_left&&c.adj_right?'◄►':c.adj_left?'◄':'►';
-    return `<div class="ch-cell ch-cell--adjacent" data-freq="${c.freq}">
+  if (c.type==='adjacent_1') {
+    const dir = c.adj_left&&c.adj_right?'◄►':c.adj_left?'◄':'►';
+    return `<div class="ch-cell ch-cell--adjacent ch-cell--adj1" data-freq="${c.freq}" title="1st adjacent — guard ketat (20 dB)">
       <span class="ch-cell__freq">${c.freq.toFixed(1)}</span>
       <span class="ch-cell__name">${dir}</span>
+    </div>`;
+  }
+  if (c.type==='adjacent_2') {
+    const dir = c.adj_left&&c.adj_right?'◄►':c.adj_left?'◄':'►';
+    return `<div class="ch-cell ch-cell--adjacent ch-cell--adj2" data-freq="${c.freq}" title="2nd adjacent — guard lunak (10 dB)">
+      <span class="ch-cell__freq">${c.freq.toFixed(1)}</span>
+      <span class="ch-cell__name">${dir}${dir}</span>
     </div>`;
   }
   return `<div class="ch-cell ch-cell--free" data-freq="${c.freq}">
@@ -560,16 +577,24 @@ function showTooltip(e,info) {
     title=s?.stn_name||info.freq.toFixed(1)+' MHz';
     rows=[
       ['Frekuensi',info.freq.toFixed(3)+' MHz'],
-      ['Lower',(info.lower??info.lower_mhz??info.freq-.1).toFixed(4)+' MHz'],
-      ['Upper',(info.upper??info.upper_mhz??info.freq+.1).toFixed(4)+' MHz'],
       ['ERP',(s?.erp_dbm||'—')+' dBm'],
       ['Wilayah',s?.kota||s?.city||'—'],
-      ['Jenis',JENIS_LABELS[s?.jenis]||s?.jenis||'—'],
       ['','▸ Klik untuk detail'],
     ];
-  } else if (info.type==='adjacent') {
-    title=info.freq.toFixed(1)+' MHz — Guard band';
-    rows=[['Kiri',info.adj_left?.stn_name||'—'],['Kanan',info.adj_right?.stn_name||'—']];
+  } else if (info.type==='adjacent_1') {
+    title=info.freq.toFixed(1)+' MHz — 1st Adjacent (Guard)';
+    rows=[
+      ['Kiri',info.adj_left?.stn_name||'—'],
+      ['Kanan',info.adj_right?.stn_name||'—'],
+      ['Proteksi','20 dB separation required'],
+    ];
+  } else if (info.type==='adjacent_2') {
+    title=info.freq.toFixed(1)+' MHz — 2nd Adjacent';
+    rows=[
+      ['Kiri',info.adj_left?.stn_name||'—'],
+      ['Kanan',info.adj_right?.stn_name||'—'],
+      ['Proteksi','10 dB separation required'],
+    ];
   } else {
     title=info.freq.toFixed(1)+' MHz — Kosong ★';
     rows=[
