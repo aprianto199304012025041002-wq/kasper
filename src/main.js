@@ -458,8 +458,19 @@ function renderContent() {
 
     const cityRows = cityList.map(city => {
       const row = baseMap.map(c => {
-        if (c.type !== 'used') return c; // kosong/guard tetap tampil di semua row
-        return (c.station?.kota || c.station?.city) === city ? c : { ...c, type: 'free', station: null };
+        if (c.type === 'used') {
+          return (c.station?.kota || c.station?.city) === city
+            ? c : { ...c, type: 'free', station: null };
+        }
+        if (c.type === 'adjacent_1' || c.type === 'adjacent_2') {
+          const kotaL = c.adj_left?.kota  || c.adj_left?.city;
+          const kotaR = c.adj_right?.kota || c.adj_right?.city;
+          const keepL = kotaL === city ? c.adj_left  : null;
+          const keepR = kotaR === city ? c.adj_right : null;
+          if (keepL || keepR) return { ...c, adj_left: keepL, adj_right: keepR };
+          return { ...c, type: 'free', adj_left: null, adj_right: null };
+        }
+        return c; // free tetap tampil di semua row
       }).filter(matchSearch);
       return { city, row };
     }).filter(({ row }) => row.some(c => c.type === 'used' || (searchLower && matchSearch(c))));
