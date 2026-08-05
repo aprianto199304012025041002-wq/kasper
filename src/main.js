@@ -116,6 +116,10 @@ function renderShell() {
 
 function attachEvents() {
   document.addEventListener('change', handleChange);
+  document.addEventListener('kasper:search', (e) => {
+    state.searchTerm = e.detail.searchTerm || '';
+    renderContent();
+  });
   document.addEventListener('input',  handleInput);
   document.addEventListener('click',  handleClick);
 }
@@ -176,8 +180,6 @@ async function loadData() {
   state.loading=true; state.error=null; state.data=null;
   renderContent();
   const filters = {};
-  // filterCities = [] artinya semua; jika ada isi, kirim sebagai city (FE filter post-load)
-  if (state.searchTerm) filters.search = state.searchTerm;
   try {
     state.data    = await fetchSpectrum(filters);
     state.loading = false;
@@ -423,11 +425,47 @@ function renderContent() {
 
   const freeBlocks = (state.data.free_blocks||[]).filter(b=>b.count>=2);
 
+  // Apply search di FE
+  const searchLower = (state.searchTerm || '').toLowerCase().trim();
+  const matchSearch = (c) => {
+    if (!searchLower) return true;
+    if (c.type !== 'used') return String(c.freq).includes(searchLower);
+    return String(c.freq).includes(searchLower)
+      || (c.station?.stn_name || '').toLowerCase().includes(searchLower)
+      || (c.station?.kota || c.station?.city || '').toLowerCase().includes(searchLower);
+  };
+
   if (state.view==='grid') {
-    el.innerHTML=`
-      <div class="section-label">Peta kanal · grid 200 kHz · 87.5–108.0 MHz · ${state.data.stations.length} stasiun aktif</div>
+    // Kelompokkan per kabupaten
+    const cityList = activeCities.length > 0
+      ? activeCities
+      : [...new Set(
+          state.data.channel_map
+            .filter(c => c.type === 'used')
+            .map(c => c.station?.kota || c.station?.city || '')
+            .filter(Boolean)
+        )].sort();
+
+    const cityRows = cityList.map(city => {
+      const row = baseMap.map(c => {
+        if (c.type !== 'used') return c; // kosong/guard tetap tampil di semua row
+        return (c.station?.kota || c.station?.city) === city ? c : { ...c, type: 'free', station: null };
+      }).filter(matchSearch);
+      return { city, row };
+    }).filter(({ row }) => row.some(c => c.type === 'used' || (searchLower && matchSearch(c))));
+
+    el.innerHTML = `
+      <div class="section-label">Peta kanal per wilayah · grid 200 kHz · 87.5–108.0 MHz · ${state.data.stations.length} stasiun aktif</div>
       <div class="grid-frame" style="padding:12px">
-        <div class="ch-grid" style="gap:3px">${chMap.map(renderCell).join('')}</div>
+        ${cityRows.map(({ city, row }) => {
+          const usedCount = row.filter(c => c.type === 'used').length;
+          const filtered = state.filterChanView === 'free'  ? row.filter(c => c.type === 'free') :
+                           state.filterChanView === 'used'  ? row.filter(c => c.type === 'used') : row;
+          return `<div class="city-row-block">
+            <div class="city-row-label">${esc(city)} <span class="city-row-count">${usedCount}</span></div>
+            <div class="ch-grid-row">${filtered.map(renderCell).join('')}</div>
+          </div>`;
+        }).join('')}
       </div>
       ${renderSlotSection(freeBlocks)}
       <div class="detail-panel" id="detailPanel"></div>`;
@@ -442,8 +480,12 @@ function renderContent() {
       ${renderSlotSection(freeBlocks)}
       <div class="detail-panel" id="detailPanel"></div>`;
     renderBandRuler();
+    const filteredForBand = searchLower
+      ? (state.filterChanView==='all' ? baseMap : chMap).map(c =>
+          c.type === 'used' && !matchSearch(c) ? { ...c, type: 'free', station: null } : c)
+      : (state.filterChanView==='all' ? baseMap : chMap);
     renderBandView(
-      state.filterChanView==='all' ? baseMap : chMap,
+      filteredForBand,
       handleBandHover,
       info=>{ if(info.type==='used') openDetailPage(info.station); else openInlineDetail(info); }
     );
@@ -451,28 +493,30 @@ function renderContent() {
 }
 
 // ── Cell render ───────────────────────────────────────────────────────
+function firstWord(name) {
+  if (!name) return '';
+  return name.trim().split(/\s+/)[0];
+}
+
 function renderCell(c) {
   if (c.type==='used') {
     const color = cityColor(c.station?.kota||c.station?.city);
-    const tag = {publik:'RRI',komunitas:'KOM',publik_lokal:'LPPL'}[c.station?.jenis]||'SW';
-    return `<div class="ch-cell ch-cell--used" style="--cell-color:${color};width:68px;height:72px" data-freq="${c.freq}" title="${esc(c.station?.stn_name||'')}">
-      <span class="ch-cell__freq" style="font-size:11px">${c.freq.toFixed(1)}</span>
-      <span class="ch-cell__name" style="font-size:8px;max-width:62px">${esc(c.station?.stn_name||'')}</span>
-      <span class="ch-cell__tag">${tag}</span>
+    const label = firstWord(c.station?.stn_name);
+    return `<div class="ch-cell ch-cell--used" style="--cell-color:${color}" data-freq="${c.freq}" title="${esc(c.station?.stn_name||'')}">
+      <span class="ch-cell__freq">${c.freq.toFixed(1)}</span>
+      <span class="ch-cell__name">${esc(label)}</span>
     </div>`;
   }
   if (c.type==='adjacent') {
     const dir=c.adj_left&&c.adj_right?'◄►':c.adj_left?'◄':'►';
-    return `<div class="ch-cell ch-cell--adjacent" style="width:68px;height:72px" data-freq="${c.freq}">
-      <span class="ch-cell__freq" style="font-size:11px">${c.freq.toFixed(1)}</span>
-      <span class="ch-cell__name">guard</span>
-      <span class="ch-cell__tag">${dir}</span>
+    return `<div class="ch-cell ch-cell--adjacent" data-freq="${c.freq}">
+      <span class="ch-cell__freq">${c.freq.toFixed(1)}</span>
+      <span class="ch-cell__name">${dir}</span>
     </div>`;
   }
-  return `<div class="ch-cell ch-cell--free" style="width:68px;height:72px" data-freq="${c.freq}">
-    <span class="ch-cell__freq" style="font-size:11px;font-weight:700">${c.freq.toFixed(1)}</span>
-    <span class="ch-cell__name">kosong</span>
-    <span class="ch-cell__tag">★ open</span>
+  return `<div class="ch-cell ch-cell--free" data-freq="${c.freq}">
+    <span class="ch-cell__freq">${c.freq.toFixed(1)}</span>
+    <span class="ch-cell__name">★</span>
   </div>`;
 }
 

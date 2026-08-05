@@ -133,3 +133,53 @@ input.control-input:focus{border-color:var(--accent);outline:none;}
   .slot-row{grid-template-columns:100px 1fr;row-gap:4px;}
   .detail-grid{grid-template-columns:1fr 1fr;}
 }
+
+/* ── Per-city row grid ───────────────────────────────────────────────── */
+.city-row-block {
+  margin-bottom: 18px;
+}
+
+.city-row-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  padding: 0 2px 6px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-bottom: 1px solid var(--border-hairline);
+  margin-bottom: 6px;
+}
+
+.city-row-count {
+  background: var(--bg-input);
+  border: 1px solid var(--border-mid);
+  border-radius: 4px;
+  font-size: 9px;
+  padding: 1px 6px;
+  color: var(--accent);
+}
+
+.ch-grid-row {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 2px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.ch-grid-row::-webkit-scrollbar { height: 3px; }
+.ch-grid-row::-webkit-scrollbar-thumb { background: var(--border-mid); border-radius: 2px; }
+
+/* Ukuran cell baru — lebih ramping */
+.ch-cell {
+  width: 56px;
+  height: 62px;
+  flex-shrink: 0;
+}
+.ch-cell__freq { font-size: 10px; }
+.ch-cell__name { font-size: 9px; max-width: 52px; }
+.ch-cell__tag  { display: none; }

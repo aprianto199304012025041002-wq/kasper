@@ -102,10 +102,6 @@ export function renderDetailPage(data, onBack, allData) {
             <div class="dmeta__val" style="font-size:11px">${noSimf}</div>
           </div>
           <div>
-            <div class="dmeta__label">Jenis siaran</div>
-            <div class="dmeta__val">${JENIS_LABELS[jenis] || jenis}</div>
-          </div>
-          <div>
             <div class="dmeta__label">Wilayah</div>
             <div class="dmeta__val">${esc(kota)}</div>
           </div>
@@ -114,12 +110,6 @@ export function renderDetailPage(data, onBack, allData) {
             <div class="dmeta__val">${esc(district)}</div>
           </div>
         </div>
-      </div>
-
-      <!-- Mini band strip: posisi stasiun ini di antara tetangga -->
-      <div class="freq-band-strip">
-        <div class="fbs-label">Posisi di band FM (±2 MHz)</div>
-        <div id="miniBand"></div>
       </div>
 
       <!-- Peta lokasi -->
@@ -134,7 +124,7 @@ export function renderDetailPage(data, onBack, allData) {
       <!-- Tetangga band -->
       <div class="neighbor-section">
         <div class="neighbor-header">
-          Stasiun tetangga (±2 MHz di provinsi sama) — ${nbr.length} stasiun
+          Stasiun tetangga (±2 MHz) — ${nbr.length} stasiun
         </div>
         ${nbr.length === 0
           ? `<div style="padding:20px 18px;font-size:13px;color:var(--text-tertiary)">Tidak ada data tetangga.</div>`

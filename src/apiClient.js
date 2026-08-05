@@ -80,7 +80,6 @@ export async function fetchStationDetail(freq) {
   const neighbors = fallbackStations
     .filter((x) => Math.abs(x.freq - freq) >= 0.05 && Math.abs(x.freq - freq) <= 2.0)
     .sort((a, b) => Math.abs(a.freq - freq) - Math.abs(b.freq - freq))
-    .slice(0, 8)
     .map((x) => ({ ...x, kota: x.kota||x.city, freq_distance: Math.abs(x.freq-freq) }));
   return { data: { ...s, kota: s.kota||s.city }, neighbors };
 }
