@@ -72,22 +72,22 @@ class StationRepository
         return $stmt->fetch() ?: null;
     }
 
-    public function getNeighbors(float $cf, string $province, float $range = 2.0): array
+    public function getNeighbors(float $cf, string $province = '', float $range = 2.0): array
     {
         $sql = "
             SELECT id, freq, stn_name, clnt_name,
-                   city AS kota, erp_pwr_dbm AS erp_dbm,
+                   city AS kota, province,
+                   erp_pwr_dbm AS erp_dbm,
                    status_simf AS status,
                    sid_lat AS latitude, sid_long AS longitude,
                    ABS(freq - :cf) AS freq_distance
             FROM " . self::TABLE . "
             WHERE service='Broadcast' AND subservice='FM'
-              AND province = :prov
               AND ABS(freq - :cf2) BETWEEN 0.05 AND :range
-            ORDER BY freq_distance ASC LIMIT 10
+            ORDER BY freq_distance ASC LIMIT 30
         ";
         $stmt = $this->db->prepare($sql);
-        $stmt->execute([':cf'=>$cf,':cf2'=>$cf,':prov'=>$province,':range'=>$range]);
+        $stmt->execute([':cf'=>$cf,':cf2'=>$cf,':range'=>$range]);
         return $stmt->fetchAll();
     }
 
