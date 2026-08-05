@@ -491,6 +491,7 @@ function renderContent() {
       ${renderSlotSection(freeBlocks)}
       <div class="detail-panel" id="detailPanel"></div>`;
     attachCellTooltips(state.data.channel_map);
+    syncGridScroll();
   } else {
     el.innerHTML=`
       <div class="section-label">Pita spektrum horizontal · tinggi blok ∝ ERP · klik untuk detail</div>
@@ -568,6 +569,20 @@ function renderSlotSection(blocks) {
 }
 
 // ── Tooltip ───────────────────────────────────────────────────────────
+function syncGridScroll() {
+  const rows = [...document.querySelectorAll('.ch-grid-row')];
+  if (rows.length < 2) return;
+  let _syncing = false;
+  rows.forEach(src => {
+    src.addEventListener('scroll', () => {
+      if (_syncing) return;
+      _syncing = true;
+      rows.forEach(dst => { if (dst !== src) dst.scrollLeft = src.scrollLeft; });
+      requestAnimationFrame(() => { _syncing = false; });
+    }, { passive: true });
+  });
+}
+
 function attachCellTooltips(channelMap) {
   document.querySelectorAll('.ch-cell[data-freq]').forEach(cell=>{
     const info=channelMap.find(c=>c.freq===parseFloat(cell.dataset.freq));
