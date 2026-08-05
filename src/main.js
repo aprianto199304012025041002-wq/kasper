@@ -3,9 +3,8 @@ import './components/header.css';
 import './components/stats.css';
 import './components/grid.css';
 import './components/band.css';
-import './components/province.css';
 import './components/detail-page.css';
-import { fetchSpectrum, fetchProvinces, fetchStationDetail, fetchInterference, isUsingFallback } from './apiClient.js';
+import { fetchSpectrum, fetchStationDetail, fetchInterference, isUsingFallback } from './apiClient.js';
 import { renderBandView, renderBandRuler } from './bandView.js';
 import { renderDetailPage } from './detailPage.js';
 import { renderInterferencePanel } from './interferenceView.js';
@@ -40,8 +39,6 @@ const JENIS_LABELS = {
 let state = {
   page:           'main',
   view:           'grid',
-  province:       '',
-  provinces:      [],
   filterCities:   [],
   filterChanView: 'all',
   searchTerm:     '',
@@ -61,9 +58,7 @@ async function boot() {
     </div>`;
 
   try {
-    state.provinces = await fetchProvinces();
-    // state.province tetap '' = semua provinsi; user pilih via tab jika perlu
-  } catch(e) { state.provinces = []; }
+  } catch(e) {}
 
   renderShell();
   attachEvents();
@@ -102,7 +97,6 @@ async function boot() {
 function renderShell() {
   document.getElementById('app').innerHTML = `
     ${renderHeader()}
-    <div id="provinceTabs"></div>
     <div id="statsBar" style="padding:0 32px;margin-top:16px"></div>
     <main class="main-content" style="padding-top:12px">
       <div id="controlsBar" class="controls-bar"></div>
@@ -110,7 +104,6 @@ function renderShell() {
       <div id="dynamicContent"></div>
     </main>
     <div class="tooltip-float" id="tooltip"></div>`;
-  renderProvinceTabs();
   renderControls();
 }
 
@@ -139,13 +132,6 @@ function handleInput(e) {
 }
 
 async function handleClick(e) {
-  const ptab = e.target.closest('[data-province]');
-  if (ptab) {
-    state.province=ptab.dataset.province;
-    state.filterCities=[]; state.searchTerm='';
-    renderProvinceTabs(); renderControls();
-    await loadData(); return;
-  }
   const vtBtn = e.target.closest('[data-view]');
   if (vtBtn && !vtBtn.dataset.page) {
     state.view=vtBtn.dataset.view;
@@ -245,25 +231,6 @@ function renderHeader() {
 }
 
 // ── Province tabs ─────────────────────────────────────────────────────
-function renderProvinceTabs() {
-  const el = document.getElementById('provinceTabs');
-  if (!el) return;
-  const items = state.provinces.length ? state.provinces : [];
-  const semua = !state.province; // aktif kalau province = ''
-  el.innerHTML = `<div class="province-bar" role="tablist">
-    <button class="province-tab ${semua?'is-active':''}"
-      data-province="" role="tab">
-      Semua Wilayah
-      <span class="province-tab__count">${items.reduce((a,p)=>a+(p.total_fm||0),0)||''}</span>
-    </button>
-    ${items.map(p=>`
-      <button class="province-tab ${p.name===state.province?'is-active':''}"
-        data-province="${p.name}" role="tab">
-        ${shortName(p.name)}
-        <span class="province-tab__count">${p.total_fm||0}</span>
-      </button>`).join('')}
-  </div>`;
-}
 
 function shortName(name) {
   const map = {
