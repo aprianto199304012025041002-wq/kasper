@@ -163,37 +163,15 @@ switch ($route) {
         Response::json($result);
         break;
 
-    // ── GET /flush-cache ──────────────────────────────────────────────────
-    case 'flush-cache':
-        $cacheDir = __DIR__ . '/cache';
-        $deleted = 0;
-        if (is_dir($cacheDir)) {
-            foreach (glob("$cacheDir/*.cache") as $f) {
-                unlink($f); $deleted++;
-            }
-        }
-        Response::json(['status'=>'ok','deleted'=>$deleted,'time'=>date('c')]);
-        break;
-
     // ── GET /health ───────────────────────────────────────────────────────
     case 'health':
         try {
             $db->query('SELECT 1');
-            $count = $db->query("SELECT COUNT(*) FROM isr WHERE service='Broadcast' AND subservice='FM'")->fetchColumn();
-            $inRange = $db->query("SELECT COUNT(*) FROM isr WHERE service='Broadcast' AND subservice='FM' AND freq BETWEEN 87.5 AND 108.0")->fetchColumn();
-            $outRange = $db->query("SELECT COUNT(*), MIN(freq), MAX(freq) FROM isr WHERE service='Broadcast' AND subservice='FM' AND (freq < 87.5 OR freq > 108.0 OR freq IS NULL)")->fetch();
-            $byStatus = $db->query("SELECT status_simf, COUNT(*) as n FROM isr WHERE service='Broadcast' AND subservice='FM' GROUP BY status_simf ORDER BY n DESC")->fetchAll();
             Response::json([
-                'status'        => 'ok',
-                'db'            => 'connected',
-                'table'         => 'isr',
-                'fm_total'      => (int)$count,
-                'fm_in_range'   => (int)$inRange,
-                'fm_out_range'  => (int)$outRange[0],
-                'out_range_freq'=> ['min'=>$outRange[1],'max'=>$outRange[2]],
-                'by_status'     => $byStatus,
-                'version'       => '3.0',
-                'time'          => date('c'),
+                'status'  => 'ok',
+                'db'      => 'connected',
+                'version' => '3.0',
+                'time'    => date('c'),
             ]);
         } catch (Exception $e) {
             Response::json(['status' => 'error', 'detail' => $e->getMessage()], 503);
@@ -201,5 +179,5 @@ switch ($route) {
         break;
 
     default:
-        Response::notFound('Endpoint tidak ada. Tersedia: /stations, /provinces, /cities, /channels, /slots, /interference, /stats, /health');
+        Response::notFound('Endpoint tidak ada. Tersedia: /stations, /provinces, /cities, /channels, /slots, /interference, /stats');
 }
