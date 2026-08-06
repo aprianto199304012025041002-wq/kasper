@@ -446,7 +446,7 @@ function renderContent() {
       <div class="section-label">Peta kanal per wilayah · grid 200 kHz · 87.5–108.0 MHz · ${state.data.stations.length} stasiun aktif</div>
       <div class="grid-frame" style="padding:12px">
         ${cityRows.map(({ city, row }) => {
-          const usedCount = row.filter(c => c.type === 'used').length;
+          const usedCount = state.data.stations.filter(s => (s.kota || s.city) === city).length;
           const filtered = state.filterChanView === 'free'  ? row.filter(c => c.type === 'free') :
                            state.filterChanView === 'used'  ? row.filter(c => c.type === 'used') : row;
           return `<div class="city-row-block">
