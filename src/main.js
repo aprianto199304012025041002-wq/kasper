@@ -208,7 +208,7 @@ function renderHeader() {
       <div class="app-header__brand">
         <div class="app-header__mark"><span>FM</span></div>
         <div class="app-header__titles">
-          <h1>Peta Spektrum FM — ISR Balmon</h1>
+          <h1>KASPER — Kanal Spektrum Radio</h1>
           <p>Visualisasi kanal, slot kosong &amp; analisis interferensi</p>
         </div>
       </div>
