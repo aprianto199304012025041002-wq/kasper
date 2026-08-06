@@ -1,6 +1,5 @@
 // src/geoGridView.js — Geo Grid FM · Design language KOMENK
 import { FM_MIN, FM_MAX, CHANNEL_SPACING, ADJACENT_GUARD } from './channelEngine.js';
-import { fetchSpectrum } from './apiClient.js';
 
 const GRID = (() => {
   const chs = [], steps = Math.round((FM_MAX - FM_MIN) / CHANNEL_SPACING);
@@ -721,7 +720,8 @@ function attachCellEvents(container, cityRows) {
 
 // ── Main export ───────────────────────────────────────────────────────
 // geoSettings: { showAdj, showLabel, onlyFree, filterCities }
-export async function renderGeoGridView(container, currentProvince, currentFilters) {
+// preloadedStations: state.data.stations dari main.js (sumber tunggal data)
+export function renderGeoGridView(container, currentProvince, currentFilters, preloadedStations) {
   injectCSS();
   resetColors();
   _tt = null;
@@ -730,37 +730,24 @@ export async function renderGeoGridView(container, currentProvince, currentFilte
 
   const area = document.getElementById('ggGridArea');
 
-  const showAdj   = currentFilters?.showAdj   !== false;
-  const showLabel = currentFilters?.showLabel  !== false;
-  const onlyFree  = currentFilters?.onlyFree   === true;
-  const filterCities = currentFilters?.filterCities || []; // [] = semua
+  const showAdj      = currentFilters?.showAdj      !== false;
+  const showLabel    = currentFilters?.showLabel     !== false;
+  const onlyFree     = currentFilters?.onlyFree      === true;
+  const filterCities = currentFilters?.filterCities || [];
 
-  let allStations = [];
-
-  // ── Apply filters + re-render ──
-  function applyFilters() {
-    let stations = [...allStations];
-    if (filterCities.length > 0) {
-      stations = stations.filter(s =>
-        filterCities.includes((s.kota || s.city || '').toUpperCase().trim()) ||
-        filterCities.includes(s.kota || s.city || '')
-      );
-    }
-    const cityRows = buildCityRows(stations);
-    if (!stations.length) {
-      area.innerHTML = `<div class="gg-state"><span>Tidak ada stasiun untuk filter ini.</span></div>`;
-      return;
-    }
-    renderGrid(area, cityRows, { showAdj, showLabel, onlyFree });
+  let stations = (preloadedStations || []).map(s => ({ ...s, freq: parseFloat(s.freq) }));
+  if (filterCities.length > 0) {
+    stations = stations.filter(s =>
+      filterCities.includes((s.kota || s.city || '').toUpperCase().trim()) ||
+      filterCities.includes(s.kota || s.city || '')
+    );
   }
 
-  // ── Load data ──
-  area.innerHTML = `<div class="gg-state"><div class="gg-spinner"></div><span>Memuat data spektrum…</span></div>`;
-  try {
-    const data = await fetchSpectrum({});
-    allStations = (data.stations || []).map(s => ({ ...s, freq: parseFloat(s.freq) }));
-    applyFilters();
-  } catch (err) {
-    area.innerHTML = `<div class="gg-state"><span style="color:var(--red,#ef4444)">Gagal memuat: ${esc(err.message)}</span></div>`;
+  if (!stations.length) {
+    area.innerHTML = `<div class="gg-state"><span>Tidak ada stasiun untuk filter ini.</span></div>`;
+    return;
   }
+
+  const cityRows = buildCityRows(stations);
+  renderGrid(area, cityRows, { showAdj, showLabel, onlyFree });
 }

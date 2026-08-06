@@ -366,7 +366,8 @@ function renderContent() {
     renderGeoGridView(
       document.getElementById('geoGridContainer'),
       '',
-      filters
+      filters,
+      state.data?.stations || []
     );
     return;
   }
