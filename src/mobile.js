@@ -156,6 +156,10 @@ export function openDrawer() {
   if (_getStateFn) syncDrawer(_getStateFn());
   document.getElementById('kasperDrawer')?.classList.add('is-open');
   document.body.classList.add('drawer-open');
+  // Autofocus search setelah animasi selesai
+  setTimeout(() => {
+    document.getElementById('drawerSearch')?.focus();
+  }, 300);
 }
 
 function closeDrawer() {
@@ -300,7 +304,16 @@ export function initMobileUI(getState, onViewChange, onPageChange, onFilterChang
       };
     }
 
-    closeDrawer();
+    // Visual feedback: flash "✓" sebelum tutup
+    const applyBtn = document.getElementById('drawerApply');
+    if (applyBtn) {
+      const orig = applyBtn.textContent;
+      applyBtn.textContent = '✓ DITERAPKAN';
+      applyBtn.style.opacity = '.7';
+      setTimeout(() => { applyBtn.textContent = orig; applyBtn.style.opacity = ''; }, 600);
+    }
+
+    setTimeout(() => closeDrawer(), 180);
 
     onFilterChange(filterPayload);
 
@@ -331,8 +344,19 @@ export function initMobileUI(getState, onViewChange, onPageChange, onFilterChang
     const gridBtn = document.querySelector('.kd-view-btn[data-dview="grid"]');
     if (gridBtn) gridBtn.classList.add('is-active');
 
+    // Reset geo toggles ke default
+    const togAdj   = document.getElementById('geoTogAdj');
+    const togLabel = document.getElementById('geoTogLabel');
+    const togFree  = document.getElementById('geoTogFree');
+    if (togAdj)   togAdj.checked   = true;
+    if (togLabel) togLabel.checked = true;
+    if (togFree)  togFree.checked  = false;
+
     // Terapkan reset ke state sekaligus
-    onFilterChange({ filterCities: [], filterChanView: 'all', searchTerm: '' });
+    onFilterChange({
+      filterCities: [], filterChanView: 'all', searchTerm: '',
+      geoSettings: { showAdj: true, showLabel: true, onlyFree: false },
+    });
 
     // Kalau view bukan grid, reset ke grid
     if (state.view !== 'grid' || state.page !== 'main') {

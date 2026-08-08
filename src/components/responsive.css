@@ -73,7 +73,10 @@ body.drawer-open { overflow: hidden; }
   background: rgba(0,0,0,.65);
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
+  opacity: 0;
+  transition: opacity .28s cubic-bezier(.4,0,.2,1);
 }
+.kasper-drawer.is-open .kasper-drawer__backdrop { opacity: 1; }
 
 .kasper-drawer__panel {
   position: absolute; bottom: 0; left: 0; right: 0;
@@ -81,6 +84,7 @@ body.drawer-open { overflow: hidden; }
   border-top: 1px solid var(--border-mid);
   border-radius: 18px 18px 0 0;
   padding-bottom: env(safe-area-inset-bottom, 20px);
+  min-height: 240px;
   max-height: 88vh;
   display: flex; flex-direction: column;
   transform: translateY(100%);
@@ -187,6 +191,14 @@ body.drawer-open { overflow: hidden; }
 /* ── City chips (multi-select) ───────────────────────────────────────── */
 .kd-city-chips {
   display: flex; flex-wrap: wrap; gap: 6px;
+  max-height: 120px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-right: 2px;
+}
+.kd-city-chips::-webkit-scrollbar { width: 3px; }
+.kd-city-chips::-webkit-scrollbar-thumb {
+  background: var(--border-mid); border-radius: 2px;
 }
 
 .kd-city-chip {
