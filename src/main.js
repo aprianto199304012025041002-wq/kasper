@@ -142,15 +142,12 @@ async function handleClick(e) {
     if (state.page==='interference' && !state.interfData) await loadInterference();
     else renderContent(); return;
   }
-  if (e.target.id==='closeDetail') { document.getElementById('detailPanel')?.classList.remove('is-open'); return; }
   const cell = e.target.closest('.ch-cell[data-freq]');
   if (cell && state.data) {
     const ch = state.data.channel_map.find(c=>c.freq===parseFloat(cell.dataset.freq));
     if (ch?.type==='used') openDetailPage(ch.station);
     else if (ch) openInlineDetail(ch); return;
   }
-  const slot = e.target.closest('.slot-row[data-start]');
-  if (slot) { openSlotDetail(parseFloat(slot.dataset.start),parseFloat(slot.dataset.end)); return; }
   const nRow = e.target.closest('.neighbor-row[data-freq]');
   if (nRow) { openDetailPage({freq:parseFloat(nRow.dataset.freq)}); return; }
   if (e.target.id==='backBtn') {
@@ -203,7 +200,7 @@ function renderHeader() {
   return `<header class="app-header">
     <div class="app-header__inner">
       <div class="app-header__brand">
-        <div class="app-header__mark"><span>FM</span></div>
+        <div class="app-header__mark"><span>👻</span></div>
         <div class="app-header__titles">
           <h1>KASPER — Kanal Spektrum Radio</h1>
           <p>Visualisasi kanal, slot kosong &amp; analisis interferensi</p>
@@ -398,8 +395,6 @@ function renderContent() {
   if (state.filterChanView==='free') chMap=chMap.filter(c=>c.type==='free');
   if (state.filterChanView==='used') chMap=chMap.filter(c=>c.type==='used'||c.type==='adjacent_1'||c.type==='adjacent_2');
 
-  const freeBlocks = (state.data.free_blocks||[]).filter(b=>b.count>=2);
-
   // Apply search di FE
   const searchLower = (state.searchTerm || '').toLowerCase().trim();
   const matchSearch = (c) => {
@@ -441,7 +436,6 @@ function renderContent() {
     }).filter(({ row }) => row.some(c => c.type === 'used' || (searchLower && matchSearch(c))));
 
     el.innerHTML = `
-      <div class="section-label">Peta kanal per wilayah · grid 200 kHz · 87.5–108.0 MHz · ${state.data.stations.length} stasiun aktif</div>
       <div class="grid-frame" style="padding:12px">
         <div class="city-grid-scroll">
           <div class="city-grid-inner">
@@ -456,19 +450,14 @@ function renderContent() {
             }).join('')}
           </div>
         </div>
-      </div>
-      ${renderSlotSection(freeBlocks)}
-      <div class="detail-panel" id="detailPanel"></div>`;
+      </div>`;
     attachCellTooltips(state.data.channel_map);
   } else {
     el.innerHTML=`
-      <div class="section-label">Pita spektrum horizontal · tinggi blok ∝ ERP · klik untuk detail</div>
       <div class="band-view">
         <div class="band-ruler"><div class="band-ruler__inner" id="bandRuler"></div></div>
         <div class="band-track-wrap"><div class="band-track-inner" id="bandViewInner"></div></div>
-      </div>
-      ${renderSlotSection(freeBlocks)}
-      <div class="detail-panel" id="detailPanel"></div>`;
+      </div>`;
     renderBandRuler();
     const filteredForBand = searchLower
       ? (state.filterChanView==='all' ? baseMap : chMap).map(c =>
@@ -515,25 +504,6 @@ function renderCell(c) {
     <span class="ch-cell__freq">${c.freq.toFixed(1)}</span>
     <span class="ch-cell__name">★</span>
   </div>`;
-}
-
-// ── Slot section ──────────────────────────────────────────────────────
-function renderSlotSection(blocks) {
-  if (!blocks.length) return '';
-  return `<div class="section-label">Slot kosong potensial — ${blocks.length} blok ≥ 400 kHz</div>
-    <div class="slot-list">
-      ${blocks.map(b=>{
-        const r=b.priority||'low';
-        const lbl={high:'★★ Prioritas tinggi',medium:'★ Layak',low:'Marginal'}[r];
-        return `<div class="slot-row slot-row--${r}" data-start="${b.start}" data-end="${b.end}">
-          <div><div class="slot-row__main">${b.start.toFixed(1)}–${b.end.toFixed(1)}</div><div class="slot-row__sub">MHz</div></div>
-          <div><div class="slot-row__val">${b.width_khz??b.widthKHz} kHz</div><div class="slot-row__sub">lebar</div></div>
-          <div><div class="slot-row__val">${b.center.toFixed(1)} MHz</div><div class="slot-row__sub">kandidat center</div></div>
-          <div><div class="slot-row__val">${b.count} kanal</div><div class="slot-row__sub">@200 kHz</div></div>
-          <div style="text-align:right"><span class="badge badge--${r}">${lbl}</span></div>
-        </div>`;
-      }).join('')}
-    </div>`;
 }
 
 // ── Tooltip ───────────────────────────────────────────────────────────
@@ -598,55 +568,56 @@ function moveTooltip(e){
 }
 function hideTooltip(){ const tt=document.getElementById('tooltip'); if(tt) tt.style.display='none'; }
 
-// ── Inline detail panel ───────────────────────────────────────────────
-function openInlineDetail(info) {
-  const panel=document.getElementById('detailPanel');
-  if (!panel) return;
-  panel.classList.add('is-open');
-  const lower=info.lower??info.lower_mhz??(info.freq-.1);
-  const upper=info.upper??info.upper_mhz??(info.freq+.1);
-  if (info.type==='free') {
-    panel.innerHTML=`<div class="detail-panel__head">
-      <div class="detail-panel__title">Kanal ${info.freq.toFixed(1)} MHz — Kosong ★</div>
-      <button class="detail-panel__close" id="closeDetail">✕</button>
-    </div>
-    <div class="detail-grid">
-      <div><div class="detail-item__label">Center</div><div class="detail-item__value mono">${info.freq.toFixed(3)} MHz</div></div>
-      <div><div class="detail-item__label">Lower</div><div class="detail-item__value mono">${Number(lower).toFixed(4)} MHz</div></div>
-      <div><div class="detail-item__label">Upper</div><div class="detail-item__value mono">${Number(upper).toFixed(4)} MHz</div></div>
-      <div><div class="detail-item__label">Status</div><div class="detail-item__value" style="color:var(--signal-phosphor)">Tersedia untuk alokasi baru</div></div>
-    </div>`;
-  } else {
-    panel.innerHTML=`<div class="detail-panel__head">
-      <div class="detail-panel__title">${info.freq.toFixed(1)} MHz — Adjacent Protected</div>
-      <button class="detail-panel__close" id="closeDetail">✕</button>
-    </div>
-    <div class="detail-grid">
-      <div><div class="detail-item__label">Guard kiri</div><div class="detail-item__value">${esc(info.adj_left?.stn_name||'—')}</div></div>
-      <div><div class="detail-item__label">Guard kanan</div><div class="detail-item__value">${esc(info.adj_right?.stn_name||'—')}</div></div>
-    </div>`;
+// ── Cell detail drawer (bottom-up) ───────────────────────────────────
+function openCellDrawer(html) {
+  let el = document.getElementById('cellDrawer');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'cellDrawer';
+    el.className = 'cell-drawer';
+    el.innerHTML = `<div class="cell-drawer__backdrop"></div><div class="cell-drawer__panel" id="cellDrawerPanel"></div>`;
+    document.body.appendChild(el);
+    el.querySelector('.cell-drawer__backdrop').addEventListener('click', closeCellDrawer);
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeCellDrawer(); }, { passive: true });
   }
-  panel.scrollIntoView({behavior:'smooth',block:'nearest'});
+  document.getElementById('cellDrawerPanel').innerHTML = html;
+  el.classList.add('is-open');
+  document.body.classList.add('drawer-open');
 }
 
-function openSlotDetail(start,end) {
-  const panel=document.getElementById('detailPanel');
-  if (!panel) return;
-  panel.classList.add('is-open');
-  const center=Math.round(((start+end)/2)*10)/10;
-  panel.innerHTML=`<div class="detail-panel__head">
-    <div class="detail-panel__title">Slot kosong ${start.toFixed(1)}–${end.toFixed(1)} MHz</div>
-    <button class="detail-panel__close" id="closeDetail">✕</button>
-  </div>
-  <div class="detail-grid">
-    <div><div class="detail-item__label">Rentang</div><div class="detail-item__value mono">${start.toFixed(2)} – ${end.toFixed(2)} MHz</div></div>
-    <div><div class="detail-item__label">Lebar</div><div class="detail-item__value mono">${Math.round((end-start+.2)*1000)} kHz</div></div>
-    <div><div class="detail-item__label">Kandidat center</div><div class="detail-item__value mono">${center.toFixed(1)} MHz</div></div>
-    <div><div class="detail-item__label">Lower</div><div class="detail-item__value mono">${(center-.1).toFixed(3)} MHz</div></div>
-    <div><div class="detail-item__label">Upper</div><div class="detail-item__value mono">${(center+.1).toFixed(3)} MHz</div></div>
-    <div><div class="detail-item__label">Status</div><div class="detail-item__value" style="color:var(--signal-phosphor)">Layak diajukan izin baru</div></div>
-  </div>`;
-  panel.scrollIntoView({behavior:'smooth',block:'nearest'});
+function closeCellDrawer() {
+  document.getElementById('cellDrawer')?.classList.remove('is-open');
+  document.body.classList.remove('drawer-open');
+}
+
+function openInlineDetail(info) {
+  const lower = info.lower ?? info.lower_mhz ?? (info.freq - .1);
+  const upper = info.upper ?? info.upper_mhz ?? (info.freq + .1);
+  let html;
+  if (info.type === 'free') {
+    html = `
+      <div class="cd-head">
+        <div class="cd-title">📡 ${info.freq.toFixed(1)} MHz — Kosong ★</div>
+        <button class="cd-close" onclick="document.getElementById('cellDrawer').classList.remove('is-open');document.body.classList.remove('drawer-open')">✕</button>
+      </div>
+      <div class="cd-grid">
+        <div class="cd-item"><div class="cd-label">Center</div><div class="cd-val mono">${info.freq.toFixed(3)} MHz</div></div>
+        <div class="cd-item"><div class="cd-label">Lower</div><div class="cd-val mono">${Number(lower).toFixed(4)} MHz</div></div>
+        <div class="cd-item"><div class="cd-label">Upper</div><div class="cd-val mono">${Number(upper).toFixed(4)} MHz</div></div>
+        <div class="cd-item"><div class="cd-label">Status</div><div class="cd-val" style="color:var(--signal-phosphor)">Tersedia untuk alokasi baru</div></div>
+      </div>`;
+  } else {
+    html = `
+      <div class="cd-head">
+        <div class="cd-title">⚡ ${info.freq.toFixed(1)} MHz — Adjacent Protected</div>
+        <button class="cd-close" onclick="document.getElementById('cellDrawer').classList.remove('is-open');document.body.classList.remove('drawer-open')">✕</button>
+      </div>
+      <div class="cd-grid">
+        <div class="cd-item"><div class="cd-label">Guard kiri</div><div class="cd-val">${esc(info.adj_left?.stn_name || '—')}</div></div>
+        <div class="cd-item"><div class="cd-label">Guard kanan</div><div class="cd-val">${esc(info.adj_right?.stn_name || '—')}</div></div>
+      </div>`;
+  }
+  openCellDrawer(html);
 }
 
 function esc(str){const d=document.createElement('div');d.textContent=String(str);return d.innerHTML;}
