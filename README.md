@@ -1,18 +1,24 @@
-# ISR FM Spectrum — v3
+# KASPER — Kanal Spektrum Radio
 
-Aplikasi web visualisasi pita spektrum frekuensi FM berbasis data ISR (Izin Stasiun Radio) Balmon.
+Aplikasi web visualisasi spektrum frekuensi FM berbasis data ISR (Izin Stasiun Radio) Balmon.
+
+- **Live:** `kasper.balmonjogja.info`
+- **Stack:** Vite + Vanilla JS · PHP 8 + MySQL · Deploy Hostinger
+
+---
 
 ## Fitur
 
 | Fitur | Keterangan |
 |---|---|
-| **Peta kanal grid** | Grid 200 kHz · 87.5–108.0 MHz, warna per wilayah |
+| **Peta kanal grid** | Grid 100 kHz · 87.5–108.0 MHz, warna per wilayah |
 | **Pita horizontal** | View alternatif, tinggi blok proporsional ERP |
+| **Geo Grid** | Grid per kota dengan drawer filter (guard band, label, slot) |
 | **Slot kosong** | Deteksi dan ranking blok kanal kosong potensial |
 | **Detail stasiun** | Info lengkap + mini band strip + peta Leaflet + tetangga |
-| **Multi-provinsi** | Tab provinsi dinamis, filter wilayah |
 | **Analisis interferensi** | Model ITU-R BS.412: co-channel & adjacent channel |
-| **API PHP** | Backend MySQL dengan 7 endpoint, file cache 5 menit |
+| **Universal Drawer** | FAB → drawer kontrol: view, filter kota, search, geo settings |
+| **API PHP** | Backend MySQL dengan 8 endpoint, file cache 5 menit |
 | **Offline fallback** | Jika API tidak tersedia, pakai data JSON lokal otomatis |
 
 ---
@@ -20,36 +26,33 @@ Aplikasi web visualisasi pita spektrum frekuensi FM berbasis data ISR (Izin Stas
 ## Struktur repo
 
 ```
-isr-fm-spectrum/
+kasper/
 ├── index.html                  # Entry point frontend
 ├── vite.config.js
 ├── package.json
-├── .env.example                # Template konfigurasi URL API
-├── .github/workflows/
-│   └── deploy.yml              # Auto-deploy ke GitHub Pages
 │
 ├── src/                        # Frontend (Vite, Vanilla JS)
-│   ├── main.js                 # App utama
-│   ├── apiClient.js            # HTTP client + offline fallback
-│   ├── channelEngine.js        # Logic grid/gap analysis
+│   ├── main.js                 # App utama + state management
+│   ├── apiClient.js            # HTTP client + offline fallback + retry
+│   ├── channelEngine.js        # Logic grid/gap analysis (JS)
 │   ├── bandView.js             # Renderer pita horizontal
+│   ├── geoGridView.js          # Geo Grid per kota + drawer internal
 │   ├── detailPage.js           # Halaman detail stasiun + Leaflet map
 │   ├── interferenceView.js     # Panel analisis interferensi
-│   ├── style.css               # Design tokens global
+│   ├── mobile.js               # Universal Drawer + FAB
+│   ├── style.css               # Design tokens global (komenk palette)
 │   ├── data/
-│   │   └── stations.json       # Data stasiun FM Yogyakarta (fallback)
+│   │   └── stations.json       # Data stasiun FM fallback (offline)
 │   └── components/
+│       ├── responsive.css      # Drawer layout + breakpoints
 │       ├── header.css
 │       ├── stats.css
 │       ├── grid.css
 │       ├── band.css
-│       ├── province.css
 │       └── detail-page.css
 │
 └── api/                        # Backend PHP
-    ├── index.php               # Router API (7 endpoint)
-    ├── .htaccess               # URL rewrite Apache
-    ├── schema.sql              # Skema MySQL + seed provinsi
+    ├── index.php               # Router API (8 endpoint)
     └── src/
         ├── config.php          # Konfigurasi DB (env vars)
         ├── Database.php        # PDO singleton
@@ -63,18 +66,17 @@ isr-fm-spectrum/
 
 ---
 
-## Setup lokal (VS Code)
+## Setup lokal
 
 ### Prasyarat
 - Node.js ≥ 18
 - PHP ≥ 8.1 + MySQL (opsional, bisa tanpa backend)
-- Git
 
 ### 1. Clone dan install
 
 ```bash
-git clone https://github.com/<username>/<repo>.git
-cd isr-fm-spectrum
+git clone https://github.com/aprianto199304012025041002-wq/kasper.git
+cd kasper
 npm install
 ```
 
@@ -92,91 +94,37 @@ Buka `http://localhost:5173`. Data diambil dari `src/data/stations.json`.
 # Import skema
 mysql -u root -p < api/schema.sql
 
-# Import data dari isr.sql
+# Import data ISR
 mysql -u root -p isr_db < /path/to/isr.sql
 
-# Konfigurasi
-cp .env.example .env.local
-# Edit .env.local:
-# VITE_API_URL=http://localhost/isr-api/api
+# Konfigurasi env (edit api/src/config.php atau set env vars)
+# DB_HOST, DB_NAME, DB_USER, DB_PASS, CORS_ORIGIN
 
-# Salin folder api/ ke web root PHP, misal:
-cp -r api/ /var/www/html/isr-api/
+# Salin folder api/ ke web root PHP
+cp -r api/ /var/www/html/kasper-api/
 
 npm run dev
 ```
 
-### 4. VS Code extensions yang disarankan
-
-Install via VS Code → Extensions:
-- **ESLint** (`dbaeumer.vscode-eslint`)
-- **PHP Intelephense** (`bmewburn.vscode-intelephense-client`)
-- **GitLens** (`eamodio.gitlens`)
-- **Vite** (`antfu.vite`)
-
 ---
 
-## Deploy ke Hostinger via GitHub
+## Deploy ke Hostinger
 
-### A. Siapkan repo GitHub
+### Backend PHP
 
-```bash
-git init
-git add .
-git commit -m "feat: ISR FM Spectrum v3"
-git branch -M main
-git remote add origin https://github.com/<username>/<repo>.git
-git push -u origin main
-```
+1. Upload folder `api/` ke `public_html/api/`
+2. Buat database MySQL di hPanel → **Databases**
+3. Import `api/schema.sql` via phpMyAdmin
+4. Import data ISR via phpMyAdmin atau SSH
+5. Edit `api/src/config.php` — isi DB credentials
+6. Pastikan `api/cache/` writable: `chmod 755 api/cache/`
 
-### B. Deploy frontend ke GitHub Pages
+### Frontend
 
-1. Di GitHub: **Settings → Pages → Source → GitHub Actions**
-2. Workflow `.github/workflows/deploy.yml` sudah siap — setiap push ke `main` otomatis build dan deploy
-3. Jika pakai custom domain Hostinger:
-   - Di GitHub Pages: tambahkan custom domain (`spectrum.namadomain.com`)
-   - Di Hostinger DNS: tambahkan CNAME `spectrum` → `<username>.github.io`
+Frontend di-serve langsung dari Hostinger (`kasper.balmonjogja.info`). API URL sudah hardcode di `src/apiClient.js`:
 
-### C. Deploy backend PHP ke Hostinger
-
-1. Login ke **Hostinger hPanel → File Manager** atau pakai FTP/SSH
-2. Upload folder `api/` ke `public_html/api/` (atau subfolder sesuai struktur kamu)
-3. Buat database MySQL di hPanel → **Databases → MySQL Databases**
-4. Import skema:
-   ```bash
-   # Via phpMyAdmin di hPanel, atau SSH:
-   mysql -u user_db -p nama_db < api/schema.sql
-   ```
-5. Import data ISR:
-   ```bash
-   mysql -u user_db -p nama_db < isr.sql
-   ```
-6. Set environment variables — buat file `api/.env` atau edit langsung `api/src/config.php`:
-   ```php
-   'db' => [
-       'host' => 'localhost',
-       'name' => 'u123456_isr_db',   // nama DB dari hPanel
-       'user' => 'u123456_user',      // user DB dari hPanel
-       'pass' => 'password_db',
-   ]
-   ```
-7. Pastikan folder `api/cache/` bisa ditulis:
-   ```bash
-   chmod 755 api/cache/
-   ```
-
-### D. Hubungkan frontend ke backend Hostinger
-
-```bash
-# Edit .env.local (tidak di-commit ke git)
-echo "VITE_API_URL=https://namadomain.com/api" > .env.local
-
-# Build ulang
-npm run build
-
-# Upload dist/ ke GitHub → Pages otomatis update via Actions
-git add dist/ && git commit -m "build: update" && git push
-# atau biarkan Actions yang build otomatis dari source
+```js
+const API_BASE = 'https://kasper.balmonjogja.info/api';
 ```
 
 ---
@@ -200,47 +148,39 @@ git add dist/ && git commit -m "build: update" && git push
 ### Contoh request
 
 ```bash
-# Slot kosong DIY dengan minimal 2 kanal berurutan
-curl "https://api.namadomain.com/slots?province=DAERAH+ISTIMEWA+YOGYAKARTA&min_count=2"
+# Slot kosong dengan minimal 2 kanal berurutan
+curl "https://kasper.balmonjogja.info/api/slots?min_count=2"
 
 # Detail stasiun 106.1 MHz
-curl "https://api.namadomain.com/stations/106.1"
+curl "https://kasper.balmonjogja.info/api/stations/106.1"
 
 # Interferensi Sleman
-curl "https://api.namadomain.com/interference?city=SLEMAN"
+curl "https://kasper.balmonjogja.info/api/interference?city=SLEMAN"
 ```
 
 ---
 
-## Update data
-
-Jika ada update file `isr.sql` dari Balmon:
+## Update data ISR
 
 ```bash
-# Drop dan reimport
-mysql -u root -p isr_db -e "TRUNCATE TABLE isr_stations;"
+# Truncate dan reimport
+mysql -u root -p isr_db -e "TRUNCATE TABLE isr;"
 mysql -u root -p isr_db < isr_baru.sql
 
 # Bust cache API
 rm -f api/cache/*.cache
 ```
 
-Untuk update `stations.json` (fallback offline), jalankan script ekstraksi:
-
-```bash
-python3 scripts/extract_stations.py  # lihat folder scripts/
-```
-
 ---
 
-## Catatan model interferensi
+## Model interferensi
 
-Analisis interferensi menggunakan model **free-space path loss** berbasis ITU-R BS.412:
+Analisis menggunakan **free-space path loss** berbasis ITU-R BS.412:
 
 - **Co-channel**: protection ratio minimum 30 dB
 - **Adjacent ±200 kHz**: protection ratio minimum 20 dB
 - **2nd Adjacent ±400 kHz**: protection ratio minimum 10 dB
 - Radius evaluasi: 150 km per pasangan stasiun
-- **Prasyarat**: kolom `latitude` dan `longitude` di tabel `isr_stations` harus terisi
-hehehe
-Model ini adalah aproksimasi — untuk analisis resmi gunakan software propagasi ITU-R P.1546 atau SEAMCAT.
+- **Prasyarat**: kolom `latitude` dan `longitude` di tabel `isr` harus terisi
+
+Model ini adalah aproksimasi — untuk analisis resmi gunakan ITU-R P.1546 atau SEAMCAT.
