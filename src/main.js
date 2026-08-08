@@ -597,19 +597,10 @@ function openCellDrawer(html) {
   }
 
   const panel = document.getElementById('cellDrawerPanel');
+  panel.scrollTop = 0;
+  panel.innerHTML = html;
 
-  // Kalau drawer sudah terbuka (ganti konten dari kabupaten/grid lain):
-  // tutup dulu (slide ke bawah), ganti konten, buka lagi dari bawah
-  if (el.classList.contains('is-open')) {
-    el.classList.remove('is-open');
-    setTimeout(() => {
-      panel.innerHTML = html;
-      panel.scrollTop = 0;
-      el.classList.add('is-open');
-    }, 200); // tunggu animasi slide-down selesai
-  } else {
-    panel.innerHTML = html;
-    panel.scrollTop = 0;
+  if (!el.classList.contains('is-open')) {
     el.classList.add('is-open');
     document.body.classList.add('drawer-open');
   }
