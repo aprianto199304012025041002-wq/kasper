@@ -45,7 +45,8 @@
 .app-header__mark span { position: relative; }
 .app-header__titles h1 {
   font-size: 22px; font-weight: 700;
-  letter-spacing: -.02em;
+  letter-spacing: .05em;
+  text-transform: uppercase;
   color: var(--text-primary);
   font-family: var(--font-sans);
 }
