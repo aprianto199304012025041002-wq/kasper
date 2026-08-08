@@ -556,15 +556,17 @@ html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
   position: fixed; inset: 0; z-index: 1100;
   pointer-events: none;
 }
-.cell-drawer.is-open { pointer-events: all; }
+.cell-drawer.is-open { pointer-events: none; }
+.cell-drawer.is-open .cell-drawer__panel { pointer-events: all; }
 
 .cell-drawer__backdrop {
   position: fixed; inset: 0;
-  background: rgba(0,0,0,.6);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
+  background: rgba(0,0,0,.45);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
   opacity: 0;
   transition: opacity .22s cubic-bezier(.4,0,.2,1);
+  pointer-events: none;
 }
 .cell-drawer.is-open .cell-drawer__backdrop { opacity: 1; }
 
