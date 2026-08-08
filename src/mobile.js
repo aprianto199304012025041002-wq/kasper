@@ -348,9 +348,7 @@ export function initMobileUI(getState, onViewChange, onPageChange, onFilterChang
   };
 }
 
-export function openFilterDrawer() {
-  openDrawer();
-}
+export { openDrawer as openFilterDrawer };
 
 export function syncFilterBadge(state) {
   updateFabBadge(state);

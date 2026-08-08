@@ -57,9 +57,6 @@ async function boot() {
       <span class="live-dot"></span>&nbsp;Memuat data spektrum…
     </div>`;
 
-  try {
-  } catch(e) {}
-
   renderShell();
   attachEvents();
   await loadData();
@@ -123,11 +120,11 @@ function handleChange(e) {
   if (e.target.id==='fChanView') { state.filterChanView=e.target.value; renderContent(); }
 }
 
-let _st;
+let _searchDebounce;
 function handleInput(e) {
   if (e.target.id==='fSearch') {
-    clearTimeout(_st);
-    _st = setTimeout(() => { state.searchTerm=e.target.value; loadData(); }, 320);
+    clearTimeout(_searchDebounce);
+    _searchDebounce = setTimeout(() => { state.searchTerm=e.target.value; loadData(); }, 320);
   }
 }
 
@@ -449,7 +446,7 @@ function renderContent() {
         ${cityRows.map(({ city, row }) => {
           const usedCount = state.data.stations.filter(s => (s.kota || s.city) === city).length;
           const filtered = state.filterChanView === 'free'  ? row.filter(c => c.type === 'free') :
-                           state.filterChanView === 'used'  ? row.filter(c => c.type === 'used') : row;
+                           state.filterChanView === 'used'  ? row.filter(c => c.type === 'used' || c.type === 'adjacent_1' || c.type === 'adjacent_2') : row;
           return `<div class="city-row-block">
             <div class="city-row-label">${esc(city)} <span class="city-row-count">${usedCount}</span></div>
             <div class="ch-grid-row">${filtered.map(renderCell).join('')}</div>

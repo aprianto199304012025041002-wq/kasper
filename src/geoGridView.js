@@ -593,7 +593,6 @@ function renderCityRow(row, opts) {
       </div>`;
     }
     // free
-    const dimFree = opts.onlyFree === false ? '' : '';
     return `<div class="gg-ch free ${opts.onlyFree ? 'col-hl' : ''}" data-freq="${ch.freq}" data-city="${esc(city)}">
       <span class="gg-ch-freq">${ch.freq.toFixed(1)}</span>
       ${opts.showLabel ? `<span class="gg-ch-lbl">★</span>` : ''}

@@ -6,14 +6,23 @@ import { computeChannelMap, findFreeBlocks, summarize } from './channelEngine.js
 const API_BASE = 'https://kasper.balmonjogja.info/api';
 
 let _apiAvailable = null;
+let _apiCheckedAt = 0;
+const API_CACHE_MS = 60_000; // re-check setelah 1 menit jika sebelumnya gagal
+const FETCH_TIMEOUT_MS = 8000;
 
 async function checkApi() {
-  if (_apiAvailable !== null) return _apiAvailable;
+  const now = Date.now();
+  // Kalau sudah confirmed available di sesi ini, langsung pakai
+  if (_apiAvailable === true) return true;
+  // Kalau sebelumnya gagal, coba lagi setelah API_CACHE_MS
+  if (_apiAvailable === false && now - _apiCheckedAt < API_CACHE_MS) return false;
   try {
     const r = await fetch(`${API_BASE}/health`, { signal: AbortSignal.timeout(4000) });
     const d = await r.json();
+    _apiCheckedAt = now;
     return (_apiAvailable = r.ok && d.status === 'ok');
   } catch {
+    _apiCheckedAt = now;
     return (_apiAvailable = false);
   }
 }
@@ -23,7 +32,7 @@ async function apiFetch(endpoint, params = {}) {
   if (available) {
     const url = new URL(`${API_BASE}${endpoint}`);
     Object.entries(params).forEach(([k, v]) => { if (v) url.searchParams.set(k, v); });
-    const r = await fetch(url.toString());
+    const r = await fetch(url.toString(), { signal: AbortSignal.timeout(FETCH_TIMEOUT_MS) });
     if (!r.ok) throw new Error(`API error ${r.status}`);
     return r.json();
   }

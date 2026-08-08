@@ -12,7 +12,7 @@ return [
         'charset' => 'utf8mb4',
     ],
     'cors' => [
-        'allowed_origin' => getenv('CORS_ORIGIN') ?: '*',
+        'allowed_origin' => getenv('CORS_ORIGIN') ?: 'https://kasper.balmonjogja.info',
     ],
     'cache' => [
         'enabled' => true,
