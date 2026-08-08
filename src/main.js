@@ -145,8 +145,7 @@ async function handleClick(e) {
   const cell = e.target.closest('.ch-cell[data-freq]');
   if (cell && state.data) {
     const ch = state.data.channel_map.find(c=>c.freq===parseFloat(cell.dataset.freq));
-    if (ch?.type==='used') openDetailPage(ch.station);
-    else if (ch) openInlineDetail(ch); return;
+    if (ch) openInlineDetail(ch); return;
   }
   const nRow = e.target.closest('.neighbor-row[data-freq]');
   if (nRow) { openDetailPage({freq:parseFloat(nRow.dataset.freq)}); return; }
@@ -482,7 +481,7 @@ function renderContent() {
     renderBandView(
       filteredForBand,
       handleBandHover,
-      info=>{ if(info.type==='used') openDetailPage(info.station); else openInlineDetail(info); }
+      info=>{ openInlineDetail(info); }
     );
   }
 }
@@ -607,33 +606,85 @@ function closeCellDrawer() {
 }
 
 function openInlineDetail(info) {
-  const lower = info.lower ?? info.lower_mhz ?? (info.freq - .1);
-  const upper = info.upper ?? info.upper_mhz ?? (info.freq + .1);
-  let html;
-  if (info.type === 'free') {
-    html = `
-      <div class="cd-head">
-        <div class="cd-title">📡 ${info.freq.toFixed(1)} MHz — Kosong ★</div>
-        <button class="cd-close" onclick="document.getElementById('cellDrawer').classList.remove('is-open');document.body.classList.remove('drawer-open')">✕</button>
-      </div>
-      <div class="cd-grid">
-        <div class="cd-item"><div class="cd-label">Center</div><div class="cd-val mono">${info.freq.toFixed(3)} MHz</div></div>
-        <div class="cd-item"><div class="cd-label">Lower</div><div class="cd-val mono">${Number(lower).toFixed(4)} MHz</div></div>
-        <div class="cd-item"><div class="cd-label">Upper</div><div class="cd-val mono">${Number(upper).toFixed(4)} MHz</div></div>
-        <div class="cd-item"><div class="cd-label">Status</div><div class="cd-val" style="color:var(--signal-phosphor)">Tersedia untuk alokasi baru</div></div>
-      </div>`;
+  const freq = info.freq;
+  const lower = (info.lower ?? info.lower_mhz ?? (freq - .1));
+  const upper = (info.upper ?? info.upper_mhz ?? (freq + .1));
+
+  const TYPE_META = {
+    used:       { badge: 'TERPAKAI',   badgeClass: 'cd-badge--used',  icon: '📻' },
+    adjacent_1: { badge: 'ADJ-1',      badgeClass: 'cd-badge--adj1',  icon: '⚡' },
+    adjacent_2: { badge: 'ADJ-2',      badgeClass: 'cd-badge--adj2',  icon: '〰' },
+    free:       { badge: 'KOSONG',     badgeClass: 'cd-badge--free',  icon: '★'  },
+  };
+  const meta = TYPE_META[info.type] || TYPE_META.free;
+
+  // Baris konten per type — format [label, value, mono?]
+  let rows = [];
+  let cta = '';
+
+  if (info.type === 'used') {
+    const s = info.station || {};
+    rows = [
+      ['Frekuensi',  freq.toFixed(3) + ' MHz',           true],
+      ['Lower edge', Number(lower).toFixed(4) + ' MHz',  true],
+      ['Upper edge', Number(upper).toFixed(4) + ' MHz',  true],
+      ['Nama stasiun', s.stn_name || '—',                false],
+      ['Wilayah',    s.kota || s.city || '—',            false],
+      ['ERP',        s.erp_dbm ? s.erp_dbm + ' dBm' : '—', true],
+    ];
+    cta = `<button class="cd-cta" id="cdCtaDetail">Lihat detail stasiun →</button>`;
+  } else if (info.type === 'adjacent_1') {
+    rows = [
+      ['Frekuensi',  freq.toFixed(3) + ' MHz',           true],
+      ['Lower edge', Number(lower).toFixed(4) + ' MHz',  true],
+      ['Upper edge', Number(upper).toFixed(4) + ' MHz',  true],
+      ['Guard kiri', info.adj_left?.stn_name  || '—',    false],
+      ['Guard kanan',info.adj_right?.stn_name || '—',    false],
+      ['Proteksi',   '20 dB separation',                 true],
+    ];
+  } else if (info.type === 'adjacent_2') {
+    rows = [
+      ['Frekuensi',  freq.toFixed(3) + ' MHz',           true],
+      ['Lower edge', Number(lower).toFixed(4) + ' MHz',  true],
+      ['Upper edge', Number(upper).toFixed(4) + ' MHz',  true],
+      ['Guard kiri', info.adj_left?.stn_name  || '—',    false],
+      ['Guard kanan',info.adj_right?.stn_name || '—',    false],
+      ['Proteksi',   '10 dB separation',                 true],
+    ];
   } else {
-    html = `
-      <div class="cd-head">
-        <div class="cd-title">⚡ ${info.freq.toFixed(1)} MHz — Adjacent Protected</div>
-        <button class="cd-close" onclick="document.getElementById('cellDrawer').classList.remove('is-open');document.body.classList.remove('drawer-open')">✕</button>
-      </div>
-      <div class="cd-grid">
-        <div class="cd-item"><div class="cd-label">Guard kiri</div><div class="cd-val">${esc(info.adj_left?.stn_name || '—')}</div></div>
-        <div class="cd-item"><div class="cd-label">Guard kanan</div><div class="cd-val">${esc(info.adj_right?.stn_name || '—')}</div></div>
-      </div>`;
+    rows = [
+      ['Frekuensi',  freq.toFixed(3) + ' MHz',           true],
+      ['Lower edge', Number(lower).toFixed(4) + ' MHz',  true],
+      ['Upper edge', Number(upper).toFixed(4) + ' MHz',  true],
+      ['Lebar kanal','200 kHz',                          true],
+      ['Status',     'Tersedia untuk alokasi baru',      false],
+    ];
   }
+
+  const html = `
+    <div class="cd-head">
+      <div class="cd-head-left">
+        <span class="cd-badge ${meta.badgeClass}">${meta.icon} ${meta.badge}</span>
+        <span class="cd-freq">${freq.toFixed(1)} MHz</span>
+      </div>
+      <button class="cd-close" id="cdClose">✕</button>
+    </div>
+    <div class="cd-grid">
+      ${rows.map(([l, v, mono]) => `
+        <div class="cd-item">
+          <div class="cd-label">${esc(l)}</div>
+          <div class="cd-val${mono ? ' mono' : ''}">${esc(String(v))}</div>
+        </div>`).join('')}
+    </div>
+    ${cta}`;
+
   openCellDrawer(html);
+
+  document.getElementById('cdClose')?.addEventListener('click', closeCellDrawer);
+  document.getElementById('cdCtaDetail')?.addEventListener('click', () => {
+    closeCellDrawer();
+    openDetailPage(info.station);
+  });
 }
 
 function esc(str){const d=document.createElement('div');d.textContent=String(str);return d.innerHTML;}
