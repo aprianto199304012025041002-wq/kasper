@@ -165,16 +165,31 @@ input.control-input:focus{border-color:var(--accent);outline:none;}
   color: var(--accent);
 }
 
+/* ── Shared horizontal scroll wrapper ───────────────────────────────── */
+.city-grid-scroll {
+  overflow-x: auto;
+  overflow-y: visible;
+  padding-bottom: 8px;
+}
+
+/* Scrollbar tunggal di bawah semua grid */
+.city-grid-scroll::-webkit-scrollbar { height: 6px; }
+.city-grid-scroll::-webkit-scrollbar-track { background: var(--bg-input); border-radius: 3px; }
+.city-grid-scroll::-webkit-scrollbar-thumb { background: var(--border-mid); border-radius: 3px; }
+.city-grid-scroll::-webkit-scrollbar-thumb:hover { background: var(--text-tertiary); }
+
+/* Inner container — lebar mengikuti konten, semua row sejajar */
+.city-grid-inner {
+  display: inline-block;
+  min-width: 100%;
+}
+
 .ch-grid-row {
   display: flex;
   flex-wrap: nowrap;
   gap: 2px;
-  overflow-x: auto;
-  padding-bottom: 4px;
+  /* tidak ada overflow sendiri — ikut parent scroll */
 }
-
-.ch-grid-row::-webkit-scrollbar { height: 3px; }
-.ch-grid-row::-webkit-scrollbar-thumb { background: var(--border-mid); border-radius: 2px; }
 
 /* Ukuran cell baru — lebih ramping */
 .ch-cell {
