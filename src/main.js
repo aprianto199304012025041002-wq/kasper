@@ -595,13 +595,30 @@ function openCellDrawer(html) {
     el.querySelector('.cell-drawer__backdrop').addEventListener('click', closeCellDrawer);
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeCellDrawer(); }, { passive: true });
   }
-  document.getElementById('cellDrawerPanel').innerHTML = html;
-  el.classList.add('is-open');
-  document.body.classList.add('drawer-open');
+
+  const panel = document.getElementById('cellDrawerPanel');
+
+  // Kalau drawer sudah terbuka (ganti konten dari kabupaten/grid lain):
+  // tutup dulu (slide ke bawah), ganti konten, buka lagi dari bawah
+  if (el.classList.contains('is-open')) {
+    el.classList.remove('is-open');
+    setTimeout(() => {
+      panel.innerHTML = html;
+      panel.scrollTop = 0;
+      el.classList.add('is-open');
+    }, 200); // tunggu animasi slide-down selesai
+  } else {
+    panel.innerHTML = html;
+    panel.scrollTop = 0;
+    el.classList.add('is-open');
+    document.body.classList.add('drawer-open');
+  }
 }
 
 function closeCellDrawer() {
-  document.getElementById('cellDrawer')?.classList.remove('is-open');
+  const el = document.getElementById('cellDrawer');
+  if (!el) return;
+  el.classList.remove('is-open');
   document.body.classList.remove('drawer-open');
 }
 
