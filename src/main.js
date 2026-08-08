@@ -217,7 +217,7 @@ function renderHeader() {
       <div class="app-header__brand">
         <div class="app-header__mark"><span>👻</span></div>
         <div class="app-header__titles">
-          <h1>KASPER — Kanal Spektrum Radio</h1>
+          <h1>KASPER — KANAL SPEKTRUM RADIO</h1>
           <p>Visualisasi kanal, slot kosong &amp; analisis interferensi</p>
         </div>
       </div>

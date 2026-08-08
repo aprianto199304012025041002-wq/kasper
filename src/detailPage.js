@@ -54,8 +54,8 @@ export function renderDetailPage(data, onBack, allData, targetEl) {
         <div class="app-header__brand">
           <div class="app-header__mark"><span>👻</span></div>
           <div class="app-header__titles">
-            <h1>${esc(stnName)}</h1>
-            <p>Detail Stasiun · ${freq.toFixed(1)} MHz · ${esc(kota)}</p>
+            <h1>KASPER — KANAL SPEKTRUM RADIO</h1>
+            <p>${esc(stnName)} · ${freq.toFixed(1)} MHz · ${esc(kota)}</p>
           </div>
         </div>
       </div>
