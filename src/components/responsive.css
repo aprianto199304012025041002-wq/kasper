@@ -500,7 +500,57 @@ html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
 * { -webkit-tap-highlight-color: transparent; }
 
 /* ══════════════════════════════════════════════════════════════════════
-   CELL DETAIL DRAWER — bottom-up, mobile & desktop
+   STATION DETAIL DRAWER — full-height bottom sheet
+   ══════════════════════════════════════════════════════════════════════ */
+.station-drawer {
+  position: fixed; inset: 0; z-index: 1200;
+  pointer-events: none;
+}
+.station-drawer.is-open { pointer-events: all; }
+
+.station-drawer__backdrop {
+  position: absolute; inset: 0;
+  background: rgba(0,0,0,.7);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  opacity: 0;
+  transition: opacity .28s cubic-bezier(.4,0,.2,1);
+}
+.station-drawer.is-open .station-drawer__backdrop { opacity: 1; }
+
+.station-drawer__panel {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  background: var(--bg-base, #080b10);
+  border-top: 1px solid var(--border-mid, rgba(255,255,255,.08));
+  border-radius: 20px 20px 0 0;
+  height: 92vh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  transform: translateY(100%);
+  transition: transform .28s cubic-bezier(.4,0,.2,1);
+}
+.station-drawer.is-open .station-drawer__panel { transform: translateY(0); }
+
+/* handle bar */
+.station-drawer__panel::before {
+  content: '';
+  display: block;
+  width: 36px; height: 4px;
+  background: var(--border-mid, rgba(255,255,255,.15));
+  border-radius: 2px;
+  margin: 12px auto 0;
+  position: sticky; top: 12px; z-index: 1;
+}
+
+/* Tombol kembali di dalam drawer */
+.station-drawer__panel .back-btn {
+  margin: 16px 24px 0;
+}
+
+@media (max-width: 640px) {
+  .station-drawer__panel { height: 96vh; border-radius: 16px 16px 0 0; }
+}
+
    ══════════════════════════════════════════════════════════════════════ */
 .cell-drawer {
   position: fixed; inset: 0; z-index: 1100;

@@ -24,7 +24,7 @@ const FM_MIN = 87.5, FM_MAX = 108.0;
  * @param {Function} onBack - callback untuk kembali ke halaman utama
  * @param {Object}  allData - data spektrum lengkap (untuk mini band strip)
  */
-export function renderDetailPage(data, onBack, allData) {
+export function renderDetailPage(data, onBack, allData, targetEl) {
   const s   = data.data;
   const nbr = data.neighbors || [];
 
@@ -47,11 +47,12 @@ export function renderDetailPage(data, onBack, allData) {
   const lat       = parseFloat(s.latitude)  || null;
   const lon       = parseFloat(s.longitude) || null;
 
-  document.getElementById('app').innerHTML = `
+  const root = targetEl || document.getElementById('app');
+  root.innerHTML = `
     <header class="app-header">
       <div class="app-header__inner">
         <div class="app-header__brand">
-          <div class="app-header__mark"><span>FM</span></div>
+          <div class="app-header__mark"><span>👻</span></div>
           <div class="app-header__titles">
             <h1>${esc(stnName)}</h1>
             <p>Detail Stasiun · ${freq.toFixed(1)} MHz · ${esc(kota)}</p>
@@ -148,7 +149,7 @@ export function renderDetailPage(data, onBack, allData) {
     </main>
   `;
 
-  document.getElementById('backBtn').addEventListener('click', onBack);
+  root.querySelector('#backBtn')?.addEventListener('click', onBack);
 
   // Peta Leaflet
   initMap(lat, lon, stnName, freq, nbr);

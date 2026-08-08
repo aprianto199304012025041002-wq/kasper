@@ -150,9 +150,6 @@ async function handleClick(e) {
   }
   const nRow = e.target.closest('.neighbor-row[data-freq]');
   if (nRow) { openDetailPage({freq:parseFloat(nRow.dataset.freq)}); return; }
-  if (e.target.id==='backBtn') {
-    state.page='main'; renderShell(); attachEvents(); renderContent(); return;
-  }
 }
 
 // ── Data loading ──────────────────────────────────────────────────────
@@ -182,16 +179,35 @@ async function loadInterference() {
 
 async function openDetailPage(stationOrFreq) {
   const freq = stationOrFreq.freq ?? stationOrFreq;
-  const dc = document.getElementById('dynamicContent');
-  if (dc) dc.innerHTML=`<div style="padding:48px;text-align:center;font-family:var(--font-mono);font-size:13px;color:var(--text-tertiary)"><span class="live-dot"></span> Memuat detail…</div>`;
+
+  // Buka drawer dulu dengan loading state
+  let el = document.getElementById('stationDrawer');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'stationDrawer';
+    el.className = 'station-drawer';
+    el.innerHTML = `<div class="station-drawer__backdrop"></div><div class="station-drawer__panel" id="stationDrawerPanel"></div>`;
+    document.body.appendChild(el);
+    el.querySelector('.station-drawer__backdrop').addEventListener('click', closeStationDrawer);
+  }
+  document.getElementById('stationDrawerPanel').innerHTML =
+    `<div style="padding:48px;text-align:center;font-family:var(--font-mono);font-size:13px;color:var(--text-tertiary)"><span class="live-dot"></span> Memuat detail…</div>`;
+  el.classList.add('is-open');
+  document.body.classList.add('drawer-open');
+
   try {
     const detail = await fetchStationDetail(parseFloat(freq));
-    renderDetailPage(detail, ()=>{
-      state.page='main'; renderShell(); attachEvents(); renderContent();
-    }, state.data);
+    const panel = document.getElementById('stationDrawerPanel');
+    renderDetailPage(detail, closeStationDrawer, state.data, panel);
   } catch(e) {
-    if (dc) dc.innerHTML=`<div class="empty-state">Gagal memuat detail: ${e.message}</div>`;
+    const panel = document.getElementById('stationDrawerPanel');
+    if (panel) panel.innerHTML = `<div class="empty-state" style="padding:32px">Gagal memuat detail: ${e.message}</div>`;
   }
+}
+
+function closeStationDrawer() {
+  document.getElementById('stationDrawer')?.classList.remove('is-open');
+  document.body.classList.remove('drawer-open');
 }
 
 // ── Header ────────────────────────────────────────────────────────────
