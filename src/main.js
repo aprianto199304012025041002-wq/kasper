@@ -95,6 +95,13 @@ function renderShell() {
   document.getElementById('app').innerHTML = `
     ${renderHeader()}
     <div id="statsBar" style="padding:0 32px;margin-top:16px"></div>
+    <div class="view-tab-bar">
+      <button class="view-tab ${state.view==='grid'?'is-active':''}" data-view="grid">⊞ Grid</button>
+      <button class="view-tab ${state.view==='band'?'is-active':''}" data-view="band">▬ Pita</button>
+      <button class="view-tab ${state.view==='geo'?'is-active':''}" data-view="geo">⊟ Geo Grid</button>
+      <div class="view-tab-sep"></div>
+      <button class="view-tab ${state.page==='interference'?'is-active':''}" data-page="interference">⚡ Interferensi</button>
+    </div>
     <main class="main-content" style="padding-top:12px">
       <div id="controlsBar" class="controls-bar"></div>
       <div id="legendBar"></div>
@@ -133,12 +140,15 @@ async function handleClick(e) {
   if (vtBtn && !vtBtn.dataset.page) {
     state.view=vtBtn.dataset.view;
     document.querySelectorAll('[data-view]').forEach(b=>b.classList.toggle('is-active',b.dataset.view===state.view));
-    renderContent(); return;
+    document.querySelectorAll('[data-page]').forEach(b=>b.classList.remove('is-active'));
+    state.page = 'main';
+    renderControls(); renderContent(); return;
   }
   const pagBtn = e.target.closest('[data-page]');
   if (pagBtn) {
     state.page=pagBtn.dataset.page;
     document.querySelectorAll('[data-page]').forEach(b=>b.classList.toggle('is-active',b.dataset.page===state.page));
+    document.querySelectorAll('[data-view]').forEach(b=>b.classList.remove('is-active'));
     if (state.page==='interference' && !state.interfData) await loadInterference();
     else renderContent(); return;
   }
@@ -293,7 +303,6 @@ function renderControls() {
   const hideCity = state.view === 'geo';
 
   el.innerHTML = `
-
     ${state.view !== 'geo' ? `<div class="control-group">
       <span class="control-group__label">Tampilkan</span>
       <select class="control-input" id="fChanView">
@@ -308,13 +317,7 @@ function renderControls() {
       ⚙ Filter
       <span class="mob-badge"></span>
     </button>
-    <div style="display:flex;gap:6px;margin-left:auto;align-items:center">
-      <div class="view-toggle">
-        <button class="view-toggle__btn ${state.view==='grid'?'is-active':''}" data-view="grid">⊞ Grid</button>
-        <button class="view-toggle__btn ${state.view==='band'?'is-active':''}" data-view="band">▬ Pita</button>
-        <button class="view-toggle__btn ${state.view==='geo'?'is-active':''}" data-view="geo">⊟ Geo Grid</button>
-        <button class="view-toggle__btn ${state.page==='interference'?'is-active':''}" data-page="interference">⚡ Interferensi</button>
-      </div>
+    <div style="margin-left:auto;display:flex;align-items:center">
       ${src}
     </div>`;
 }

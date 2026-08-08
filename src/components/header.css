@@ -80,3 +80,43 @@
   .app-header { padding: 14px 16px; }
   .app-header__meta { display: none; }
 }
+
+/* ── View tab bar ─────────────────────────────────────────────────── */
+.view-tab-bar {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 0 32px;
+  border-bottom: 1px solid var(--border-mid);
+  background: var(--bg-panel);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.view-tab-bar::-webkit-scrollbar { display: none; }
+
+.view-tab {
+  flex-shrink: 0;
+  padding: 12px 20px;
+  background: none; border: none; cursor: pointer;
+  font-family: var(--font-mono); font-size: 12px; font-weight: 600;
+  color: var(--text-tertiary);
+  letter-spacing: .05em;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  transition: color .15s, border-color .15s;
+  white-space: nowrap;
+}
+.view-tab:hover { color: var(--text-secondary); }
+.view-tab.is-active {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+
+.view-tab-sep {
+  flex: 1;
+}
+
+@media (max-width: 640px) {
+  .view-tab-bar { padding: 0 8px; }
+  .view-tab { padding: 10px 14px; font-size: 11px; }
+}
