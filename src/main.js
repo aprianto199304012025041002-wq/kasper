@@ -525,10 +525,10 @@ function renderCell(c) {
 
 // ── Band view: SVG spectrum per kota ─────────────────────────────────
 const FM_MIN_B = 87.5, FM_MAX_B = 108.0;
-const SVG_W_PER_MHZ = 52;   // sama dengan grid cell spacing
-const SVG_H = 72;            // tinggi track
-const AMP_MIN = 8, AMP_MAX = 34;   // amplitudo sinus (px)
-const SINE_STEPS = 40;       // resolusi kurva per channel
+const SVG_W_PER_MHZ = 52;
+const SVG_H = 90;
+const AMP_MIN = 10, AMP_MAX = 40;
+const SINE_STEPS = 40;
 
 function erpAmp(erp) {
   const ratio = Math.max(0, Math.min(1, ((erp || 60) - 40) / (78 - 40)));
@@ -541,24 +541,23 @@ function freqToX(freq) {
 
 function renderBandSVG(row, city) {
   const totalW = (FM_MAX_B - FM_MIN_B) * SVG_W_PER_MHZ + 40;
-  const cy = SVG_H / 2;   // garis tengah
+  const cy = SVG_H - 10;  // baseline dekat bawah
   const color = cityColor(city);
 
-  let pathParts = [];    // path segmen gelombang
-  let adjRects  = [];    // rect adjacent
-  let freeMarks = [];    // titik free
-  let hitAreas  = [];    // invisible hit targets
-  let labels    = [];    // label frekuensi
+  let paths   = [];
+  let markers = [];
+  let hits    = [];
+  let labels  = [];
+
+  const slotHalfW = SVG_W_PER_MHZ * 0.1; // lebar 200 kHz / 2
 
   for (const c of row) {
     const x = freqToX(c.freq);
-    const slotW = SVG_W_PER_MHZ * 0.2; // lebar 200 kHz dalam px
 
     if (c.type === 'used') {
       const amp = erpAmp(c.station?.erp_dbm);
-      // Gambar satu arch sinus penuh dari x-slotW/2 ke x+slotW/2
-      const x0 = x - slotW;
-      const x1 = x + slotW;
+      const x0 = x - slotHalfW * 2;
+      const x1 = x + slotHalfW * 2;
       const pts = [];
       for (let i = 0; i <= SINE_STEPS; i++) {
         const t = i / SINE_STEPS;
@@ -566,40 +565,35 @@ function renderBandSVG(row, city) {
         const py = cy - amp * Math.sin(Math.PI * t);
         pts.push(`${i === 0 ? 'M' : 'L'}${px.toFixed(1)},${py.toFixed(1)}`);
       }
-      pathParts.push(`<path d="${pts.join(' ')}" stroke="${color}" stroke-width="2" fill="none" opacity="0.9"/>`);
-      // Area fill di bawah arch
-      const fillPts = [...pts, `L${x1.toFixed(1)},${cy} L${x0.toFixed(1)},${cy} Z`];
-      pathParts.push(`<path d="${fillPts.join(' ')}" fill="${color}" opacity="0.12"/>`);
-      // Label frekuensi
-      labels.push(`<text x="${x.toFixed(1)}" y="${(cy - amp - 5).toFixed(1)}" text-anchor="middle" font-size="7" fill="${color}" opacity="0.8">${c.freq.toFixed(1)}</text>`);
-      // Hit area
-      hitAreas.push(`<rect class="band-hit" data-freq="${c.freq}" x="${(x - slotW).toFixed(1)}" y="0" width="${(slotW * 2).toFixed(1)}" height="${SVG_H}" fill="transparent" style="cursor:pointer"/>`);
+      const d = pts.join(' ');
+      const fillD = `${d} L${x1.toFixed(1)},${cy} L${x0.toFixed(1)},${cy} Z`;
+      paths.push(`<path d="${fillD}" fill="${color}" opacity="0.15"/>`);
+      paths.push(`<path d="${d}" stroke="${color}" stroke-width="1.8" fill="none" opacity="0.95"/>`);
+      labels.push(`<text x="${x.toFixed(1)}" y="${(cy - amp - 4).toFixed(1)}" text-anchor="middle" font-size="7" fill="${color}" opacity="0.85" font-family="monospace">${c.freq.toFixed(1)}</text>`);
+      hits.push(`<rect class="band-hit" data-freq="${c.freq}" x="${x0.toFixed(1)}" y="0" width="${(x1 - x0).toFixed(1)}" height="${SVG_H}" fill="transparent" style="cursor:pointer"/>`);
 
     } else if (c.type === 'adjacent_1') {
-      adjRects.push(`<rect x="${(x - slotW/2).toFixed(1)}" y="${(cy - 6).toFixed(1)}" width="${slotW.toFixed(1)}" height="12" rx="2" fill="rgba(255,160,0,0.2)" stroke="rgba(255,160,0,0.5)" stroke-width="0.5"/>
-        <rect class="band-hit" data-freq="${c.freq}" x="${(x - slotW).toFixed(1)}" y="0" width="${(slotW * 2).toFixed(1)}" height="${SVG_H}" fill="transparent" style="cursor:pointer"/>`);
+      markers.push(`<line x1="${x.toFixed(1)}" y1="${cy}" x2="${x.toFixed(1)}" y2="${(cy - 6).toFixed(1)}" stroke="rgba(255,160,0,0.6)" stroke-width="1.5"/>`);
+      hits.push(`<rect class="band-hit" data-freq="${c.freq}" x="${(x - slotHalfW).toFixed(1)}" y="0" width="${(slotHalfW * 2).toFixed(1)}" height="${SVG_H}" fill="transparent" style="cursor:pointer"/>`);
 
     } else if (c.type === 'adjacent_2') {
-      adjRects.push(`<rect x="${(x - slotW/2).toFixed(1)}" y="${(cy - 4).toFixed(1)}" width="${slotW.toFixed(1)}" height="8" rx="2" fill="rgba(255,100,0,0.15)" stroke="rgba(255,100,0,0.4)" stroke-width="0.5"/>
-        <rect class="band-hit" data-freq="${c.freq}" x="${(x - slotW).toFixed(1)}" y="0" width="${(slotW * 2).toFixed(1)}" height="${SVG_H}" fill="transparent" style="cursor:pointer"/>`);
+      markers.push(`<line x1="${x.toFixed(1)}" y1="${cy}" x2="${x.toFixed(1)}" y2="${(cy - 3).toFixed(1)}" stroke="rgba(255,100,0,0.5)" stroke-width="1"/>`);
+      hits.push(`<rect class="band-hit" data-freq="${c.freq}" x="${(x - slotHalfW).toFixed(1)}" y="0" width="${(slotHalfW * 2).toFixed(1)}" height="${SVG_H}" fill="transparent" style="cursor:pointer"/>`);
 
     } else {
-      // free — titik kecil di garis tengah
-      freeMarks.push(`<circle cx="${x.toFixed(1)}" cy="${cy}" r="2" fill="rgba(0,230,118,0.3)" stroke="rgba(0,230,118,0.5)" stroke-width="0.5"/>
-        <rect class="band-hit" data-freq="${c.freq}" x="${(x - slotW).toFixed(1)}" y="0" width="${(slotW * 2).toFixed(1)}" height="${SVG_H}" fill="transparent" style="cursor:pointer"/>`);
+      markers.push(`<circle cx="${x.toFixed(1)}" cy="${cy}" r="1.5" fill="rgba(0,230,118,0.4)"/>`);
+      hits.push(`<rect class="band-hit" data-freq="${c.freq}" x="${(x - slotHalfW).toFixed(1)}" y="0" width="${(slotHalfW * 2).toFixed(1)}" height="${SVG_H}" fill="transparent" style="cursor:pointer"/>`);
     }
   }
 
-  // Garis baseline tengah
-  const baseline = `<line x1="0" y1="${cy}" x2="${totalW}" y2="${cy}" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>`;
+  const baseline = `<line x1="0" y1="${cy}" x2="${totalW}" y2="${cy}" stroke="rgba(255,255,255,0.07)" stroke-width="1"/>`;
 
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${totalW}" height="${SVG_H}" style="display:block;overflow:visible">
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${totalW}" height="${SVG_H}" style="display:block">
     ${baseline}
-    ${adjRects.join('')}
-    ${freeMarks.join('')}
-    ${pathParts.join('')}
+    ${markers.join('')}
+    ${paths.join('')}
     ${labels.join('')}
-    ${hitAreas.join('')}
+    ${hits.join('')}
   </svg>`;
 }
 
