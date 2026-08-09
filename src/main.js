@@ -5,10 +5,8 @@ import './components/grid.css';
 import './components/band.css';
 import './components/detail-page.css';
 import { fetchSpectrum, fetchStationDetail, fetchInterference, isUsingFallback } from './apiClient.js';
-import { renderBandView } from './bandView.js';
 import { renderDetailPage } from './detailPage.js';
 import { renderInterferencePanel } from './interferenceView.js';
-import { renderGeoGridView } from './geoGridView.js';
 import { initMobileUI, openFilterDrawer, syncFilterBadge } from './mobile.js';
 import './components/responsive.css';
 
@@ -415,66 +413,53 @@ function renderContent() {
           .filter(Boolean)
       )].sort();
 
-  // ── Render: cuma bagian ini yang beda per view ─────────────────────
-  if (state.view === 'grid') {
-    const cityRows = cityList.map(city => {
-      const row = baseMap.map(c => {
-        if (c.type === 'used') {
-          return (c.station?.kota || c.station?.city) === city
-            ? c : { ...c, type: 'free', station: null };
-        }
-        if (c.type === 'adjacent_1' || c.type === 'adjacent_2') {
-          const kotaL = c.adj_left?.kota  || c.adj_left?.city;
-          const kotaR = c.adj_right?.kota || c.adj_right?.city;
-          const keepL = kotaL === city ? c.adj_left  : null;
-          const keepR = kotaR === city ? c.adj_right : null;
-          if (keepL || keepR) return { ...c, adj_left: keepL, adj_right: keepR };
-          return { ...c, type: 'free', adj_left: null, adj_right: null };
-        }
-        return c;
-      }).filter(matchSearch);
-      return { city, row };
-    }).filter(({ row }) => row.some(c => c.type === 'used' || (searchLower && matchSearch(c))));
+  // ── Build city rows — sama untuk semua view ────────────────────────
+  const cityRows = cityList.map(city => {
+    const row = baseMap.map(c => {
+      if (c.type === 'used') {
+        return (c.station?.kota || c.station?.city) === city
+          ? c : { ...c, type: 'free', station: null };
+      }
+      if (c.type === 'adjacent_1' || c.type === 'adjacent_2') {
+        const kotaL = c.adj_left?.kota  || c.adj_left?.city;
+        const kotaR = c.adj_right?.kota || c.adj_right?.city;
+        const keepL = kotaL === city ? c.adj_left  : null;
+        const keepR = kotaR === city ? c.adj_right : null;
+        if (keepL || keepR) return { ...c, adj_left: keepL, adj_right: keepR };
+        return { ...c, type: 'free', adj_left: null, adj_right: null };
+      }
+      return c;
+    }).filter(matchSearch);
+    return { city, row };
+  }).filter(({ row }) => row.some(c => c.type === 'used' || (searchLower && matchSearch(c))));
 
-    el.innerHTML = `
-      <div class="grid-frame" style="padding:12px">
-        <div class="city-grid-scroll">
-          <div class="city-grid-inner">
-            ${cityRows.map(({ city, row }) => {
-              const usedCount = state.data.stations.filter(s => (s.kota || s.city) === city).length;
-              const filtered = state.filterChanView === 'free'  ? row.filter(c => c.type === 'free') :
-                               state.filterChanView === 'used'  ? row.filter(c => c.type === 'used' || c.type === 'adjacent_1' || c.type === 'adjacent_2') : row;
-              return `<div class="city-row-block">
-                <div class="city-row-label">${esc(city)} <span class="city-row-count">${usedCount}</span></div>
-                <div class="ch-grid-row">${filtered.map(renderCell).join('')}</div>
-              </div>`;
-            }).join('')}
-          </div>
+  const applyFilter = (row) =>
+    state.filterChanView === 'free' ? row.filter(c => c.type === 'free') :
+    state.filterChanView === 'used' ? row.filter(c => c.type === 'used' || c.type === 'adjacent_1' || c.type === 'adjacent_2') :
+    row;
+
+  // Pilih cell renderer berdasarkan view
+  const cellFn = state.view === 'band' ? renderCellBand
+               : state.view === 'geo'  ? renderCellGeo
+               : renderCell;
+
+  el.innerHTML = `
+    <div class="grid-frame" style="padding:12px">
+      <div class="city-grid-scroll">
+        <div class="city-grid-inner">
+          ${cityRows.map(({ city, row }) => {
+            const usedCount = state.data.stations.filter(s => (s.kota || s.city) === city).length;
+            const filtered = applyFilter(row);
+            return `<div class="city-row-block ${state.view === 'band' ? 'city-row-block--band' : ''}">
+              <div class="city-row-label">${esc(city)} <span class="city-row-count">${usedCount}</span></div>
+              <div class="ch-grid-row">${filtered.map(c => cellFn(c, city)).join('')}</div>
+            </div>`;
+          }).join('')}
         </div>
-      </div>`;
-    attachCellTooltips(state.data.channel_map);
+      </div>
+    </div>`;
 
-  } else if (state.view === 'band') {
-    el.innerHTML = `<div class="bv-wrap" id="bandViewInner"></div>`;
-    renderBandView(
-      state.filterChanView === 'all' ? baseMap : chMap,
-      state.data.stations,
-      activeCities.length ? activeCities : null,
-      info => { openInlineDetail(info); }
-    );
-
-  } else if (state.view === 'geo') {
-    el.innerHTML = '<div id="geoGridContainer"></div>';
-    renderGeoGridView(
-      document.getElementById('geoGridContainer'),
-      activeCities,
-      state.geoSettings || {},
-      activeCities.length
-        ? state.data.stations.filter(s => activeCities.includes(s.kota || s.city))
-        : state.data.stations,
-      (ch) => openInlineDetail(ch)
-    );
-  }
+  attachCellTooltips(state.data.channel_map);
 }
 
 // ── Cell render ───────────────────────────────────────────────────────
@@ -504,6 +489,64 @@ function renderCell(c) {
     return `<div class="ch-cell ch-cell--adjacent ch-cell--adj2" data-freq="${c.freq}" title="2nd adjacent — guard lunak (10 dB)">
       <span class="ch-cell__freq">${c.freq.toFixed(1)}</span>
       <span class="ch-cell__name">${dir}${dir}</span>
+    </div>`;
+  }
+  return `<div class="ch-cell ch-cell--free" data-freq="${c.freq}">
+    <span class="ch-cell__freq">${c.freq.toFixed(1)}</span>
+    <span class="ch-cell__name">★</span>
+  </div>`;
+}
+
+// ── Cell renderer: Pita (batang vertikal proporsional ERP) ────────────
+const ERP_MIN = 40, ERP_MAX = 78, BAR_MAX_H = 36;
+function erpBarH(erp) {
+  const ratio = Math.max(0, Math.min(1, ((erp || 60) - ERP_MIN) / (ERP_MAX - ERP_MIN)));
+  return Math.round(8 + ratio * (BAR_MAX_H - 8));
+}
+
+function renderCellBand(c, city) {
+  if (c.type === 'used') {
+    const color = cityColor(c.station?.kota || c.station?.city);
+    const h = erpBarH(c.station?.erp_dbm);
+    return `<div class="ch-cell ch-cell--band-used" style="--cell-color:${color}" data-freq="${c.freq}" title="${esc(c.station?.stn_name||'')}">
+      <span class="ch-cell__freq">${c.freq.toFixed(1)}</span>
+      <div class="ch-cell__bar" style="height:${h}px;background:${color}"></div>
+    </div>`;
+  }
+  if (c.type === 'adjacent_1') {
+    return `<div class="ch-cell ch-cell--adjacent ch-cell--adj1" data-freq="${c.freq}">
+      <span class="ch-cell__freq">${c.freq.toFixed(1)}</span>
+      <div class="ch-cell__bar ch-cell__bar--adj1" style="height:6px"></div>
+    </div>`;
+  }
+  if (c.type === 'adjacent_2') {
+    return `<div class="ch-cell ch-cell--adjacent ch-cell--adj2" data-freq="${c.freq}">
+      <span class="ch-cell__freq">${c.freq.toFixed(1)}</span>
+      <div class="ch-cell__bar ch-cell__bar--adj2" style="height:4px"></div>
+    </div>`;
+  }
+  return `<div class="ch-cell ch-cell--free" data-freq="${c.freq}">
+    <span class="ch-cell__freq">${c.freq.toFixed(1)}</span>
+    <span class="ch-cell__name">★</span>
+  </div>`;
+}
+
+// ── Cell renderer: Geo Grid (warna solid per kota, tanpa nama) ────────
+function renderCellGeo(c, city) {
+  if (c.type === 'used') {
+    const color = cityColor(c.station?.kota || c.station?.city);
+    return `<div class="ch-cell ch-cell--geo-used" style="--cell-color:${color};background:${color}22;border-color:${color}" data-freq="${c.freq}" title="${esc(c.station?.stn_name||'')}">
+      <span class="ch-cell__freq">${c.freq.toFixed(1)}</span>
+    </div>`;
+  }
+  if (c.type === 'adjacent_1') {
+    return `<div class="ch-cell ch-cell--adjacent ch-cell--adj1" data-freq="${c.freq}">
+      <span class="ch-cell__freq">${c.freq.toFixed(1)}</span>
+    </div>`;
+  }
+  if (c.type === 'adjacent_2') {
+    return `<div class="ch-cell ch-cell--adjacent ch-cell--adj2" data-freq="${c.freq}">
+      <span class="ch-cell__freq">${c.freq.toFixed(1)}</span>
     </div>`;
   }
   return `<div class="ch-cell ch-cell--free" data-freq="${c.freq}">
