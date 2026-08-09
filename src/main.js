@@ -409,27 +409,39 @@ function renderContent() {
 
   // ── Build city rows ─────────────────────────────────────────────────
   const cityRows = cityList.map(city => {
+    const cityStations = state.data.stations.filter(s => (s.kota || s.city) === city);
+
     const row = baseMap.map(c => {
-      // Cek dulu: apakah slot ini ada stasiun milik kota ini?
-      // Jika iya, tampilkan sebagai used — override adjacent apapun
-      const ownStation = state.data.stations.find(s =>
-        (s.kota || s.city) === city && Math.abs(parseFloat(s.freq) - c.freq) < 0.01
-      );
-      if (ownStation) {
-        return { ...c, type: 'used', station: ownStation };
-      }
-
-      if (c.type === 'used') {
-        // Stasiun used kota lain → free di row ini
-        return { ...c, type: 'free', station: null };
-      }
-
-      // Adjacent tetap tampil di semua row — proteksi universal
+      const ownStation = cityStations.find(s => Math.abs(parseFloat(s.freq) - c.freq) < 0.01);
+      if (ownStation) return { ...c, type: 'used', station: ownStation };
+      if (c.type === 'used') return { ...c, type: 'free', station: null };
       if (c.type === 'adjacent_1' || c.type === 'adjacent_2') return c;
-
       return c;
-    }).filter(matchSearch);
-    return { city, row };
+    });
+
+    // Co-channel: inject stasiun kota yang tidak terwakili di channel_map
+    // (misal 107.5 ada 3 stasiun Bantul tapi channel_map hanya 1 slot)
+    const freqInRow = new Set(row.filter(c => c.type === 'used').map(c => c.freq));
+    const extraUsed = [];
+    for (const s of cityStations) {
+      const f = parseFloat(s.freq);
+      if (!freqInRow.has(f)) {
+        extraUsed.push({
+          freq: f,
+          lower: Math.round((f - 0.05) * 100) / 100,
+          upper: Math.round((f + 0.05) * 100) / 100,
+          type: 'used',
+          station: s,
+        });
+        freqInRow.add(f);
+      }
+    }
+
+    const fullRow = [...row, ...extraUsed]
+      .sort((a, b) => a.freq - b.freq)
+      .filter(matchSearch);
+
+    return { city, row: fullRow };
   }).filter(({ row }) => row.some(c => c.type === 'used' || (searchLower && matchSearch(c))));
 
   const applyFilter = (row) =>
