@@ -529,6 +529,8 @@ const SVG_W_PER_MHZ = 52;
 const SVG_H = 90;
 const AMP_MIN = 10, AMP_MAX = 40;
 const SINE_STEPS = 40;
+// 1 slot = 100kHz (step channel_map) dalam px
+const SLOT_PX = SVG_W_PER_MHZ * 0.1;  // = 5.2px per 100kHz step
 
 function erpAmp(erp) {
   const ratio = Math.max(0, Math.min(1, ((erp || 60) - 40) / (78 - 40)));
@@ -549,15 +551,15 @@ function renderBandSVG(row, city) {
   let hits    = [];
   let labels  = [];
 
-  const slotHalfW = SVG_W_PER_MHZ * 0.1; // lebar 200 kHz / 2
+  const slotHalfW = SLOT_PX;  // arch: kiri-kanan masing2 1 slot (200kHz total)
 
   for (const c of row) {
     const x = freqToX(c.freq);
 
     if (c.type === 'used') {
       const amp = erpAmp(c.station?.erp_dbm);
-      const x0 = x - slotHalfW * 2;
-      const x1 = x + slotHalfW * 2;
+      const x0 = x - slotHalfW;
+      const x1 = x + slotHalfW;
       const pts = [];
       for (let i = 0; i <= SINE_STEPS; i++) {
         const t = i / SINE_STEPS;
@@ -574,15 +576,15 @@ function renderBandSVG(row, city) {
 
     } else if (c.type === 'adjacent_1') {
       markers.push(`<line x1="${x.toFixed(1)}" y1="${cy}" x2="${x.toFixed(1)}" y2="${(cy - 6).toFixed(1)}" stroke="rgba(255,160,0,0.6)" stroke-width="1.5"/>`);
-      hits.push(`<rect class="band-hit" data-freq="${c.freq}" x="${(x - slotHalfW).toFixed(1)}" y="0" width="${(slotHalfW * 2).toFixed(1)}" height="${SVG_H}" fill="transparent" style="cursor:pointer"/>`);
+      hits.push(`<rect class="band-hit" data-freq="${c.freq}" x="${(x - SLOT_PX/2).toFixed(1)}" y="0" width="${SLOT_PX.toFixed(1)}" height="${SVG_H}" fill="transparent" style="cursor:pointer"/>`);
 
     } else if (c.type === 'adjacent_2') {
       markers.push(`<line x1="${x.toFixed(1)}" y1="${cy}" x2="${x.toFixed(1)}" y2="${(cy - 3).toFixed(1)}" stroke="rgba(255,100,0,0.5)" stroke-width="1"/>`);
-      hits.push(`<rect class="band-hit" data-freq="${c.freq}" x="${(x - slotHalfW).toFixed(1)}" y="0" width="${(slotHalfW * 2).toFixed(1)}" height="${SVG_H}" fill="transparent" style="cursor:pointer"/>`);
+      hits.push(`<rect class="band-hit" data-freq="${c.freq}" x="${(x - SLOT_PX/2).toFixed(1)}" y="0" width="${SLOT_PX.toFixed(1)}" height="${SVG_H}" fill="transparent" style="cursor:pointer"/>`);
 
     } else {
-      markers.push(`<circle cx="${x.toFixed(1)}" cy="${cy}" r="1.5" fill="rgba(0,230,118,0.4)"/>`);
-      hits.push(`<rect class="band-hit" data-freq="${c.freq}" x="${(x - slotHalfW).toFixed(1)}" y="0" width="${(slotHalfW * 2).toFixed(1)}" height="${SVG_H}" fill="transparent" style="cursor:pointer"/>`);
+      markers.push(`<circle cx="${x.toFixed(1)}" cy="${cy}" r="${(SLOT_PX * 0.28).toFixed(1)}" fill="rgba(0,230,118,0.4)"/>`);
+      hits.push(`<rect class="band-hit" data-freq="${c.freq}" x="${(x - SLOT_PX/2).toFixed(1)}" y="0" width="${SLOT_PX.toFixed(1)}" height="${SVG_H}" fill="transparent" style="cursor:pointer"/>`);
     }
   }
 
