@@ -366,24 +366,11 @@ function renderContent() {
     return;
   }
 
-  // ── Geo Grid view ──────────────────────────────────────────────────
-  if (state.view === 'geo') {
-    renderLegend();
-    el.innerHTML = '<div id="geoGridContainer"></div>';
-    renderGeoGridView(
-      document.getElementById('geoGridContainer'),
-      state.filterCities || [],
-      state.geoSettings || {},
-      state.data?.stations || [],
-      (ch) => openInlineDetail(ch)
-    );
-    return;
-  }
-
   if (!state.data) return;
 
-  // Apply filterCities multi-select di FE
+  // ── Pipeline filter — sama untuk semua 3 view ──────────────────────
   const activeCities = state.filterCities || [];
+
   const baseMap = activeCities.length === 0
     ? state.data.channel_map
     : state.data.channel_map.map(c => {
@@ -409,7 +396,6 @@ function renderContent() {
   if (state.filterChanView==='free') chMap=chMap.filter(c=>c.type==='free');
   if (state.filterChanView==='used') chMap=chMap.filter(c=>c.type==='used'||c.type==='adjacent_1'||c.type==='adjacent_2');
 
-  // Apply search di FE
   const searchLower = (state.searchTerm || '').toLowerCase().trim();
   const matchSearch = (c) => {
     if (!searchLower) return true;
@@ -419,17 +405,18 @@ function renderContent() {
       || (c.station?.kota || c.station?.city || '').toLowerCase().includes(searchLower);
   };
 
-  if (state.view==='grid') {
-    // Kelompokkan per kabupaten
-    const cityList = activeCities.length > 0
-      ? activeCities
-      : [...new Set(
-          state.data.channel_map
-            .filter(c => c.type === 'used')
-            .map(c => c.station?.kota || c.station?.city || '')
-            .filter(Boolean)
-        )].sort();
+  // Daftar kota yang aktif — sama untuk semua view
+  const cityList = activeCities.length > 0
+    ? activeCities
+    : [...new Set(
+        state.data.channel_map
+          .filter(c => c.type === 'used')
+          .map(c => c.station?.kota || c.station?.city || '')
+          .filter(Boolean)
+      )].sort();
 
+  // ── Render: cuma bagian ini yang beda per view ─────────────────────
+  if (state.view === 'grid') {
     const cityRows = cityList.map(city => {
       const row = baseMap.map(c => {
         if (c.type === 'used') {
@@ -444,7 +431,7 @@ function renderContent() {
           if (keepL || keepR) return { ...c, adj_left: keepL, adj_right: keepR };
           return { ...c, type: 'free', adj_left: null, adj_right: null };
         }
-        return c; // free tetap tampil di semua row
+        return c;
       }).filter(matchSearch);
       return { city, row };
     }).filter(({ row }) => row.some(c => c.type === 'used' || (searchLower && matchSearch(c))));
@@ -466,17 +453,28 @@ function renderContent() {
         </div>
       </div>`;
     attachCellTooltips(state.data.channel_map);
-  } else {
+
+  } else if (state.view === 'band') {
     el.innerHTML = `<div class="bv-wrap" id="bandViewInner"></div>`;
-    const activeCities = state.filterCities && state.filterCities.length ? state.filterCities : null;
     renderBandView(
       state.filterChanView === 'all' ? baseMap : chMap,
       state.data.stations,
-      activeCities,
+      activeCities.length ? activeCities : null,
       info => { openInlineDetail(info); }
     );
+
+  } else if (state.view === 'geo') {
+    el.innerHTML = '<div id="geoGridContainer"></div>';
+    renderGeoGridView(
+      document.getElementById('geoGridContainer'),
+      activeCities,
+      state.geoSettings || {},
+      activeCities.length
+        ? state.data.stations.filter(s => activeCities.includes(s.kota || s.city))
+        : state.data.stations,
+      (ch) => openInlineDetail(ch)
+    );
   }
-}
 
 // ── Cell render ───────────────────────────────────────────────────────
 function firstWord(name) {
