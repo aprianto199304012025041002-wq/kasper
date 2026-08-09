@@ -1,98 +1,166 @@
-// src/bandView.js
-import { FM_MIN, FM_MAX, CHANNEL_SPACING } from './channelEngine.js';
+// src/bandView.js — Band view per kota, shared scroll, konsisten dengan grid view
+import { FM_MIN, FM_MAX } from './channelEngine.js';
 
-// Komenk palette — cyan/violet/orange family
+const PX_PER_MHZ = 52;   // piksel per MHz — lebar total ~1060px untuk 87.5–108.0
+const TRACK_H    = 56;    // tinggi row track
+const ERP_MIN    = 40, ERP_MAX = 78;
+const BLOCK_W    = 14;    // lebar tiap blok (px) — setara 200kHz slot
+
 const REGION_COLORS = {
-  'KOTA YOGYAKARTA': '#00e5ff',   // --accent cyan
-  'SLEMAN':          '#a78bfa',   // --accent3 violet
-  'BANTUL':          '#ff6b35',   // --accent2 orange
-  'GUNUNGKIDUL':     '#34d399',   // emerald
-  'KULON PROGO':     '#f472b6',   // pink
+  'KOTA YOGYAKARTA': '#00e5ff',
+  'SLEMAN':          '#a78bfa',
+  'BANTUL':          '#ff6b35',
+  'GUNUNGKIDUL':     '#34d399',
+  'KULON PROGO':     '#f472b6',
 };
-
 const DEFAULT_COLOR = '#4a90d9';
-const PX_PER_MHZ = 38, TRACK_H = 172, ERP_MIN = 40, ERP_MAX = 78, BLOCK_MIN_H = 28;
 
 function px(freq) { return (freq - FM_MIN) * PX_PER_MHZ; }
-function erpH(erp) { return BLOCK_MIN_H + Math.max(0, Math.min(1, (erp - ERP_MIN) / (ERP_MAX - ERP_MIN))) * (TRACK_H - BLOCK_MIN_H); }
-
-export function renderBandView(channelMap, onHover, onClick) {
-  const container = document.getElementById('bandViewInner');
-  if (!container) return;
-  const totalW = px(FM_MAX) + 24;
-  container.style.width = totalW + 'px';
-  container.innerHTML = '';
-
-  const baseline = document.createElement('div');
-  baseline.className = 'band-baseline'; container.appendChild(baseline);
-
-  const hint = document.createElement('div');
-  hint.className = 'band-erp-legend'; hint.textContent = '↕ tinggi ∝ ERP'; container.appendChild(hint);
-
-  const axis = document.createElement('div');
-  axis.className = 'band-freq-axis'; axis.style.width = totalW + 'px';
-  for (let f = FM_MIN; f <= FM_MAX + 0.01; f = Math.round((f + 1) * 10) / 10) {
-    const x = px(f);
-    const tick = document.createElement('div'); tick.className = 'band-freq-tick'; tick.style.left = x + 'px'; axis.appendChild(tick);
-    const lbl = document.createElement('div'); lbl.className = 'band-freq-label'; lbl.style.left = x + 'px'; lbl.textContent = f % 1 === 0 ? f.toFixed(0) : f.toFixed(1); axis.appendChild(lbl);
-    if (f + 0.5 < FM_MAX) { const m = document.createElement('div'); m.className='band-freq-tick'; m.style.cssText=`left:${px(f+0.5)}px;height:4px;opacity:.35;`; axis.appendChild(m); }
-  }
-  container.appendChild(axis);
-
-  for (const ch of channelMap) {
-    const bx = px(ch.freq), bw = Math.max(CHANNEL_SPACING * PX_PER_MHZ - 2, 4);
-    const bh = ch.type === 'used' ? erpH(ch.station?.erp_dbm || 60) : 20;
-    const block = document.createElement('div');
-    block.className = 'band-block';
-    block.style.cssText = `left:${bx - bw/2}px;width:${bw}px;height:${bh}px;`;
-
-    if (ch.type === 'used') {
-      const color = REGION_COLORS[ch.station?.kota] || DEFAULT_COLOR;
-      block.style.background = color + '1a';
-      block.style.borderColor = color;
-      block.style.borderStyle = 'solid';
-      if (bw > 20) {
-        const l = document.createElement('div');
-        l.className = 'band-block__label';
-        l.style.color = color;
-        l.textContent = bw > 35 ? (ch.station?.stn_name || '') : ch.freq.toFixed(1);
-        block.appendChild(l);
-      }
-    } else if (ch.type === 'adjacent') {
-      block.classList.add('band-block--adjacent');
-      block.style.height = '14px';
-    } else {
-      block.classList.add('band-block--free');
-      const star = document.createElement('div');
-      star.className = 'band-block__label';
-      star.style.color = 'var(--accent)';
-      star.textContent = ch.freq.toFixed(1);
-      block.appendChild(star);
-    }
-    block.addEventListener('mouseenter', (e) => onHover(e, ch));
-    block.addEventListener('mousemove',  (e) => onHover(e, ch));
-    block.addEventListener('mouseleave', ()  => onHover(null, null));
-    block.addEventListener('click',      ()  => onClick(ch));
-    container.appendChild(block);
-  }
+function erpH(erp) {
+  const ratio = Math.max(0, Math.min(1, ((erp || 60) - ERP_MIN) / (ERP_MAX - ERP_MIN)));
+  return Math.round(10 + ratio * (TRACK_H - 16));
 }
 
-export function renderBandRuler() {
-  const ruler = document.getElementById('bandRuler');
-  if (!ruler) return;
-  const totalW = px(FM_MAX) + 24;
-  ruler.style.width = totalW + 'px'; ruler.innerHTML = '';
+export function renderBandView(channelMap, stations, activeCities, onClickCell) {
+  const el = document.getElementById('bandViewInner');
+  if (!el) return;
+
+  // Group channel_map per kota — pakai channel_map dari API tapi filtered per city
+  const cities = activeCities && activeCities.length
+    ? activeCities
+    : [...new Set(stations.map(s => s.kota || s.city).filter(Boolean))].sort();
+
+  const totalW = px(FM_MAX) + 40;
+
+  // Build ruler HTML
+  let rulerHtml = `<div class="bv-ruler" style="width:${totalW}px">`;
   for (let f = FM_MIN; f <= FM_MAX + 0.01; f = Math.round((f + 0.5) * 10) / 10) {
-    const x = px(f), isMajor = f % 1 === 0;
-    const tick = document.createElement('div');
-    tick.className = `band-ruler__tick band-ruler__tick--${isMajor ? 'major' : 'minor'}`;
-    tick.style.left = x + 'px'; ruler.appendChild(tick);
-    if (isMajor) {
-      const lbl = document.createElement('div');
-      lbl.className = 'band-ruler__label';
-      lbl.style.left = x + 'px';
-      lbl.textContent = f.toFixed(0) + ' MHz';
-      ruler.appendChild(lbl);
-    }
+    const x = px(f);
+    const major = f % 1 === 0;
+    rulerHtml += `<div class="bv-tick ${major ? 'bv-tick--major' : 'bv-tick--minor'}" style="left:${x}px"></div>`;
+    if (major) rulerHtml += `<div class="bv-ruler-label" style="left:${x}px">${f.toFixed(0)}</div>`;
   }
+  rulerHtml += `</div>`;
+
+  // Build rows HTML per kota
+  let rowsHtml = '';
+  for (const city of cities) {
+    const cityStations = stations.filter(s => (s.kota || s.city) === city);
+    const cityColor = REGION_COLORS[city] || DEFAULT_COLOR;
+    const count = cityStations.length;
+
+    // Filter channel_map untuk kota ini
+    const cityFreqs = new Set(cityStations.map(s => parseFloat(s.freq)));
+
+    let blocksHtml = '';
+    for (const ch of channelMap) {
+      const x = px(ch.freq) - BLOCK_W / 2;
+
+      if (ch.type === 'used') {
+        const chCity = ch.station?.kota || ch.station?.city;
+        if (chCity !== city) continue; // hanya blok milik kota ini
+        const h = erpH(ch.station?.erp_dbm);
+        const color = cityColor;
+        const top = TRACK_H - h;
+        blocksHtml += `<div class="bv-block bv-block--used"
+          style="left:${x}px;width:${BLOCK_W}px;height:${h}px;top:${top}px;background:${color}22;border-color:${color}"
+          data-freq="${ch.freq}" data-type="used" title="${ch.station?.stn_name || ''} · ${ch.freq.toFixed(1)} MHz">
+          <div class="bv-block__label" style="color:${color}">${ch.freq.toFixed(1)}</div>
+        </div>`;
+      } else if (ch.type === 'adjacent_1' || ch.type === 'adjacent_2') {
+        // Tampilkan adjacent jika salah satu guard-nya kota ini
+        const leftCity  = ch.adj_left?.kota  || ch.adj_left?.city;
+        const rightCity = ch.adj_right?.kota || ch.adj_right?.city;
+        if (leftCity !== city && rightCity !== city) continue;
+        const isAdj1 = ch.type === 'adjacent_1';
+        blocksHtml += `<div class="bv-block bv-block--adj ${isAdj1 ? 'bv-block--adj1' : 'bv-block--adj2'}"
+          style="left:${x}px;width:${BLOCK_W}px"
+          data-freq="${ch.freq}" data-type="${ch.type}">
+        </div>`;
+      } else {
+        // free — tampilkan di setiap row sebagai konteks
+        blocksHtml += `<div class="bv-block bv-block--free"
+          style="left:${x}px;width:${BLOCK_W}px"
+          data-freq="${ch.freq}" data-type="free">
+          <div class="bv-block__star">★</div>
+        </div>`;
+      }
+    }
+
+    rowsHtml += `
+      <div class="bv-row">
+        <div class="bv-row-label">
+          <span class="bv-row-city" style="color:${cityColor}">${city}</span>
+          <span class="bv-row-count">${count}</span>
+        </div>
+        <div class="bv-track" style="width:${totalW}px;height:${TRACK_H}px">
+          <div class="bv-baseline"></div>
+          ${blocksHtml}
+        </div>
+      </div>`;
+  }
+
+  el.innerHTML = `
+    <div class="bv-scroll-wrap">
+      <div class="bv-sticky-col">
+        <div class="bv-ruler-spacer"></div>
+        ${cities.map((city, i) => {
+          const color = REGION_COLORS[city] || DEFAULT_COLOR;
+          const count = stations.filter(s => (s.kota || s.city) === city).length;
+          return `<div class="bv-label-cell">
+            <span class="bv-row-city" style="color:${color}">${city}</span>
+            <span class="bv-row-count">${count}</span>
+          </div>`;
+        }).join('')}
+      </div>
+      <div class="bv-scroll-body" id="bvScrollBody">
+        ${rulerHtml}
+        ${cities.map(city => {
+          const cityStations = stations.filter(s => (s.kota || s.city) === city);
+          const cityColor = REGION_COLORS[city] || DEFAULT_COLOR;
+          let blocksHtml = '';
+          for (const ch of channelMap) {
+            const x = px(ch.freq) - BLOCK_W / 2;
+            if (ch.type === 'used') {
+              const chCity = ch.station?.kota || ch.station?.city;
+              if (chCity !== city) continue;
+              const h = erpH(ch.station?.erp_dbm);
+              const top = TRACK_H - h;
+              blocksHtml += `<div class="bv-block bv-block--used"
+                style="left:${x}px;width:${BLOCK_W}px;height:${h}px;top:${top}px;background:${cityColor}22;border-color:${cityColor}"
+                data-freq="${ch.freq}" title="${ch.station?.stn_name||''} · ${ch.freq.toFixed(1)} MHz">
+                <div class="bv-block__label" style="color:${cityColor}">${ch.freq.toFixed(1)}</div>
+              </div>`;
+            } else if (ch.type === 'adjacent_1' || ch.type === 'adjacent_2') {
+              const leftCity  = ch.adj_left?.kota  || ch.adj_left?.city;
+              const rightCity = ch.adj_right?.kota || ch.adj_right?.city;
+              if (leftCity !== city && rightCity !== city) continue;
+              blocksHtml += `<div class="bv-block ${ch.type==='adjacent_1'?'bv-block--adj1':'bv-block--adj2'}"
+                style="left:${x}px;width:${BLOCK_W}px"
+                data-freq="${ch.freq}" data-type="${ch.type}">
+              </div>`;
+            } else {
+              blocksHtml += `<div class="bv-block bv-block--free"
+                style="left:${x}px;width:${BLOCK_W}px"
+                data-freq="${ch.freq}" data-type="free">
+                <div class="bv-block__star">★</div>
+              </div>`;
+            }
+          }
+          return `<div class="bv-track" style="width:${totalW}px;height:${TRACK_H}px">
+            <div class="bv-baseline"></div>
+            ${blocksHtml}
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`;
+
+  // Attach click
+  el.querySelectorAll('.bv-block[data-freq]').forEach(block => {
+    block.addEventListener('click', () => {
+      const freq = parseFloat(block.dataset.freq);
+      const ch = channelMap.find(c => c.freq === freq);
+      if (ch) onClickCell(ch);
+    });
+  });
 }

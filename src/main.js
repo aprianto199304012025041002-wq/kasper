@@ -5,7 +5,7 @@ import './components/grid.css';
 import './components/band.css';
 import './components/detail-page.css';
 import { fetchSpectrum, fetchStationDetail, fetchInterference, isUsingFallback } from './apiClient.js';
-import { renderBandView, renderBandRuler } from './bandView.js';
+import { renderBandView } from './bandView.js';
 import { renderDetailPage } from './detailPage.js';
 import { renderInterferencePanel } from './interferenceView.js';
 import { renderGeoGridView } from './geoGridView.js';
@@ -471,20 +471,13 @@ function renderContent() {
       </div>`;
     attachCellTooltips(state.data.channel_map);
   } else {
-    el.innerHTML=`
-      <div class="band-view">
-        <div class="band-ruler"><div class="band-ruler__inner" id="bandRuler"></div></div>
-        <div class="band-track-wrap"><div class="band-track-inner" id="bandViewInner"></div></div>
-      </div>`;
-    renderBandRuler();
-    const filteredForBand = searchLower
-      ? (state.filterChanView==='all' ? baseMap : chMap).map(c =>
-          c.type === 'used' && !matchSearch(c) ? { ...c, type: 'free', station: null } : c)
-      : (state.filterChanView==='all' ? baseMap : chMap);
+    el.innerHTML = `<div class="bv-wrap" id="bandViewInner"></div>`;
+    const activeCities = state.filterCities && state.filterCities.length ? state.filterCities : null;
     renderBandView(
-      filteredForBand,
-      handleBandHover,
-      info=>{ openInlineDetail(info); }
+      state.filterChanView === 'all' ? baseMap : chMap,
+      state.data.stations,
+      activeCities,
+      info => { openInlineDetail(info); }
     );
   }
 }
@@ -537,7 +530,6 @@ function attachCellTooltips(channelMap) {
   });
 }
 
-function handleBandHover(e,info){ if(!info||!e){hideTooltip();return;} showTooltip(e,info); }
 
 function showTooltip(e,info) {
   const tt=document.getElementById('tooltip');
