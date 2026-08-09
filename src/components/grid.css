@@ -214,3 +214,10 @@ input.control-input:focus{border-color:var(--accent);outline:none;}
 
 /* ── Geo view cell ── */
 .ch-cell--geo-used { border: 1px solid; }
+
+/* ── Band SVG row ── */
+.band-svg-row {
+  display: block;
+  line-height: 0;
+}
+.band-svg-row svg { display: block; }

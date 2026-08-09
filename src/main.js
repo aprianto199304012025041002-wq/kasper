@@ -413,7 +413,7 @@ function renderContent() {
           .filter(Boolean)
       )].sort();
 
-  // ── Build city rows — sama untuk semua view ────────────────────────
+  // ── Build city rows ─────────────────────────────────────────────────
   const cityRows = cityList.map(city => {
     const row = baseMap.map(c => {
       if (c.type === 'used') {
@@ -438,10 +438,36 @@ function renderContent() {
     state.filterChanView === 'used' ? row.filter(c => c.type === 'used' || c.type === 'adjacent_1' || c.type === 'adjacent_2') :
     row;
 
-  // Pilih cell renderer berdasarkan view
-  const cellFn = state.view === 'band' ? renderCellBand
-               : state.view === 'geo'  ? renderCellGeo
-               : renderCell;
+  // ── Band view: SVG spectrum per kota ──────────────────────────────
+  if (state.view === 'band') {
+    el.innerHTML = `
+      <div class="grid-frame" style="padding:12px">
+        <div class="city-grid-scroll">
+          <div class="city-grid-inner">
+            ${cityRows.map(({ city, row }) => {
+              const usedCount = state.data.stations.filter(s => (s.kota || s.city) === city).length;
+              return `<div class="city-row-block">
+                <div class="city-row-label">${esc(city)} <span class="city-row-count">${usedCount}</span></div>
+                <div class="band-svg-row" data-city="${esc(city)}">${renderBandSVG(row, city)}</div>
+              </div>`;
+            }).join('')}
+          </div>
+        </div>
+      </div>`;
+
+    // Click handler untuk band SVG
+    el.querySelectorAll('.band-hit[data-freq]').forEach(hit => {
+      hit.addEventListener('click', () => {
+        const freq = parseFloat(hit.dataset.freq);
+        const ch = state.data.channel_map.find(c => Math.abs(c.freq - freq) < 0.01);
+        if (ch) openInlineDetail(ch);
+      });
+    });
+    return;
+  }
+
+  // ── Grid & Geo: cell-per-cell ──────────────────────────────────────
+  const cellFn = state.view === 'geo' ? renderCellGeo : renderCell;
 
   el.innerHTML = `
     <div class="grid-frame" style="padding:12px">
@@ -450,7 +476,7 @@ function renderContent() {
           ${cityRows.map(({ city, row }) => {
             const usedCount = state.data.stations.filter(s => (s.kota || s.city) === city).length;
             const filtered = applyFilter(row);
-            return `<div class="city-row-block ${state.view === 'band' ? 'city-row-block--band' : ''}">
+            return `<div class="city-row-block">
               <div class="city-row-label">${esc(city)} <span class="city-row-count">${usedCount}</span></div>
               <div class="ch-grid-row">${filtered.map(c => cellFn(c, city)).join('')}</div>
             </div>`;
@@ -497,39 +523,88 @@ function renderCell(c) {
   </div>`;
 }
 
-// ── Cell renderer: Pita (batang vertikal proporsional ERP) ────────────
-const ERP_MIN = 40, ERP_MAX = 78, BAR_MAX_H = 36;
-function erpBarH(erp) {
-  const ratio = Math.max(0, Math.min(1, ((erp || 60) - ERP_MIN) / (ERP_MAX - ERP_MIN)));
-  return Math.round(8 + ratio * (BAR_MAX_H - 8));
+// ── Band view: SVG spectrum per kota ─────────────────────────────────
+const FM_MIN_B = 87.5, FM_MAX_B = 108.0;
+const SVG_W_PER_MHZ = 52;   // sama dengan grid cell spacing
+const SVG_H = 72;            // tinggi track
+const AMP_MIN = 8, AMP_MAX = 34;   // amplitudo sinus (px)
+const SINE_STEPS = 40;       // resolusi kurva per channel
+
+function erpAmp(erp) {
+  const ratio = Math.max(0, Math.min(1, ((erp || 60) - 40) / (78 - 40)));
+  return AMP_MIN + ratio * (AMP_MAX - AMP_MIN);
 }
 
-function renderCellBand(c, city) {
-  if (c.type === 'used') {
-    const color = cityColor(c.station?.kota || c.station?.city);
-    const h = erpBarH(c.station?.erp_dbm);
-    return `<div class="ch-cell ch-cell--band-used" style="--cell-color:${color}" data-freq="${c.freq}" title="${esc(c.station?.stn_name||'')}">
-      <span class="ch-cell__freq">${c.freq.toFixed(1)}</span>
-      <div class="ch-cell__bar" style="height:${h}px;background:${color}"></div>
-    </div>`;
-  }
-  if (c.type === 'adjacent_1') {
-    return `<div class="ch-cell ch-cell--adjacent ch-cell--adj1" data-freq="${c.freq}">
-      <span class="ch-cell__freq">${c.freq.toFixed(1)}</span>
-      <div class="ch-cell__bar ch-cell__bar--adj1" style="height:6px"></div>
-    </div>`;
-  }
-  if (c.type === 'adjacent_2') {
-    return `<div class="ch-cell ch-cell--adjacent ch-cell--adj2" data-freq="${c.freq}">
-      <span class="ch-cell__freq">${c.freq.toFixed(1)}</span>
-      <div class="ch-cell__bar ch-cell__bar--adj2" style="height:4px"></div>
-    </div>`;
-  }
-  return `<div class="ch-cell ch-cell--free" data-freq="${c.freq}">
-    <span class="ch-cell__freq">${c.freq.toFixed(1)}</span>
-    <span class="ch-cell__name">★</span>
-  </div>`;
+function freqToX(freq) {
+  return (freq - FM_MIN_B) * SVG_W_PER_MHZ;
 }
+
+function renderBandSVG(row, city) {
+  const totalW = (FM_MAX_B - FM_MIN_B) * SVG_W_PER_MHZ + 40;
+  const cy = SVG_H / 2;   // garis tengah
+  const color = cityColor(city);
+
+  let pathParts = [];    // path segmen gelombang
+  let adjRects  = [];    // rect adjacent
+  let freeMarks = [];    // titik free
+  let hitAreas  = [];    // invisible hit targets
+  let labels    = [];    // label frekuensi
+
+  for (const c of row) {
+    const x = freqToX(c.freq);
+    const slotW = SVG_W_PER_MHZ * 0.2; // lebar 200 kHz dalam px
+
+    if (c.type === 'used') {
+      const amp = erpAmp(c.station?.erp_dbm);
+      // Gambar satu arch sinus penuh dari x-slotW/2 ke x+slotW/2
+      const x0 = x - slotW;
+      const x1 = x + slotW;
+      const pts = [];
+      for (let i = 0; i <= SINE_STEPS; i++) {
+        const t = i / SINE_STEPS;
+        const px = x0 + t * (x1 - x0);
+        const py = cy - amp * Math.sin(Math.PI * t);
+        pts.push(`${i === 0 ? 'M' : 'L'}${px.toFixed(1)},${py.toFixed(1)}`);
+      }
+      pathParts.push(`<path d="${pts.join(' ')}" stroke="${color}" stroke-width="2" fill="none" opacity="0.9"/>`);
+      // Area fill di bawah arch
+      const fillPts = [...pts, `L${x1.toFixed(1)},${cy} L${x0.toFixed(1)},${cy} Z`];
+      pathParts.push(`<path d="${fillPts.join(' ')}" fill="${color}" opacity="0.12"/>`);
+      // Label frekuensi
+      labels.push(`<text x="${x.toFixed(1)}" y="${(cy - amp - 5).toFixed(1)}" text-anchor="middle" font-size="7" fill="${color}" opacity="0.8">${c.freq.toFixed(1)}</text>`);
+      // Hit area
+      hitAreas.push(`<rect class="band-hit" data-freq="${c.freq}" x="${(x - slotW).toFixed(1)}" y="0" width="${(slotW * 2).toFixed(1)}" height="${SVG_H}" fill="transparent" style="cursor:pointer"/>`);
+
+    } else if (c.type === 'adjacent_1') {
+      adjRects.push(`<rect x="${(x - slotW/2).toFixed(1)}" y="${(cy - 6).toFixed(1)}" width="${slotW.toFixed(1)}" height="12" rx="2" fill="rgba(255,160,0,0.2)" stroke="rgba(255,160,0,0.5)" stroke-width="0.5"/>
+        <rect class="band-hit" data-freq="${c.freq}" x="${(x - slotW).toFixed(1)}" y="0" width="${(slotW * 2).toFixed(1)}" height="${SVG_H}" fill="transparent" style="cursor:pointer"/>`);
+
+    } else if (c.type === 'adjacent_2') {
+      adjRects.push(`<rect x="${(x - slotW/2).toFixed(1)}" y="${(cy - 4).toFixed(1)}" width="${slotW.toFixed(1)}" height="8" rx="2" fill="rgba(255,100,0,0.15)" stroke="rgba(255,100,0,0.4)" stroke-width="0.5"/>
+        <rect class="band-hit" data-freq="${c.freq}" x="${(x - slotW).toFixed(1)}" y="0" width="${(slotW * 2).toFixed(1)}" height="${SVG_H}" fill="transparent" style="cursor:pointer"/>`);
+
+    } else {
+      // free — titik kecil di garis tengah
+      freeMarks.push(`<circle cx="${x.toFixed(1)}" cy="${cy}" r="2" fill="rgba(0,230,118,0.3)" stroke="rgba(0,230,118,0.5)" stroke-width="0.5"/>
+        <rect class="band-hit" data-freq="${c.freq}" x="${(x - slotW).toFixed(1)}" y="0" width="${(slotW * 2).toFixed(1)}" height="${SVG_H}" fill="transparent" style="cursor:pointer"/>`);
+    }
+  }
+
+  // Garis baseline tengah
+  const baseline = `<line x1="0" y1="${cy}" x2="${totalW}" y2="${cy}" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>`;
+
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${totalW}" height="${SVG_H}" style="display:block;overflow:visible">
+    ${baseline}
+    ${adjRects.join('')}
+    ${freeMarks.join('')}
+    ${pathParts.join('')}
+    ${labels.join('')}
+    ${hitAreas.join('')}
+  </svg>`;
+}
+
+// ── Cell renderer: Pita (lama, tidak dipakai) ─────────────────────────
+// Diganti renderBandSVG di atas
 
 // ── Cell renderer: Geo Grid (warna solid per kota, tanpa nama) ────────
 function renderCellGeo(c, city) {
