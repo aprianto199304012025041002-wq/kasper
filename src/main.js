@@ -410,14 +410,23 @@ function renderContent() {
   // ── Build city rows ─────────────────────────────────────────────────
   const cityRows = cityList.map(city => {
     const row = baseMap.map(c => {
-      if (c.type === 'used') {
-        // Hanya used milik kota ini yang tampil sebagai used
-        return (c.station?.kota || c.station?.city) === city
-          ? c : { ...c, type: 'free', station: null };
+      // Cek dulu: apakah slot ini ada stasiun milik kota ini?
+      // Jika iya, tampilkan sebagai used — override adjacent apapun
+      const ownStation = state.data.stations.find(s =>
+        (s.kota || s.city) === city && Math.abs(parseFloat(s.freq) - c.freq) < 0.01
+      );
+      if (ownStation) {
+        return { ...c, type: 'used', station: ownStation };
       }
-      // Adjacent tampil di semua row — proteksi berlaku universal
+
+      if (c.type === 'used') {
+        // Stasiun used kota lain → free di row ini
+        return { ...c, type: 'free', station: null };
+      }
+
+      // Adjacent tetap tampil di semua row — proteksi universal
       if (c.type === 'adjacent_1' || c.type === 'adjacent_2') return c;
-      // Free tetap free
+
       return c;
     }).filter(matchSearch);
     return { city, row };
