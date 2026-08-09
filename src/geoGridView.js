@@ -718,24 +718,21 @@ function attachCellEvents(container, cityRows) {
 }
 
 // ── Main export ───────────────────────────────────────────────────────
-// geoSettings: { showAdj, showLabel, onlyFree, filterCities }
 // preloadedStations: state.data.stations dari main.js (sumber tunggal data)
-export function renderGeoGridView(container, currentProvince, currentFilters, preloadedStations) {
+// filterCities: array kota yang dipilih (dari drawer filter)
+// geoSettings: { showAdj, showLabel, onlyFree }
+// onClickCell: callback(ch) → openInlineDetail dari main.js
+export function renderGeoGridView(container, filterCities, geoSettings, preloadedStations, onClickCell) {
   injectCSS();
   resetColors();
   _tt = null;
 
-  container.innerHTML = createHTML();
-
-  const area = document.getElementById('ggGridArea');
-
-  const showAdj      = currentFilters?.showAdj      !== false;
-  const showLabel    = currentFilters?.showLabel     !== false;
-  const onlyFree     = currentFilters?.onlyFree      === true;
-  const filterCities = currentFilters?.filterCities || [];
+  const showAdj   = geoSettings?.showAdj   !== false;
+  const showLabel = geoSettings?.showLabel  !== false;
+  const onlyFree  = geoSettings?.onlyFree  === true;
 
   let stations = (preloadedStations || []).map(s => ({ ...s, freq: parseFloat(s.freq) }));
-  if (filterCities.length > 0) {
+  if (filterCities && filterCities.length > 0) {
     stations = stations.filter(s =>
       filterCities.includes((s.kota || s.city || '').toUpperCase().trim()) ||
       filterCities.includes(s.kota || s.city || '')
@@ -743,10 +740,49 @@ export function renderGeoGridView(container, currentProvince, currentFilters, pr
   }
 
   if (!stations.length) {
-    area.innerHTML = `<div class="gg-state"><span>Tidak ada stasiun untuk filter ini.</span></div>`;
+    container.innerHTML = `<div class="gg-state"><span>Tidak ada stasiun untuk filter ini.</span></div>`;
     return;
   }
 
   const cityRows = buildCityRows(stations);
-  renderGrid(area, cityRows, { showAdj, showLabel, onlyFree });
+
+  // Render: sticky label col kiri + shared scroll kanan (konsisten dgn grid & band view)
+  const rows = cityRows.map(r => renderCityRow(r, { showAdj, showLabel, onlyFree })).join('');
+  container.innerHTML = `
+    <div class="gg-wrap">
+      <div class="gg-grid-area" id="ggGridArea">
+        <div class="gg-grid-min">
+          ${renderRuler()}
+          <div class="gg-table" id="ggTable">${rows}</div>
+        </div>
+      </div>
+      <div class="gg-tt" id="ggTT"></div>
+    </div>`;
+
+  const area = container.querySelector('#ggGridArea');
+
+  // Click handler — teruskan ke openInlineDetail via callback
+  area.addEventListener('click', e => {
+    const cell = e.target.closest('.gg-ch[data-freq]');
+    if (!cell) return;
+    const freq = parseFloat(cell.dataset.freq);
+    const cityName = cell.dataset.city;
+    const row = cityRows.find(r => r.city === cityName);
+    const ch = row?.channelMap.find(c => Math.abs(c.freq - freq) < 0.01);
+    if (ch && onClickCell) {
+      // Normalisasi ke format channel_map utama agar drawer konsisten
+      const normalized = {
+        freq: ch.freq,
+        lower: ch.lower,
+        upper: ch.upper,
+        type: ch.type === 'adj' ? 'adjacent_1' : ch.type,
+        station: ch.station || null,
+        adj_left:  ch.adjL || null,
+        adj_right: ch.adjR || null,
+      };
+      onClickCell(normalized);
+    }
+  });
+
+  attachCellEvents(area, cityRows);
 }

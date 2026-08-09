@@ -370,16 +370,12 @@ function renderContent() {
   if (state.view === 'geo') {
     renderLegend();
     el.innerHTML = '<div id="geoGridContainer"></div>';
-    const filters = {
-      search: state.searchTerm,
-      filterCities: state.filterCities,
-      ...state.geoSettings,
-    };
     renderGeoGridView(
       document.getElementById('geoGridContainer'),
-      '',
-      filters,
-      state.data?.stations || []
+      state.filterCities || [],
+      state.geoSettings || {},
+      state.data?.stations || [],
+      (ch) => openInlineDetail(ch)
     );
     return;
   }
