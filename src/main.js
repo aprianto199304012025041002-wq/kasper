@@ -475,6 +475,7 @@ function renderContent() {
       (ch) => openInlineDetail(ch)
     );
   }
+}
 
 // ── Cell render ───────────────────────────────────────────────────────
 function firstWord(name) {
