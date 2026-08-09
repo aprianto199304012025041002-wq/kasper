@@ -664,3 +664,15 @@ html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
   text-align: center;
 }
 .cd-cta:hover { background: rgba(0,229,255,.18); border-color: rgba(0,229,255,.4); }
+
+/* ── Co-channel list di drawer ── */
+.cd-colist {
+  margin-top: 12px;
+  display: flex; flex-direction: column; gap: 8px;
+}
+.cd-coitem {
+  padding: 8px 10px;
+  background: var(--bg-input);
+  border-radius: 6px;
+  border-left: 2px solid rgba(255,160,0,.5);
+}

@@ -412,36 +412,17 @@ function renderContent() {
     const cityStations = state.data.stations.filter(s => (s.kota || s.city) === city);
 
     const row = baseMap.map(c => {
-      const ownStation = cityStations.find(s => Math.abs(parseFloat(s.freq) - c.freq) < 0.01);
-      if (ownStation) return { ...c, type: 'used', station: ownStation };
+      // Cari semua stasiun kota ini di frekuensi ini (bisa > 1 = co-channel)
+      const ownStations = cityStations.filter(s => Math.abs(parseFloat(s.freq) - c.freq) < 0.01);
+      if (ownStations.length > 0) {
+        return { ...c, type: 'used', station: ownStations[0], coStations: ownStations };
+      }
       if (c.type === 'used') return { ...c, type: 'free', station: null };
       if (c.type === 'adjacent_1' || c.type === 'adjacent_2') return c;
       return c;
-    });
+    }).filter(matchSearch);
 
-    // Co-channel: inject stasiun kota yang tidak terwakili di channel_map
-    // (misal 107.5 ada 3 stasiun Bantul tapi channel_map hanya 1 slot)
-    const freqInRow = new Set(row.filter(c => c.type === 'used').map(c => c.freq));
-    const extraUsed = [];
-    for (const s of cityStations) {
-      const f = parseFloat(s.freq);
-      if (!freqInRow.has(f)) {
-        extraUsed.push({
-          freq: f,
-          lower: Math.round((f - 0.05) * 100) / 100,
-          upper: Math.round((f + 0.05) * 100) / 100,
-          type: 'used',
-          station: s,
-        });
-        freqInRow.add(f);
-      }
-    }
-
-    const fullRow = [...row, ...extraUsed]
-      .sort((a, b) => a.freq - b.freq)
-      .filter(matchSearch);
-
-    return { city, row: fullRow };
+    return { city, row };
   }).filter(({ row }) => row.some(c => c.type === 'used' || (searchLower && matchSearch(c))));
 
   const applyFilter = (row) =>
@@ -509,9 +490,11 @@ function renderCell(c) {
   if (c.type==='used') {
     const color = cityColor(c.station?.kota||c.station?.city);
     const label = firstWord(c.station?.stn_name);
+    const co = c.coStations?.length > 1 ? `<span class="ch-cell__co">${c.coStations.length}</span>` : '';
     return `<div class="ch-cell ch-cell--used" style="--cell-color:${color}" data-freq="${c.freq}" title="${esc(c.station?.stn_name||'')}">
       <span class="ch-cell__freq">${c.freq.toFixed(1)}</span>
       <span class="ch-cell__name">${esc(label)}</span>
+      ${co}
     </div>`;
   }
   if (c.type==='adjacent_1') {
@@ -745,15 +728,47 @@ function openInlineDetail(info) {
   let cta = '';
 
   if (info.type === 'used') {
-    const s = info.station || {};
+    const stations = info.coStations || [info.station];
+    const isCoChannel = stations.length > 1;
     rows = [
-      ['Frekuensi',  freq.toFixed(3) + ' MHz',           true],
-      ['Lower edge', Number(lower).toFixed(4) + ' MHz',  true],
-      ['Upper edge', Number(upper).toFixed(4) + ' MHz',  true],
-      ['Nama stasiun', s.stn_name || '—',                false],
-      ['Wilayah',    s.kota || s.city || '—',            false],
-      ['ERP',        s.erp_dbm ? s.erp_dbm + ' dBm' : '—', true],
+      ['Frekuensi',  freq.toFixed(3) + ' MHz', true],
+      ['Lower edge', Number(lower).toFixed(4) + ' MHz', true],
+      ['Upper edge', Number(upper).toFixed(4) + ' MHz', true],
     ];
+    if (isCoChannel) {
+      // Co-channel: list semua stasiun
+      const stationList = stations.map((s, i) =>
+        `<div class="cd-coitem">
+          <div class="cd-label">#${i+1} ${esc(s.jenis||'')}</div>
+          <div class="cd-val">${esc(s.stn_name||'—')}</div>
+          <div class="cd-val" style="font-size:11px;color:var(--text-tertiary)">${esc(s.kecamatan||'')} · ${s.erp_dbm ? s.erp_dbm.toFixed(1)+' dBm' : '—'}</div>
+        </div>`
+      ).join('');
+      const html = `
+        <div class="cd-head">
+          <div class="cd-head-left">
+            <span class="cd-badge cd-badge--used">📻 CO-CHANNEL ×${stations.length}</span>
+            <span class="cd-freq">${freq.toFixed(1)} MHz</span>
+          </div>
+          <button class="cd-close" id="cdClose">✕</button>
+        </div>
+        <div class="cd-grid">
+          <div class="cd-item"><div class="cd-label">Frekuensi</div><div class="cd-val mono">${freq.toFixed(3)} MHz</div></div>
+          <div class="cd-item"><div class="cd-label">Lower edge</div><div class="cd-val mono">${Number(lower).toFixed(4)} MHz</div></div>
+          <div class="cd-item"><div class="cd-label">Upper edge</div><div class="cd-val mono">${Number(upper).toFixed(4)} MHz</div></div>
+          <div class="cd-item"><div class="cd-label">Status</div><div class="cd-val" style="color:#ffa000">${stations.length} izin di slot ini</div></div>
+        </div>
+        <div class="cd-colist">${stationList}</div>`;
+      openCellDrawer(html);
+      document.getElementById('cdClose')?.addEventListener('click', closeCellDrawer);
+      return;
+    }
+    const s = stations[0] || {};
+    rows.push(
+      ['Nama stasiun', s.stn_name || '—', false],
+      ['Wilayah',     s.kota || s.city || '—', false],
+      ['ERP',         s.erp_dbm ? s.erp_dbm + ' dBm' : '—', true],
+    );
     cta = `<button class="cd-cta" id="cdCtaDetail">Lihat detail stasiun →</button>`;
   } else if (info.type === 'adjacent_1') {
     rows = [
