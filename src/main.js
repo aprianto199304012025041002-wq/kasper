@@ -573,10 +573,10 @@ function renderBandSVG(row, city) {
       const count = coStations.length;
       const avgErp = coStations.reduce((s, st) => s + (st?.erp_dbm || 60), 0) / coStations.length;
       const amp = erpAmp(avgErp);
-      // Arch: puncak di center freq, kaki di ±100kHz (batas channel 200kHz per ITU)
-      // Adj-1 ada di ±200kHz (1 slot lebih luar dari kaki)
-      // Adj-2 ada di ±400kHz
-      const archW = SLOT_PX * 1; // ±100kHz = 1 slot = SLOT_PX
+      // Arch: puncak di center freq, kaki di ±50kHz
+      // Adj-1 ada di ±100kHz, Adj-2 ada di ±200kHz
+      // Step channel_map = 100kHz = SLOT_PX
+      const archW = SLOT_PX * 0.5; // ±50kHz
       const x0 = x - archW;
       const x1 = x + archW;
       const pts = [];
