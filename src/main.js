@@ -533,12 +533,12 @@ function renderCell(c) {
 
 // ── Band view: SVG spectrum per kota ─────────────────────────────────
 const FM_MIN_B = 87.5, FM_MAX_B = 108.0;
-const SVG_W_PER_MHZ = 52;
-const SVG_H = 90;
-const AMP_MIN = 10, AMP_MAX = 40;
+const SVG_W_PER_MHZ = 80;   // diperlebar dari 52 → 80px per MHz
+const SVG_H = 110;           // lebih tinggi untuk ruler di bawah
+const RULER_H = 20;          // tinggi area ruler
+const AMP_MIN = 12, AMP_MAX = 48;
 const SINE_STEPS = 40;
-// 1 slot = 100kHz (step channel_map) dalam px
-const SLOT_PX = SVG_W_PER_MHZ * 0.1;  // = 5.2px per 100kHz step
+const SLOT_PX = SVG_W_PER_MHZ * 0.1;  // 8px per 100kHz
 
 function erpAmp(erp) {
   const ratio = Math.max(0, Math.min(1, ((erp || 60) - 40) / (78 - 40)));
@@ -551,9 +551,8 @@ function freqToX(freq) {
 
 function renderBandSVG(row, city) {
   const totalW = (FM_MAX_B - FM_MIN_B) * SVG_W_PER_MHZ + 40;
-  const cy = SVG_H - 10;
+  const cy = SVG_H - RULER_H - 6;  // baseline di atas ruler
 
-  // Warna seragam sesuai skema grid
   const COLOR_USED  = '#ffd600';
   const COLOR_ADJ1  = '#ff2d2d';
   const COLOR_ADJ2  = 'rgba(255,45,45,0.5)';
@@ -572,12 +571,13 @@ function renderBandSVG(row, city) {
     if (c.type === 'used') {
       const coStations = c.coStations || [c.station];
       const count = coStations.length;
-
-      // Selalu 1 arch — amplitudo pakai rata-rata ERP semua stasiun
       const avgErp = coStations.reduce((s, st) => s + (st?.erp_dbm || 60), 0) / coStations.length;
       const amp = erpAmp(avgErp);
-      const x0 = x - slotHalfW;
-      const x1 = x + slotHalfW;
+      // Arch melebar ±200kHz dari center (SLOT_PX * 2 = 200kHz)
+      // Puncak di center freq, kaki kanan/kiri di posisi adj-2
+      const archW = SLOT_PX * 2;
+      const x0 = x - archW;
+      const x1 = x + archW;
       const pts = [];
       for (let i = 0; i <= SINE_STEPS; i++) {
         const t = i / SINE_STEPS;
@@ -589,29 +589,47 @@ function renderBandSVG(row, city) {
       const fillD = `${d} L${x1.toFixed(1)},${cy} L${x0.toFixed(1)},${cy} Z`;
       paths.push(`<path d="${fillD}" fill="${COLOR_USED}" opacity="0.13"/>`);
       paths.push(`<path d="${d}" stroke="${COLOR_USED}" stroke-width="1.8" fill="none" opacity="0.95"/>`);
-
       const badge = count > 1 ? ` ×${count}` : '';
       labels.push(`<text x="${x.toFixed(1)}" y="${(cy - amp - 4).toFixed(1)}" text-anchor="middle" font-size="7" fill="${COLOR_USED}" opacity="0.9" font-family="monospace">${c.freq.toFixed(1)}${badge}</text>`);
-      hits.push(`<rect class="band-hit" data-freq="${c.freq}" x="${x0.toFixed(1)}" y="0" width="${(x1 - x0).toFixed(1)}" height="${SVG_H}" fill="transparent" style="cursor:pointer"/>`);
+      hits.push(`<rect class="band-hit" data-freq="${c.freq}" x="${x0.toFixed(1)}" y="0" width="${(x1 - x0).toFixed(1)}" height="${cy}" fill="transparent" style="cursor:pointer"/>`);
 
     } else if (c.type === 'adjacent_1') {
-      markers.push(`<line x1="${x.toFixed(1)}" y1="${cy}" x2="${x.toFixed(1)}" y2="${(cy - 6).toFixed(1)}" stroke="${COLOR_ADJ1}" stroke-width="1.5" stroke-dasharray="2,2"/>`);
-      hits.push(`<rect class="band-hit" data-freq="${c.freq}" x="${(x - SLOT_PX/2).toFixed(1)}" y="0" width="${SLOT_PX.toFixed(1)}" height="${SVG_H}" fill="transparent" style="cursor:pointer"/>`);
+      markers.push(`<line x1="${x.toFixed(1)}" y1="${cy}" x2="${x.toFixed(1)}" y2="${(cy - 7).toFixed(1)}" stroke="${COLOR_ADJ1}" stroke-width="1.5" stroke-dasharray="2,2"/>`);
+      hits.push(`<rect class="band-hit" data-freq="${c.freq}" x="${(x - SLOT_PX/2).toFixed(1)}" y="0" width="${SLOT_PX.toFixed(1)}" height="${cy}" fill="transparent" style="cursor:pointer"/>`);
 
     } else if (c.type === 'adjacent_2') {
-      markers.push(`<line x1="${x.toFixed(1)}" y1="${cy}" x2="${x.toFixed(1)}" y2="${(cy - 3).toFixed(1)}" stroke="${COLOR_ADJ2}" stroke-width="1" stroke-dasharray="2,2"/>`);
-      hits.push(`<rect class="band-hit" data-freq="${c.freq}" x="${(x - SLOT_PX/2).toFixed(1)}" y="0" width="${SLOT_PX.toFixed(1)}" height="${SVG_H}" fill="transparent" style="cursor:pointer"/>`);
+      markers.push(`<line x1="${x.toFixed(1)}" y1="${cy}" x2="${x.toFixed(1)}" y2="${(cy - 4).toFixed(1)}" stroke="${COLOR_ADJ2}" stroke-width="1" stroke-dasharray="2,2"/>`);
+      hits.push(`<rect class="band-hit" data-freq="${c.freq}" x="${(x - SLOT_PX/2).toFixed(1)}" y="0" width="${SLOT_PX.toFixed(1)}" height="${cy}" fill="transparent" style="cursor:pointer"/>`);
 
     } else {
-      markers.push(`<circle cx="${x.toFixed(1)}" cy="${cy}" r="${(SLOT_PX * 0.28).toFixed(1)}" fill="${COLOR_FREE}" opacity="0.5"/>`);
-      hits.push(`<rect class="band-hit" data-freq="${c.freq}" x="${(x - SLOT_PX/2).toFixed(1)}" y="0" width="${SLOT_PX.toFixed(1)}" height="${SVG_H}" fill="transparent" style="cursor:pointer"/>`);
+      markers.push(`<circle cx="${x.toFixed(1)}" cy="${cy}" r="${(SLOT_PX * 0.32).toFixed(1)}" fill="${COLOR_FREE}" opacity="0.55"/>`);
+      hits.push(`<rect class="band-hit" data-freq="${c.freq}" x="${(x - SLOT_PX/2).toFixed(1)}" y="0" width="${SLOT_PX.toFixed(1)}" height="${cy}" fill="transparent" style="cursor:pointer"/>`);
     }
   }
 
-  const baseline = `<line x1="0" y1="${cy}" x2="${totalW}" y2="${cy}" stroke="rgba(255,255,255,0.07)" stroke-width="1"/>`;
+  // Baseline
+  const baseline = `<line x1="0" y1="${cy}" x2="${totalW}" y2="${cy}" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>`;
+
+  // Ruler frekuensi di bawah baseline
+  let rulerParts = [];
+  const rulerY = cy + 4;
+  for (let f = FM_MIN_B; f <= FM_MAX_B + 0.01; f = Math.round((f + 0.1) * 10) / 10) {
+    const rx = freqToX(f);
+    const isMajor = Math.round(f * 10) % 10 === 0; // setiap 1 MHz
+    const isMid   = Math.round(f * 10) % 5 === 0 && !isMajor; // setiap 0.5 MHz
+    if (isMajor) {
+      rulerParts.push(`<line x1="${rx.toFixed(1)}" y1="${rulerY}" x2="${rx.toFixed(1)}" y2="${(rulerY + 6)}" stroke="rgba(255,255,255,0.25)" stroke-width="1"/>`);
+      rulerParts.push(`<text x="${rx.toFixed(1)}" y="${(rulerY + 16)}" text-anchor="middle" font-size="7.5" fill="rgba(255,255,255,0.35)" font-family="monospace">${f.toFixed(0)}</text>`);
+    } else if (isMid) {
+      rulerParts.push(`<line x1="${rx.toFixed(1)}" y1="${rulerY}" x2="${rx.toFixed(1)}" y2="${(rulerY + 4)}" stroke="rgba(255,255,255,0.12)" stroke-width="1"/>`);
+    } else {
+      rulerParts.push(`<line x1="${rx.toFixed(1)}" y1="${rulerY}" x2="${rx.toFixed(1)}" y2="${(rulerY + 2)}" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>`);
+    }
+  }
 
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${totalW}" height="${SVG_H}" style="display:block">
     ${baseline}
+    ${rulerParts.join('')}
     ${markers.join('')}
     ${paths.join('')}
     ${labels.join('')}
