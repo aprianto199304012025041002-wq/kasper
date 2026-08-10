@@ -152,8 +152,19 @@ async function handleClick(e) {
   }
   const cell = e.target.closest('.ch-cell[data-freq]');
   if (cell && state.data) {
-    const ch = state.data.channel_map.find(c=>c.freq===parseFloat(cell.dataset.freq));
-    if (ch) openInlineDetail(ch); return;
+    const freq = parseFloat(cell.dataset.freq);
+    const ch = state.data.channel_map.find(c => c.freq === freq);
+    if (ch) {
+      // Cari semua stasiun di frekuensi ini dari kota yang sama (co-channel)
+      const city = cell.closest('.city-row-block')?.querySelector('.city-row-label')?.childNodes[0]?.textContent?.trim();
+      const coStations = city
+        ? state.data.stations
+            .filter(s => Math.abs(parseFloat(s.freq) - freq) < 0.01 && (s.kota || s.city) === city)
+            .sort((a, b) => (a.stn_name||'').localeCompare(b.stn_name||''))
+        : null;
+      openInlineDetail(coStations?.length ? { ...ch, coStations } : ch);
+    }
+    return;
   }
   const nRow = e.target.closest('.neighbor-row[data-freq]');
   if (nRow) { openDetailPage({freq:parseFloat(nRow.dataset.freq)}); return; }
@@ -732,14 +743,22 @@ function openInlineDetail(info) {
       ['Upper edge', Number(upper).toFixed(4) + ' MHz', true],
     ];
     if (isCoChannel) {
-      // Co-channel: list semua stasiun
-      const stationList = stations.map((s, i) =>
-        `<div class="cd-coitem">
-          <div class="cd-label">#${i+1} ${esc(s.jenis||'')}</div>
-          <div class="cd-val">${esc(s.stn_name||'—')}</div>
-          <div class="cd-val" style="font-size:11px;color:var(--text-tertiary)">${esc(s.kecamatan||'')} · ${s.erp_dbm ? s.erp_dbm.toFixed(1)+' dBm' : '—'}</div>
-        </div>`
-      ).join('');
+      const cards = stations
+        .slice()
+        .sort((a, b) => (a.stn_name||'').localeCompare(b.stn_name||''))
+        .map((s, i) => `
+          <div class="cd-swipe-card">
+            <div class="cd-swipe-num">${i+1} / ${stations.length}</div>
+            <div class="cd-swipe-name">${esc(s.stn_name||'—')}</div>
+            <div class="cd-grid" style="margin-top:10px">
+              <div class="cd-item"><div class="cd-label">Kecamatan</div><div class="cd-val">${esc(s.kecamatan||'—')}</div></div>
+              <div class="cd-item"><div class="cd-label">ERP</div><div class="cd-val mono">${s.erp_dbm ? s.erp_dbm.toFixed(1)+' dBm' : '—'}</div></div>
+              <div class="cd-item"><div class="cd-label">Jenis</div><div class="cd-val">${esc(s.jenis||'—')}</div></div>
+              <div class="cd-item"><div class="cd-label">No. SIMF</div><div class="cd-val mono">${esc(s.no_simf||'—')}</div></div>
+            </div>
+            <button class="cd-cta" onclick="window.__openDetailFreq(${freq})">Lihat detail stasiun →</button>
+          </div>`).join('');
+
       const html = `
         <div class="cd-head">
           <div class="cd-head-left">
@@ -748,15 +767,13 @@ function openInlineDetail(info) {
           </div>
           <button class="cd-close" id="cdClose">✕</button>
         </div>
-        <div class="cd-grid">
-          <div class="cd-item"><div class="cd-label">Frekuensi</div><div class="cd-val mono">${freq.toFixed(3)} MHz</div></div>
-          <div class="cd-item"><div class="cd-label">Lower edge</div><div class="cd-val mono">${Number(lower).toFixed(4)} MHz</div></div>
-          <div class="cd-item"><div class="cd-label">Upper edge</div><div class="cd-val mono">${Number(upper).toFixed(4)} MHz</div></div>
-          <div class="cd-item"><div class="cd-label">Status</div><div class="cd-val" style="color:#ffa000">${stations.length} izin di slot ini</div></div>
-        </div>
-        <div class="cd-colist">${stationList}</div>`;
+        <div class="cd-swipe-hint">← geser →</div>
+        <div class="cd-swipe-wrap">${cards}</div>`;
+
       openCellDrawer(html);
       document.getElementById('cdClose')?.addEventListener('click', closeCellDrawer);
+      // Expose untuk CTA button di dalam card
+      window.__openDetailFreq = (f) => { closeCellDrawer(); openDetailPage({freq: f}); };
       return;
     }
     const s = stations[0] || {};
