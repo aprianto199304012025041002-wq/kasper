@@ -23,15 +23,29 @@ export function getChannelStatus(ch, stations) {
   const used = stations.find((s) => Math.abs(s.freq - ch) < ADJACENT_GUARD);
   if (used) return { type: 'used', station: used };
 
-  // 1st adjacent (±0.1 MHz)
+  // Cek semua kemungkinan adj dari kiri dan kanan
   const adj1L = stations.find((s) => Math.abs(s.freq - (ch - CHANNEL_SPACING)) < ADJACENT_GUARD);
   const adj1R = stations.find((s) => Math.abs(s.freq - (ch + CHANNEL_SPACING)) < ADJACENT_GUARD);
-  if (adj1L || adj1R) return { type: 'adjacent_1', adj_left: adj1L, adj_right: adj1R };
-
-  // 2nd adjacent (±0.2 MHz)
   const adj2L = stations.find((s) => Math.abs(s.freq - (ch - 2 * CHANNEL_SPACING)) < ADJACENT_GUARD);
   const adj2R = stations.find((s) => Math.abs(s.freq - (ch + 2 * CHANNEL_SPACING)) < ADJACENT_GUARD);
-  if (adj2L || adj2R) return { type: 'adjacent_2', adj_left: adj2L, adj_right: adj2R };
+
+  const hasAdj1 = adj1L || adj1R;
+  const hasAdj2 = adj2L || adj2R;
+
+  if (hasAdj1 || hasAdj2) {
+    // Type ditentukan yang paling ketat (adj1 > adj2)
+    const type = hasAdj1 ? 'adjacent_1' : 'adjacent_2';
+    return {
+      type,
+      adj1_left:  adj1L || null,
+      adj1_right: adj1R || null,
+      adj2_left:  adj2L || null,
+      adj2_right: adj2R || null,
+      // backward compat
+      adj_left:  adj1L || adj2L || null,
+      adj_right: adj1R || adj2R || null,
+    };
+  }
 
   return { type: 'free' };
 }

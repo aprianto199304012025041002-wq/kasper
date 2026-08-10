@@ -499,18 +499,17 @@ function renderContent() {
 // adj_left  = ada stasiun di kiri → panah kanan (>) karena interferensi datang dari kiri
 // adj_right = ada stasiun di kanan → panah kiri (<) karena interferensi datang dari kanan
 function adjSymbol(c) {
-  const L = !!c.adj_left;
-  const R = !!c.adj_right;
-  const is2 = c.type === 'adjacent_2';
-  if (is2) {
-    if (L && R) return '<<>>';
-    if (L)      return '<<';
-    if (R)      return '>>';
-  } else {
-    if (L && R) return '<>';
-    if (L)      return '<';
-    if (R)      return '>';
-  }
+  // Gunakan field detail jika ada (dari channelEngine baru)
+  // fallback ke adj_left/adj_right untuk backward compat API
+  const a1L = !!(c.adj1_left  || (c.type === 'adjacent_1' && c.adj_left));
+  const a1R = !!(c.adj1_right || (c.type === 'adjacent_1' && c.adj_right));
+  const a2L = !!(c.adj2_left  || (c.type === 'adjacent_2' && c.adj_left));
+  const a2R = !!(c.adj2_right || (c.type === 'adjacent_2' && c.adj_right));
+
+  const left  = a1L ? '<'  : a2L ? '<<' : '';
+  const right = a1R ? '>'  : a2R ? '>>' : '';
+
+  if (left || right) return left + right;
   return '?';
 }
 
