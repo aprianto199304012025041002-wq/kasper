@@ -502,10 +502,16 @@ function adjSymbol(c) {
   const L = !!c.adj_left;
   const R = !!c.adj_right;
   const is2 = c.type === 'adjacent_2';
-  if (L && R)  return is2 ? '<<>>' : '<>';
-  if (L)       return is2 ? '<<'  : '<';
-  if (R)       return is2 ? '>>'  : '>';
-  return is2 ? '?' : '?';
+  if (is2) {
+    if (L && R) return '<<>>';
+    if (L)      return '<<';
+    if (R)      return '>>';
+  } else {
+    if (L && R) return '<>';
+    if (L)      return '<';
+    if (R)      return '>';
+  }
+  return '?';
 }
 
 // ── Cell render ───────────────────────────────────────────────────────
