@@ -454,12 +454,20 @@ function renderContent() {
         </div>
       </div>`;
 
-    // Click handler untuk band SVG
+    // Click handler untuk band SVG — sama seperti grid, sertakan coStations
     el.querySelectorAll('.band-hit[data-freq]').forEach(hit => {
       hit.addEventListener('click', () => {
         const freq = parseFloat(hit.dataset.freq);
         const ch = state.data.channel_map.find(c => Math.abs(c.freq - freq) < 0.01);
-        if (ch) openInlineDetail(ch);
+        if (!ch) return;
+        const cityEl = hit.closest('.city-row-block')?.querySelector('.city-row-label');
+        const city = cityEl?.childNodes[0]?.textContent?.trim();
+        const coStations = city
+          ? state.data.stations
+              .filter(s => Math.abs(parseFloat(s.freq) - freq) < 0.01 && (s.kota || s.city) === city)
+              .sort((a, b) => (a.stn_name||'').localeCompare(b.stn_name||''))
+          : null;
+        openInlineDetail(coStations?.length ? { ...ch, coStations } : ch);
       });
     });
     return;

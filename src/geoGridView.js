@@ -770,7 +770,9 @@ export function renderGeoGridView(container, filterCities, geoSettings, preloade
     const row = cityRows.find(r => r.city === cityName);
     const ch = row?.channelMap.find(c => Math.abs(c.freq - freq) < 0.01);
     if (ch && onClickCell) {
-      // Normalisasi ke format channel_map utama agar drawer konsisten
+      const coStations = (preloadedStations || [])
+        .filter(s => Math.abs(parseFloat(s.freq) - freq) < 0.01 && (s.kota || s.city) === cityName)
+        .sort((a, b) => (a.stn_name||'').localeCompare(b.stn_name||''));
       const normalized = {
         freq: ch.freq,
         lower: ch.lower,
@@ -779,6 +781,7 @@ export function renderGeoGridView(container, filterCities, geoSettings, preloade
         station: ch.station || null,
         adj_left:  ch.adjL || null,
         adj_right: ch.adjR || null,
+        coStations: coStations.length > 0 ? coStations : null,
       };
       onClickCell(normalized);
     }
