@@ -712,3 +712,46 @@ html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
   font-weight: 700; color: #ffd600;
   margin-bottom: 4px;
 }
+
+/* ── Co-channel swipe cards ── */
+.cd-swipe-hint {
+  text-align: center;
+  font-size: 10px;
+  color: var(--text-tertiary);
+  font-family: var(--font-mono);
+  margin-bottom: 8px;
+  letter-spacing: .06em;
+}
+.cd-swipe-wrap {
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  gap: 12px;
+  padding-bottom: 4px;
+  scrollbar-width: none;
+}
+.cd-swipe-wrap::-webkit-scrollbar { display: none; }
+.cd-swipe-card {
+  flex-shrink: 0;
+  width: 100%;
+  scroll-snap-align: start;
+  background: var(--bg-input);
+  border: 1px solid var(--border-mid);
+  border-radius: 10px;
+  padding: 14px;
+}
+.cd-swipe-num {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--text-tertiary);
+  margin-bottom: 6px;
+  text-align: right;
+}
+.cd-swipe-name {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 700;
+  color: #ffd600;
+  margin-bottom: 4px;
+}
