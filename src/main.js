@@ -323,22 +323,18 @@ function renderControls() {
 // ── Legend dinamis ────────────────────────────────────────────────────
 function renderLegend() {
   const el = document.getElementById('legendBar');
-  if (!el || !state.data || state.view === 'geo') { if (el) el.innerHTML = ''; return; }
-  const cities = [...new Set(state.data.stations.map(s=>s.kota||s.city).filter(Boolean))].sort();
+  if (!el || !state.data) { if (el) el.innerHTML = ''; return; }
   el.innerHTML = `<div class="legend-strip">
-    ${cities.map(c=>{
-      const col = cityColor(c);
-      return `<div class="legend-chip">
-        <span class="legend-chip__swatch" style="background:${col}22;border-color:${col}"></span>
-        <span>${c}</span>
-      </div>`;
-    }).join('')}
     <div class="legend-chip">
-      <span class="legend-chip__swatch" style="background:var(--signal-danger-dim);border-color:var(--signal-danger);border-style:dashed"></span>
-      <span>Adjacent</span>
+      <span class="legend-chip__swatch" style="background:rgba(255,214,0,.13);border-color:#ffd600"></span>
+      <span>Terpakai</span>
     </div>
     <div class="legend-chip">
-      <span class="legend-chip__swatch" style="background:var(--signal-phosphor-dim);border-color:var(--signal-phosphor)"></span>
+      <span class="legend-chip__swatch" style="background:rgba(255,45,45,.1);border-color:#ff2d2d;border-style:dashed"></span>
+      <span>Adjacent (guard)</span>
+    </div>
+    <div class="legend-chip">
+      <span class="legend-chip__swatch" style="background:rgba(30,144,255,.1);border-color:#1e90ff"></span>
       <span>Kosong ★</span>
     </div>
   </div>`;
@@ -488,10 +484,9 @@ function firstWord(name) {
 
 function renderCell(c) {
   if (c.type==='used') {
-    const color = cityColor(c.station?.kota||c.station?.city);
     const label = firstWord(c.station?.stn_name);
     const co = c.coStations?.length > 1 ? `<span class="ch-cell__co">${c.coStations.length}</span>` : '';
-    return `<div class="ch-cell ch-cell--used" style="--cell-color:${color}" data-freq="${c.freq}" title="${esc(c.station?.stn_name||'')}">
+    return `<div class="ch-cell ch-cell--used" data-freq="${c.freq}" title="${esc(c.station?.stn_name||'')}">
       <span class="ch-cell__freq">${c.freq.toFixed(1)}</span>
       <span class="ch-cell__name">${esc(label)}</span>
       ${co}
@@ -599,9 +594,10 @@ function renderBandSVG(row, city) {
 // ── Cell renderer: Geo Grid (warna solid per kota, tanpa nama) ────────
 function renderCellGeo(c, city) {
   if (c.type === 'used') {
-    const color = cityColor(c.station?.kota || c.station?.city);
-    return `<div class="ch-cell ch-cell--geo-used" style="--cell-color:${color};background:${color}22;border-color:${color}" data-freq="${c.freq}" title="${esc(c.station?.stn_name||'')}">
+    const co = c.coStations?.length > 1 ? `<span class="ch-cell__co">${c.coStations.length}</span>` : '';
+    return `<div class="ch-cell ch-cell--used ch-cell--geo-used" data-freq="${c.freq}" title="${esc(c.station?.stn_name||'')}">
       <span class="ch-cell__freq">${c.freq.toFixed(1)}</span>
+      ${co}
     </div>`;
   }
   if (c.type === 'adjacent_1') {
