@@ -551,47 +551,64 @@ function freqToX(freq) {
 
 function renderBandSVG(row, city) {
   const totalW = (FM_MAX_B - FM_MIN_B) * SVG_W_PER_MHZ + 40;
-  const cy = SVG_H - 10;  // baseline dekat bawah
-  const color = cityColor(city);
+  const cy = SVG_H - 10;
+
+  // Warna seragam sesuai skema grid
+  const COLOR_USED  = '#ffd600';
+  const COLOR_ADJ1  = '#ff2d2d';
+  const COLOR_ADJ2  = 'rgba(255,45,45,0.5)';
+  const COLOR_FREE  = '#1e90ff';
 
   let paths   = [];
   let markers = [];
   let hits    = [];
   let labels  = [];
 
-  const slotHalfW = SLOT_PX;  // arch: kiri-kanan masing2 1 slot (200kHz total)
+  const slotHalfW = SLOT_PX;
 
   for (const c of row) {
     const x = freqToX(c.freq);
 
     if (c.type === 'used') {
-      const amp = erpAmp(c.station?.erp_dbm);
-      const x0 = x - slotHalfW;
-      const x1 = x + slotHalfW;
-      const pts = [];
-      for (let i = 0; i <= SINE_STEPS; i++) {
-        const t = i / SINE_STEPS;
-        const px = x0 + t * (x1 - x0);
-        const py = cy - amp * Math.sin(Math.PI * t);
-        pts.push(`${i === 0 ? 'M' : 'L'}${px.toFixed(1)},${py.toFixed(1)}`);
-      }
-      const d = pts.join(' ');
-      const fillD = `${d} L${x1.toFixed(1)},${cy} L${x0.toFixed(1)},${cy} Z`;
-      paths.push(`<path d="${fillD}" fill="${color}" opacity="0.15"/>`);
-      paths.push(`<path d="${d}" stroke="${color}" stroke-width="1.8" fill="none" opacity="0.95"/>`);
-      labels.push(`<text x="${x.toFixed(1)}" y="${(cy - amp - 4).toFixed(1)}" text-anchor="middle" font-size="7" fill="${color}" opacity="0.85" font-family="monospace">${c.freq.toFixed(1)}</text>`);
-      hits.push(`<rect class="band-hit" data-freq="${c.freq}" x="${x0.toFixed(1)}" y="0" width="${(x1 - x0).toFixed(1)}" height="${SVG_H}" fill="transparent" style="cursor:pointer"/>`);
+      const coStations = c.coStations || [c.station];
+      const count = coStations.length;
+
+      // Co-channel: gambar arch sedikit digeser supaya tidak numpuk
+      coStations.forEach((s, idx) => {
+        const offset = count > 1 ? (idx - (count - 1) / 2) * SLOT_PX * 0.6 : 0;
+        const cx = x + offset;
+        const amp = erpAmp(s?.erp_dbm);
+        const x0 = cx - slotHalfW;
+        const x1 = cx + slotHalfW;
+        const pts = [];
+        for (let i = 0; i <= SINE_STEPS; i++) {
+          const t = i / SINE_STEPS;
+          const px = x0 + t * (x1 - x0);
+          const py = cy - amp * Math.sin(Math.PI * t);
+          pts.push(`${i === 0 ? 'M' : 'L'}${px.toFixed(1)},${py.toFixed(1)}`);
+        }
+        const d = pts.join(' ');
+        const fillD = `${d} L${x1.toFixed(1)},${cy} L${x0.toFixed(1)},${cy} Z`;
+        paths.push(`<path d="${fillD}" fill="${COLOR_USED}" opacity="${count > 1 ? 0.08 : 0.13}"/>`);
+        paths.push(`<path d="${d}" stroke="${COLOR_USED}" stroke-width="1.8" fill="none" opacity="${0.9 - idx * 0.15}"/>`);
+      });
+
+      // Label frekuensi — 1 saja di tengah, tambah badge ×N kalau co-channel
+      const amp0 = erpAmp(coStations[0]?.erp_dbm);
+      const badge = count > 1 ? ` ×${count}` : '';
+      labels.push(`<text x="${x.toFixed(1)}" y="${(cy - amp0 - 4).toFixed(1)}" text-anchor="middle" font-size="7" fill="${COLOR_USED}" opacity="0.9" font-family="monospace">${c.freq.toFixed(1)}${badge}</text>`);
+      hits.push(`<rect class="band-hit" data-freq="${c.freq}" x="${(x - slotHalfW * 1.5).toFixed(1)}" y="0" width="${(slotHalfW * 3).toFixed(1)}" height="${SVG_H}" fill="transparent" style="cursor:pointer"/>`);
 
     } else if (c.type === 'adjacent_1') {
-      markers.push(`<line x1="${x.toFixed(1)}" y1="${cy}" x2="${x.toFixed(1)}" y2="${(cy - 6).toFixed(1)}" stroke="rgba(255,160,0,0.6)" stroke-width="1.5"/>`);
+      markers.push(`<line x1="${x.toFixed(1)}" y1="${cy}" x2="${x.toFixed(1)}" y2="${(cy - 6).toFixed(1)}" stroke="${COLOR_ADJ1}" stroke-width="1.5" stroke-dasharray="2,2"/>`);
       hits.push(`<rect class="band-hit" data-freq="${c.freq}" x="${(x - SLOT_PX/2).toFixed(1)}" y="0" width="${SLOT_PX.toFixed(1)}" height="${SVG_H}" fill="transparent" style="cursor:pointer"/>`);
 
     } else if (c.type === 'adjacent_2') {
-      markers.push(`<line x1="${x.toFixed(1)}" y1="${cy}" x2="${x.toFixed(1)}" y2="${(cy - 3).toFixed(1)}" stroke="rgba(255,100,0,0.5)" stroke-width="1"/>`);
+      markers.push(`<line x1="${x.toFixed(1)}" y1="${cy}" x2="${x.toFixed(1)}" y2="${(cy - 3).toFixed(1)}" stroke="${COLOR_ADJ2}" stroke-width="1" stroke-dasharray="2,2"/>`);
       hits.push(`<rect class="band-hit" data-freq="${c.freq}" x="${(x - SLOT_PX/2).toFixed(1)}" y="0" width="${SLOT_PX.toFixed(1)}" height="${SVG_H}" fill="transparent" style="cursor:pointer"/>`);
 
     } else {
-      markers.push(`<circle cx="${x.toFixed(1)}" cy="${cy}" r="${(SLOT_PX * 0.28).toFixed(1)}" fill="rgba(0,230,118,0.4)"/>`);
+      markers.push(`<circle cx="${x.toFixed(1)}" cy="${cy}" r="${(SLOT_PX * 0.28).toFixed(1)}" fill="${COLOR_FREE}" opacity="0.5"/>`);
       hits.push(`<rect class="band-hit" data-freq="${c.freq}" x="${(x - SLOT_PX/2).toFixed(1)}" y="0" width="${SLOT_PX.toFixed(1)}" height="${SVG_H}" fill="transparent" style="cursor:pointer"/>`);
     }
   }
