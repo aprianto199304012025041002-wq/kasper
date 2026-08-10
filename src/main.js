@@ -495,6 +495,19 @@ function renderContent() {
   attachCellTooltips(state.data.channel_map);
 }
 
+// ── Adj direction symbol ──────────────────────────────────────────────
+// adj_left  = ada stasiun di kiri → panah kanan (>) karena interferensi datang dari kiri
+// adj_right = ada stasiun di kanan → panah kiri (<) karena interferensi datang dari kanan
+function adjSymbol(c) {
+  const L = !!c.adj_left;
+  const R = !!c.adj_right;
+  const is2 = c.type === 'adjacent_2';
+  if (L && R)  return is2 ? '<<>>' : '<>';
+  if (L)       return is2 ? '<<'  : '<';
+  if (R)       return is2 ? '>>'  : '>';
+  return is2 ? '?' : '?';
+}
+
 // ── Cell render ───────────────────────────────────────────────────────
 function firstWord(name) {
   if (!name) return '';
@@ -512,17 +525,17 @@ function renderCell(c) {
     </div>`;
   }
   if (c.type==='adjacent_1') {
-    const dir = c.adj_left&&c.adj_right?'◄►':c.adj_left?'◄':'►';
-    return `<div class="ch-cell ch-cell--adjacent ch-cell--adj1" data-freq="${c.freq}" title="1st adjacent — guard ketat (20 dB)">
+    const sym = adjSymbol(c);
+    return `<div class="ch-cell ch-cell--adjacent ch-cell--adj1" data-freq="${c.freq}">
       <span class="ch-cell__freq">${c.freq.toFixed(1)}</span>
-      <span class="ch-cell__name">${dir}</span>
+      <span class="ch-cell__name">${sym}</span>
     </div>`;
   }
   if (c.type==='adjacent_2') {
-    const dir = c.adj_left&&c.adj_right?'◄►':c.adj_left?'◄':'►';
-    return `<div class="ch-cell ch-cell--adjacent ch-cell--adj2" data-freq="${c.freq}" title="2nd adjacent — guard lunak (10 dB)">
+    const sym = adjSymbol(c);
+    return `<div class="ch-cell ch-cell--adjacent ch-cell--adj2" data-freq="${c.freq}">
       <span class="ch-cell__freq">${c.freq.toFixed(1)}</span>
-      <span class="ch-cell__name">${dir}${dir}</span>
+      <span class="ch-cell__name">${sym}</span>
     </div>`;
   }
   return `<div class="ch-cell ch-cell--free" data-freq="${c.freq}">
@@ -573,10 +586,9 @@ function renderBandSVG(row, city) {
       const count = coStations.length;
       const avgErp = coStations.reduce((s, st) => s + (st?.erp_dbm || 60), 0) / coStations.length;
       const amp = erpAmp(avgErp);
-      // Arch: puncak di center freq, kaki di ±50kHz
-      // Adj-1 ada di ±100kHz, Adj-2 ada di ±200kHz
-      // Step channel_map = 100kHz = SLOT_PX
-      const archW = SLOT_PX * 0.5; // ±50kHz
+      // Arch: puncak di center freq, kaki di ±100kHz (pas di posisi adj-1)
+      // Adj-1 = ±100kHz, Adj-2 = ±200kHz, step = 100kHz
+      const archW = SLOT_PX * 1; // ±100kHz = 1 step
       const x0 = x - archW;
       const x1 = x + archW;
       const pts = [];
@@ -592,18 +604,28 @@ function renderBandSVG(row, city) {
       paths.push(`<path d="${d}" stroke="${COLOR_USED}" stroke-width="1.8" fill="none" opacity="0.95"/>`);
       const badge = count > 1 ? ` ×${count}` : '';
       labels.push(`<text x="${x.toFixed(1)}" y="${(cy - amp - 4).toFixed(1)}" text-anchor="middle" font-size="7" fill="${COLOR_USED}" opacity="0.9" font-family="monospace">${c.freq.toFixed(1)}${badge}</text>`);
+      labels.push(`<text x="${x.toFixed(1)}" y="${(cy + RULER_H - 4).toFixed(1)}" text-anchor="middle" font-size="6.5" fill="${COLOR_USED}" font-family="monospace" opacity="0.7">${c.freq.toFixed(1)}</text>`);
       hits.push(`<rect class="band-hit" data-freq="${c.freq}" x="${x0.toFixed(1)}" y="0" width="${(x1 - x0).toFixed(1)}" height="${cy}" fill="transparent" style="cursor:pointer"/>`);
 
-    } else if (c.type === 'adjacent_1') {
-      markers.push(`<line x1="${x.toFixed(1)}" y1="${cy}" x2="${x.toFixed(1)}" y2="${(cy - 14).toFixed(1)}" stroke="${COLOR_ADJ1}" stroke-width="1.5" stroke-dasharray="3,3"/>`);
-      hits.push(`<rect class="band-hit" data-freq="${c.freq}" x="${(x - SLOT_PX/2).toFixed(1)}" y="0" width="${SLOT_PX.toFixed(1)}" height="${cy}" fill="transparent" style="cursor:pointer"/>`);
+    } else if (c.type === 'adjacent_1' || c.type === 'adjacent_2') {
+      const is2   = c.type === 'adjacent_2';
+      const sym   = adjSymbol(c);
+      const color = is2 ? COLOR_ADJ2 : COLOR_ADJ1;
+      const tickH = is2 ? 8 : 14;
+      const arrowY = cy - tickH - 2;
 
-    } else if (c.type === 'adjacent_2') {
-      markers.push(`<line x1="${x.toFixed(1)}" y1="${cy}" x2="${x.toFixed(1)}" y2="${(cy - 8).toFixed(1)}" stroke="${COLOR_ADJ2}" stroke-width="1" stroke-dasharray="3,3"/>`);
+      // Garis vertikal dashed
+      markers.push(`<line x1="${x.toFixed(1)}" y1="${cy}" x2="${x.toFixed(1)}" y2="${(cy - tickH).toFixed(1)}" stroke="${color}" stroke-width="${is2?1:1.5}" stroke-dasharray="3,2"/>`);
+      // Simbol arah di atas garis
+      markers.push(`<text x="${x.toFixed(1)}" y="${arrowY.toFixed(1)}" text-anchor="middle" font-size="7" fill="${color}" font-family="monospace" font-weight="700">${sym}</text>`);
+      // Label frekuensi di bawah baseline
+      markers.push(`<text x="${x.toFixed(1)}" y="${(cy + RULER_H - 4).toFixed(1)}" text-anchor="middle" font-size="6.5" fill="${color}" font-family="monospace" opacity="0.8">${c.freq.toFixed(1)}</text>`);
       hits.push(`<rect class="band-hit" data-freq="${c.freq}" x="${(x - SLOT_PX/2).toFixed(1)}" y="0" width="${SLOT_PX.toFixed(1)}" height="${cy}" fill="transparent" style="cursor:pointer"/>`);
 
     } else {
+      // Free — titik biru + label frekuensi
       markers.push(`<circle cx="${x.toFixed(1)}" cy="${cy}" r="3" fill="${COLOR_FREE}" opacity="0.6"/>`);
+      markers.push(`<text x="${x.toFixed(1)}" y="${(cy + RULER_H - 4).toFixed(1)}" text-anchor="middle" font-size="6.5" fill="${COLOR_FREE}" font-family="monospace" opacity="0.55">${c.freq.toFixed(1)}</text>`);
       hits.push(`<rect class="band-hit" data-freq="${c.freq}" x="${(x - SLOT_PX/2).toFixed(1)}" y="0" width="${SLOT_PX.toFixed(1)}" height="${cy}" fill="transparent" style="cursor:pointer"/>`);
     }
   }
