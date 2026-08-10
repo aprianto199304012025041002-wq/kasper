@@ -533,7 +533,7 @@ function renderCell(c) {
 
 // ── Band view: SVG spectrum per kota ─────────────────────────────────
 const FM_MIN_B = 87.5, FM_MAX_B = 108.0;
-const SVG_W_PER_MHZ = 80;   // diperlebar dari 52 → 80px per MHz
+const SVG_W_PER_MHZ = 200;  // 200px per MHz = 20px per 100kHz step
 const SVG_H = 110;           // lebih tinggi untuk ruler di bawah
 const RULER_H = 20;          // tinggi area ruler
 const AMP_MIN = 12, AMP_MAX = 48;
