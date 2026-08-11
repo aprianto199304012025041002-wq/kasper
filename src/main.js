@@ -499,18 +499,17 @@ function renderContent() {
 // adj_left  = ada stasiun di kiri → panah kanan (>) karena interferensi datang dari kiri
 // adj_right = ada stasiun di kanan → panah kiri (<) karena interferensi datang dari kanan
 function adjSymbol(c) {
-  // adj_left  = ada stasiun di KIRI → panah kanan (>) karena sinyal datang dari kiri
-  // adj_right = ada stasiun di KANAN → panah kiri (<) karena sinyal datang dari kanan
-  // Per sisi: adj-1 menang atas adj-2 (lebih ketat)
+  // Panah menunjuk KE ARAH stasiunnya:
+  // adj_left  = stasiun di KIRI  → '<'  (adj-1) atau '<<' (adj-2)
+  // adj_right = stasiun di KANAN → '>'  (adj-1) atau '>>' (adj-2)
+  // Per sisi: adj-1 menang atas adj-2
   const a1L = !!(c.adj1_left  || (c.type === 'adjacent_1' && c.adj_left));
   const a1R = !!(c.adj1_right || (c.type === 'adjacent_1' && c.adj_right));
   const a2L = !!(c.adj2_left  || (c.type === 'adjacent_2' && c.adj_left));
   const a2R = !!(c.adj2_right || (c.type === 'adjacent_2' && c.adj_right));
 
-  // Kiri: adj-1 → '>', adj-2 saja → '>>'
-  const fromLeft  = a1L ? '>' : a2L ? '>>' : '';
-  // Kanan: adj-1 → '<', adj-2 saja → '<<'
-  const fromRight = a1R ? '<' : a2R ? '<<' : '';
+  const fromLeft  = a1L ? '<'  : a2L ? '<<' : '';
+  const fromRight = a1R ? '>'  : a2R ? '>>' : '';
 
   if (fromLeft || fromRight) return fromLeft + fromRight;
   return '?';
