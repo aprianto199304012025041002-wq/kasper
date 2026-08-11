@@ -47,11 +47,6 @@ class ChannelEngine {
                 if (abs($f - ($ch - self::CHANNEL_SPACING)) < self::MATCH_TOLERANCE) $adj1L = $s;
                 if (abs($f - ($ch + self::CHANNEL_SPACING)) < self::MATCH_TOLERANCE) $adj1R = $s;
             }
-            if ($adj1L || $adj1R) {
-                $map[] = ['freq'=>$ch,'lower'=>$lower,'upper'=>$upper,'type'=>'adjacent_1',
-                          'adj_left'=>$adj1L,'adj_right'=>$adj1R];
-                continue;
-            }
 
             // 2nd adjacent (±0.2 MHz)
             $adj2L = $adj2R = null;
@@ -60,9 +55,25 @@ class ChannelEngine {
                 if (abs($f - ($ch - 2 * self::CHANNEL_SPACING)) < self::MATCH_TOLERANCE) $adj2L = $s;
                 if (abs($f - ($ch + 2 * self::CHANNEL_SPACING)) < self::MATCH_TOLERANCE) $adj2R = $s;
             }
-            if ($adj2L || $adj2R) {
-                $map[] = ['freq'=>$ch,'lower'=>$lower,'upper'=>$upper,'type'=>'adjacent_2',
-                          'adj_left'=>$adj2L,'adj_right'=>$adj2R];
+
+            $hasAdj1 = $adj1L || $adj1R;
+            $hasAdj2 = $adj2L || $adj2R;
+
+            if ($hasAdj1 || $hasAdj2) {
+                $type = $hasAdj1 ? 'adjacent_1' : 'adjacent_2';
+                $map[] = [
+                    'freq'      => $ch,
+                    'lower'     => $lower,
+                    'upper'     => $upper,
+                    'type'      => $type,
+                    'adj1_left' => $adj1L,
+                    'adj1_right'=> $adj1R,
+                    'adj2_left' => $adj2L,
+                    'adj2_right'=> $adj2R,
+                    // backward compat
+                    'adj_left'  => $adj1L ?? $adj2L,
+                    'adj_right' => $adj1R ?? $adj2R,
+                ];
                 continue;
             }
 
