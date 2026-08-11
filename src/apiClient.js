@@ -70,20 +70,20 @@ export async function fetchSpectrum(filters = {}) {
     const r = await fetch(url.toString(), { signal: AbortSignal.timeout(FETCH_TIMEOUT_MS) });
     if (!r.ok) throw new Error(`API error ${r.status}`);
     const raw = await r.json();
-
-    // Ambil raw stations dari DB, rebuild channel_map di frontend
     const stations = (raw.stations || []).map(s => ({
       ...s, freq: parseFloat(s.freq),
-      lower_mhz: s.lower_mhz ?? s.lower,
-      upper_mhz: s.upper_mhz ?? s.upper,
     }));
-    const channelMap = computeChannelMap(stations);
+    // Pakai channel_map dari PHP — sudah punya adj1_left/adj1_right/adj2_left/adj2_right
+    // Rebuild hanya kalau channel_map tidak ada (fallback)
+    const channelMap = (raw.channel_map && raw.channel_map.length > 0)
+      ? raw.channel_map
+      : computeChannelMap(stations);
     return {
       ...raw,
       stations,
       channel_map: channelMap,
-      summary: summarize(channelMap),
-      free_blocks: findFreeBlocks(channelMap),
+      summary: raw.summary || summarize(channelMap),
+      free_blocks: raw.free_blocks || findFreeBlocks(channelMap),
     };
   }
   return buildLocalResponse(filters);
