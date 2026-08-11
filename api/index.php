@@ -12,6 +12,7 @@ require_once __DIR__ . '/src/InterferenceEngine.php';
 
 $config   = require __DIR__ . '/src/config.php';
 $cache    = new Cache($config['cache']);
+$CACHE_V  = 'v2'; // bump ini untuk bust semua cache
 $db       = Database::connect($config['db']);
 $repo     = new StationRepository($db);
 $provRepo = new ProvinceRepository($db);
@@ -57,7 +58,7 @@ switch ($route) {
             'freq_max' => $qp['freq_max'] ?? null,
         ]);
 
-        $cacheKey = 'stations_' . md5(json_encode($filters) . ($qp['jenis'] ?? ''));
+        $cacheKey = $CACHE_V . '_stations_' . md5(json_encode($filters) . ($qp['jenis'] ?? ''));
         if ($cached = $cache->get($cacheKey)) { header('X-Cache: HIT'); Response::json($cached); }
 
         $stations = $repo->getStations($filters);
@@ -90,7 +91,7 @@ switch ($route) {
 
     // ── GET /provinces ────────────────────────────────────────────────────
     case 'provinces':
-        $cacheKey = 'provinces_all';
+        $cacheKey = $CACHE_V . '_provinces_all';
         if ($cached = $cache->get($cacheKey)) { header('X-Cache: HIT'); Response::json($cached); }
         $result = ['provinces' => $provRepo->listWithStats(), 'generated_at' => date('c')];
         $cache->set($cacheKey, $result);
@@ -100,7 +101,7 @@ switch ($route) {
     // ── GET /cities?province= ─────────────────────────────────────────────
     case 'cities':
         $province = $qp['province'] ?? '';
-        $cacheKey = 'cities_' . md5($province);
+        $cacheKey = $CACHE_V . '_cities_' . md5($province);
         if ($cached = $cache->get($cacheKey)) { header('X-Cache: HIT'); Response::json($cached); }
         $result = ['province' => $province, 'cities' => $provRepo->citiesInProvince($province)];
         $cache->set($cacheKey, $result);
@@ -110,7 +111,7 @@ switch ($route) {
     // ── GET /channels?province=&city= ─────────────────────────────────────
     case 'channels':
         $filters  = array_filter(['province' => $qp['province'] ?? '', 'city' => $qp['city'] ?? null]);
-        $cacheKey = 'channels_' . md5(json_encode($filters));
+        $cacheKey = $CACHE_V . '_channels_' . md5(json_encode($filters));
         if ($cached = $cache->get($cacheKey)) { header('X-Cache: HIT'); Response::json($cached); }
         $stations   = $repo->getStations($filters);
         $channelMap = ChannelEngine::computeMap($stations);
