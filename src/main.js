@@ -723,16 +723,20 @@ function showTooltip(e,info) {
     ];
   } else if (info.type==='adjacent_1') {
     title=info.freq.toFixed(1)+' MHz — 1st Adjacent (Guard)';
+    const a1l = info.adj1_left || info.adj_left;
+    const a1r = info.adj1_right || info.adj_right;
     rows=[
-      ['Kiri',info.adj_left?.stn_name||'—'],
-      ['Kanan',info.adj_right?.stn_name||'—'],
+      ['Kiri', a1l?.stn_name||'—'],
+      ['Kanan',a1r?.stn_name||'—'],
       ['Proteksi','20 dB separation required'],
     ];
   } else if (info.type==='adjacent_2') {
     title=info.freq.toFixed(1)+' MHz — 2nd Adjacent';
+    const a2l = info.adj2_left || info.adj_left;
+    const a2r = info.adj2_right || info.adj_right;
     rows=[
-      ['Kiri',info.adj_left?.stn_name||'—'],
-      ['Kanan',info.adj_right?.stn_name||'—'],
+      ['Kiri', a2l?.stn_name||'—'],
+      ['Kanan',a2r?.stn_name||'—'],
       ['Proteksi','10 dB separation required'],
     ];
   } else {
@@ -852,21 +856,25 @@ function openInlineDetail(info) {
     );
     cta = `<button class="cd-cta" id="cdCtaDetail">Lihat detail stasiun →</button>`;
   } else if (info.type === 'adjacent_1') {
+    const a1l = info.adj1_left  || info.adj_left;
+    const a1r = info.adj1_right || info.adj_right;
     rows = [
       ['Frekuensi',  freq.toFixed(3) + ' MHz',           true],
       ['Lower edge', Number(lower).toFixed(4) + ' MHz',  true],
       ['Upper edge', Number(upper).toFixed(4) + ' MHz',  true],
-      ['Guard kiri', info.adj_left?.stn_name  || '—',    false],
-      ['Guard kanan',info.adj_right?.stn_name || '—',    false],
+      ['Guard kiri', a1l?.stn_name || '—',               false],
+      ['Guard kanan',a1r?.stn_name || '—',               false],
       ['Proteksi',   '20 dB separation',                 true],
     ];
   } else if (info.type === 'adjacent_2') {
+    const a2l = info.adj2_left  || info.adj_left;
+    const a2r = info.adj2_right || info.adj_right;
     rows = [
       ['Frekuensi',  freq.toFixed(3) + ' MHz',           true],
       ['Lower edge', Number(lower).toFixed(4) + ' MHz',  true],
       ['Upper edge', Number(upper).toFixed(4) + ' MHz',  true],
-      ['Guard kiri', info.adj_left?.stn_name  || '—',    false],
-      ['Guard kanan',info.adj_right?.stn_name || '—',    false],
+      ['Guard kiri', a2l?.stn_name || '—',               false],
+      ['Guard kanan',a2r?.stn_name || '—',               false],
       ['Proteksi',   '10 dB separation',                 true],
     ];
   } else {
