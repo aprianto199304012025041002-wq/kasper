@@ -34,9 +34,9 @@ export function renderDetailPage(data, onBack, allData, targetEl) {
   const bwKhz     = s.bw_khz || s.bwidth || 200;
   const statusCls = (s.status || s.lic_status || '').toLowerCase() === 'granted' ? 'is-granted' : 'is-expired';
   const jenis     = s.jenis || classifyJenis(s.clnt_name || '');
-  const color     = REGION_COLORS[s.kota || s.city] || '#888';
+  const color     = REGION_COLORS[s.wilayah_layanan || s.kota || s.city] || '#888';
 
-  const kota      = s.kota || s.city || '—';
+  const kota      = s.wilayah_layanan || s.kota || s.city || '—';
   const stnName   = s.stn_name || '—';
   const clntName  = s.clnt_name || '—';
   const erp       = s.erp_dbm || s.erp_pwr_dbm || '—';
@@ -103,7 +103,7 @@ export function renderDetailPage(data, onBack, allData, targetEl) {
             <div class="dmeta__val" style="font-size:11px">${noSimf}</div>
           </div>
           <div>
-            <div class="dmeta__label">Wilayah</div>
+            <div class="dmeta__label">Wilayah Layanan</div>
             <div class="dmeta__val">${esc(kota)}</div>
           </div>
           <div>
@@ -140,7 +140,7 @@ export function renderDetailPage(data, onBack, allData, targetEl) {
                     <div class="neighbor-row__diff">${sign}${diff} MHz</div>
                   </div>
                   <div style="color:var(--text-primary);font-size:13px">${esc(n.stn_name || '—')}</div>
-                  <div style="color:var(--text-secondary);font-size:12px">${esc(n.kota || '—')}</div>
+                  <div style="color:var(--text-secondary);font-size:12px">${esc(n.wilayah_layanan || n.kota || '—')}</div>
                   <div class="neighbor-row__erp">${n.erp_dbm || '—'} dBm</div>
                   <div><span class="badge badge--${statusBadge(n.status)}">${n.status || '—'}</span></div>
                 </div>`;

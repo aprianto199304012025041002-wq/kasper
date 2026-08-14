@@ -77,7 +77,7 @@ class StationRepository
     {
         $sql = "
             SELECT id, freq, stn_name, clnt_name,
-                   city AS kota, province,
+                   city AS kota, area_of_service AS wilayah_layanan, province,
                    erp_pwr_dbm AS erp_dbm,
                    status_simf AS status,
                    sid_lat AS latitude, sid_long AS longitude,

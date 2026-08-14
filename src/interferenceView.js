@@ -77,11 +77,11 @@ function renderTable(pairs, model) {
         <div class="row-idx">${i + 1}</div>
         <div>
           <div class="row-stn">${esc(p.tx.stn_name)}</div>
-          <div class="row-stn__freq">${parseFloat(p.tx.freq).toFixed(1)} MHz · ${esc(p.tx.kota)}</div>
+          <div class="row-stn__freq">${parseFloat(p.tx.freq).toFixed(1)} MHz · ${esc(p.tx.wilayah_layanan || p.tx.kota)}</div>
         </div>
         <div>
           <div class="row-stn">${esc(p.rx.stn_name)}</div>
-          <div class="row-stn__freq">${parseFloat(p.rx.freq).toFixed(1)} MHz · ${esc(p.rx.kota)}</div>
+          <div class="row-stn__freq">${parseFloat(p.rx.freq).toFixed(1)} MHz · ${esc(p.rx.wilayah_layanan || p.rx.kota)}</div>
         </div>
         <div class="row-mono">
           <span class="interf-row__type ${TYPE_CLASS[p.type] || ''}">
