@@ -26,12 +26,13 @@ class ProvinceRepository
     public function citiesInProvince(string $province): array
     {
         $sql = "
-            SELECT city AS kota, COUNT(*) AS total
+            SELECT area_of_service AS wilayah_layanan, COUNT(*) AS total
             FROM " . self::TABLE . "
             WHERE province = :province
               AND service = 'Broadcast' AND subservice = 'FM'
               AND freq BETWEEN 87.5 AND 108.0
-            GROUP BY city ORDER BY city ASC
+              AND area_of_service IS NOT NULL
+            GROUP BY area_of_service ORDER BY area_of_service ASC
         ";
         $stmt = $this->db->prepare($sql);
         $stmt->execute([':province' => $province]);

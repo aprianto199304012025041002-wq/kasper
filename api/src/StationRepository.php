@@ -128,7 +128,7 @@ class StationRepository
     {
         $where=$province?"AND province=:province":'';
         $params=$province?[':province'=>$province]:[];
-        $stmt=$this->db->prepare("SELECT DISTINCT city AS kota FROM ".self::TABLE." WHERE service='Broadcast' AND subservice='FM' $where ORDER BY city");
+        $stmt=$this->db->prepare("SELECT DISTINCT area_of_service AS wilayah_layanan FROM ".self::TABLE." WHERE service='Broadcast' AND subservice='FM' $where ORDER BY area_of_service");
         $stmt->execute($params);
         return array_column($stmt->fetchAll(),'kota');
     }

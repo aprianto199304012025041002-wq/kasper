@@ -140,9 +140,17 @@ export async function fetchCities(province = '') {
       : `${API_BASE}/cities`;
     const r = await fetch(url);
     const d = await r.json();
-    return d.cities || [];
+    const KOMUNITAS_AOS = '2,5 KILOMETER DARI LOKASI ANTENA PEMANCAR';
+    return (d.cities || [])
+      .map(c => c.wilayah_layanan || c.kota)
+      .filter(w => w && w !== KOMUNITAS_AOS);
   }
-  return [...new Set(fallbackStations.map((s) => s.kota||s.city).filter(Boolean))].sort();
+  const KOMUNITAS_AOS = '2,5 KILOMETER DARI LOKASI ANTENA PEMANCAR';
+  return [...new Set(
+    fallbackStations
+      .map(s => s.wilayah_layanan || s.kota || s.city)
+      .filter(w => w && w !== KOMUNITAS_AOS)
+  )].sort();
 }
 
 export async function fetchHealth() {
