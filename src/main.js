@@ -272,14 +272,25 @@ function shortName(name) {
 }
 
 // ── Stats bar ─────────────────────────────────────────────────────────
-function updateStatsBar(summary) {
+function updateStatsBar(summary, allotmentStats = null) {
   const el = document.getElementById('statsBar');
   if (!el) return;
   const pctU = summary.pct_used  ?? +((summary.used/summary.total)*100).toFixed(1);
   const pctF = summary.pct_free  ?? +((summary.free/summary.total)*100).toFixed(1);
   const pctA = +((summary.adjacent/summary.total)*100).toFixed(1);
+
+  const allotmentHtml = allotmentStats ? `
+    <div class="stat-cell">
+      <div class="stat-cell__label">Allotted terisi</div>
+      <div class="stat-cell__value" style="color:#ffd600">${allotmentStats.allottedUsed}<span class="stat-cell__unit">/ ${allotmentStats.allottedTotal}</span></div>
+    </div>
+    <div class="stat-cell">
+      <div class="stat-cell__label">Allotted kosong</div>
+      <div class="stat-cell__value" style="color:#1e90ff">${allotmentStats.allottedFree}</div>
+    </div>` : '';
+
   el.innerHTML = `<div class="stats-bar" style="padding:0;margin:0">
-    <div class="stat-cell"><div class="stat-cell__label">Total kanal (200 kHz)</div><div class="stat-cell__value">${summary.total}</div></div>
+    <div class="stat-cell"><div class="stat-cell__label">Total kanal</div><div class="stat-cell__value">${summary.total}</div></div>
     <div class="stat-cell">
       <div class="stat-cell__label">Terpakai</div>
       <div class="stat-cell__value is-occupied">${summary.used}<span class="stat-cell__unit">${pctU}%</span></div>
@@ -295,6 +306,7 @@ function updateStatsBar(summary) {
       <div class="stat-cell__value is-phosphor">${summary.free}<span class="stat-cell__unit">${pctF}%</span></div>
       <div class="stat-cell__bar"><div class="stat-cell__bar-fill" style="width:${pctF}%;background:var(--signal-phosphor)"></div></div>
     </div>
+    ${allotmentHtml}
   </div>`;
 }
 
@@ -383,26 +395,12 @@ function renderContent() {
   if (!state.data) return;
 
   // ── Pipeline filter — sama untuk semua 3 view ──────────────────────
-  const activeCities = state.filterCities || [];
-
-  const baseMap = activeCities.length === 0
-    ? state.data.channel_map
-    : state.data.channel_map.map(c => {
-        if (c.type === 'used') {
-          const wl = c.station?.wilayah_layanan || c.station?.kota || c.station?.city;
-          return activeCities.includes(wl) ? c : { ...c, type: 'free', station: null };
-        }
-        // Adjacent tetap tampil — proteksi berlaku universal
-        if (c.type === 'adjacent_1' || c.type === 'adjacent_2') return c;
-        return c;
-      });
-
   updateStatsBar(state.data.summary);
   renderLegend();
 
-  let chMap = baseMap;
-  if (state.filterChanView==='free') chMap=chMap.filter(c=>c.type==='free');
-  if (state.filterChanView==='used') chMap=chMap.filter(c=>c.type==='used'||c.type==='adjacent_1'||c.type==='adjacent_2');
+  // Hitung allotment stats dari semua cityRows
+  let allottedTotal = 0, allottedUsed = 0, allottedFree = 0;
+  // Kita hitung setelah cityRows dibangun di bawah, update stats setelahnya
 
   const searchLower = (state.searchTerm || '').toLowerCase().trim();
   const matchSearch = (c) => {
@@ -410,18 +408,22 @@ function renderContent() {
     if (c.type !== 'used') return String(c.freq).includes(searchLower);
     return String(c.freq).includes(searchLower)
       || (c.station?.stn_name || '').toLowerCase().includes(searchLower)
-      || (c.station?.kota || c.station?.city || '').toLowerCase().includes(searchLower);
+      || (c.station?.wilayah_layanan || c.station?.kota || c.station?.city || '').toLowerCase().includes(searchLower);
   };
 
-  // Daftar kota yang aktif — sama untuk semua view
-  const cityList = activeCities.length > 0
-    ? activeCities
-    : [...new Set(
-        state.data.channel_map
-          .filter(c => c.type === 'used')
-          .map(c => c.station?.wilayah_layanan || c.station?.kota || c.station?.city || '')
-          .filter(Boolean)
-      )].sort();
+  const KOMUNITAS_AOS = '2,5 KILOMETER DARI LOKASI ANTENA PEMANCAR';
+  const filterCities = state.filterCities || [];
+
+  // Daftar wilayah layanan yang aktif (non-komunitas) — sama untuk semua view
+  const allWilayah = [...new Set(
+    state.data.stations
+      .map(s => s.wilayah_layanan || s.kota || s.city || '')
+      .filter(wl => wl && wl !== KOMUNITAS_AOS)
+  )].sort();
+
+  const cityList = filterCities.length > 0
+    ? filterCities.filter(c => c !== KOMUNITAS_AOS)
+    : allWilayah;
 
   // ── Build city rows ─────────────────────────────────────────────────
   const cityRows = cityList.map(city => {
@@ -446,6 +448,20 @@ function renderContent() {
 
     return { city, row };
   }).filter(({ row }) => row.some(c => c.type === 'used' || (searchLower && matchSearch(c))));
+
+  // Hitung allotment stats dari semua city rows
+  cityRows.forEach(({ row }) => {
+    row.forEach(c => {
+      if (c.allotment_status === 'allotted_lps' || c.allotment_status === 'allotted_rri') {
+        allottedTotal++;
+        if (c.type === 'used') allottedUsed++;
+        else allottedFree++;
+      }
+    });
+  });
+  if (allottedTotal > 0) {
+    updateStatsBar(state.data.summary, { allottedTotal, allottedUsed, allottedFree });
+  }
 
   const applyFilter = (row) =>
     state.filterChanView === 'free' ? row.filter(c => c.type === 'free') :
