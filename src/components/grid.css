@@ -88,6 +88,35 @@ input.control-input:focus{border-color:var(--accent);outline:none;}
 .ch-cell--free .ch-cell__name { color: rgba(30,144,255,.7); }
 .ch-cell--free:hover { box-shadow: 0 0 14px -2px #1e90ff; }
 
+/* allotted LPS — kanal dijatahkan, kosong */
+.ch-cell--allotted-lps{
+  background: rgba(30,144,255,.13);
+  border-color: #1e90ff;
+}
+.ch-cell--allotted-lps .ch-cell__freq { color: #1e90ff; }
+.ch-cell--allotted-lps .ch-cell__name { color: rgba(30,144,255,.85); }
+.ch-cell--allotted-lps:hover { box-shadow: 0 0 14px -2px #1e90ff; }
+
+/* allotted RRI — kanal dijatahkan untuk LPP RRI */
+.ch-cell--allotted-rri{
+  background: rgba(192,132,252,.13);
+  border-color: #c084fc;
+  border-style: dashed;
+}
+.ch-cell--allotted-rri .ch-cell__freq { color: #c084fc; }
+.ch-cell--allotted-rri .ch-cell__name { color: rgba(192,132,252,.85); }
+.ch-cell--allotted-rri:hover { box-shadow: 0 0 14px -2px #c084fc; }
+
+/* not allotted — kanal tidak dijatahkan di wilayah ini */
+.ch-cell--not-allotted{
+  background: rgba(255,255,255,.03);
+  border-color: rgba(255,255,255,.1);
+  opacity: 0.4;
+}
+.ch-cell--not-allotted .ch-cell__freq { color: rgba(255,255,255,.3); }
+.ch-cell--not-allotted .ch-cell__name { color: rgba(255,255,255,.2); }
+
+
 /* ── Slot rows ── */
 .slot-list{display:flex;flex-direction:column;gap:6px;}
 .slot-row{

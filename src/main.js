@@ -8,6 +8,7 @@ import { fetchSpectrum, fetchStationDetail, fetchInterference, isUsingFallback }
 import { renderDetailPage } from './detailPage.js';
 import { renderInterferencePanel } from './interferenceView.js';
 import { initMobileUI, openFilterDrawer, syncFilterBadge } from './mobile.js';
+import { computeChannelMapForWilayah } from './channelEngine.js';
 import './components/responsive.css';
 
 // ── Warna dinamis — di-generate dari HSL berdasar index kota ─────────
@@ -345,8 +346,16 @@ function renderLegend() {
       <span>Adjacent (guard)</span>
     </div>
     <div class="legend-chip">
-      <span class="legend-chip__swatch" style="background:rgba(30,144,255,.1);border-color:#1e90ff"></span>
-      <span>Kosong ★</span>
+      <span class="legend-chip__swatch" style="background:rgba(30,144,255,.13);border-color:#1e90ff"></span>
+      <span>Allotted ★ (kosong)</span>
+    </div>
+    <div class="legend-chip">
+      <span class="legend-chip__swatch" style="background:rgba(192,132,252,.13);border-color:#c084fc;border-style:dashed"></span>
+      <span>Allotted RRI ▣</span>
+    </div>
+    <div class="legend-chip">
+      <span class="legend-chip__swatch" style="background:rgba(255,255,255,.03);border-color:rgba(255,255,255,.1);opacity:0.5"></span>
+      <span>Tidak dijatahkan ·</span>
     </div>
   </div>`;
 }
@@ -418,8 +427,10 @@ function renderContent() {
   const cityRows = cityList.map(city => {
     const cityStations = state.data.stations.filter(s => (s.wilayah_layanan || s.kota || s.city) === city);
 
-    const row = baseMap.map(c => {
-      // Cari semua stasiun kota ini di frekuensi ini (bisa > 1 = co-channel)
+    // Gunakan channel map per wilayah layanan agar allotment_status ter-inject
+    const wilayahMap = computeChannelMapForWilayah(cityStations, city);
+
+    const row = wilayahMap.map(c => {
       const ownStations = cityStations.filter(s => Math.abs(parseFloat(s.freq) - c.freq) < 0.01);
       if (ownStations.length > 0) {
         return { ...c, type: 'used', station: ownStations[0], coStations: ownStations };
@@ -545,9 +556,15 @@ function renderCell(c) {
       <span class="ch-cell__name">${sym}</span>
     </div>`;
   }
-  return `<div class="ch-cell ch-cell--free" data-freq="${c.freq}">
+  const allotClass = c.allotment_status === 'allotted_rri' ? ' ch-cell--allotted-rri'
+                   : c.allotment_status === 'allotted_lps' ? ' ch-cell--allotted-lps'
+                   : c.allotment_status === 'not_allotted'  ? ' ch-cell--not-allotted'
+                   : '';
+  const allotIcon  = c.allotment_status === 'allotted_rri' ? '▣'
+                   : c.allotment_status === 'allotted_lps' ? '★' : '·';
+  return `<div class="ch-cell ch-cell--free${allotClass}" data-freq="${c.freq}">
     <span class="ch-cell__freq">${c.freq.toFixed(1)}</span>
-    <span class="ch-cell__name">★</span>
+    <span class="ch-cell__name">${allotIcon}</span>
   </div>`;
 }
 
@@ -630,9 +647,15 @@ function renderBandSVG(row, city) {
       hits.push(`<rect class="band-hit" data-freq="${c.freq}" x="${(x - SLOT_PX/2).toFixed(1)}" y="0" width="${SLOT_PX.toFixed(1)}" height="${cy}" fill="transparent" style="cursor:pointer"/>`);
 
     } else {
-      // Free — titik biru + label frekuensi
-      markers.push(`<circle cx="${x.toFixed(1)}" cy="${cy}" r="3" fill="${COLOR_FREE}" opacity="0.6"/>`);
-      markers.push(`<text x="${x.toFixed(1)}" y="${(cy + RULER_H - 4).toFixed(1)}" text-anchor="middle" font-size="6.5" fill="${COLOR_FREE}" font-family="monospace" opacity="0.55">${c.freq.toFixed(1)}</text>`);
+      // Free — bedakan: allotted (bisa diisi) vs not_allotted (tidak dijatahkan)
+      const isAllotted = c.allotment_status === 'allotted_lps' || c.allotment_status === 'allotted_rri';
+      const isRRI      = c.allotment_status === 'allotted_rri';
+      const dotColor   = isRRI ? '#c084fc' : isAllotted ? COLOR_FREE : 'rgba(255,255,255,0.18)';
+      const dotR       = isAllotted ? 3.5 : 2;
+      const dotOp      = isAllotted ? 0.85 : 0.35;
+      const labelOp    = isAllotted ? 0.7 : 0.25;
+      markers.push(`<circle cx="${x.toFixed(1)}" cy="${cy}" r="${dotR}" fill="${dotColor}" opacity="${dotOp}"/>`);
+      markers.push(`<text x="${x.toFixed(1)}" y="${(cy + RULER_H - 4).toFixed(1)}" text-anchor="middle" font-size="6.5" fill="${dotColor}" font-family="monospace" opacity="${labelOp}">${c.freq.toFixed(1)}</text>`);
       hits.push(`<rect class="band-hit" data-freq="${c.freq}" x="${(x - SLOT_PX/2).toFixed(1)}" y="0" width="${SLOT_PX.toFixed(1)}" height="${cy}" fill="transparent" style="cursor:pointer"/>`);
     }
   }
@@ -689,9 +712,15 @@ function renderCellGeo(c, city) {
       <span class="ch-cell__freq">${c.freq.toFixed(1)}</span>
     </div>`;
   }
-  return `<div class="ch-cell ch-cell--free" data-freq="${c.freq}">
+  const allotClass = c.allotment_status === 'allotted_rri' ? ' ch-cell--allotted-rri'
+                   : c.allotment_status === 'allotted_lps' ? ' ch-cell--allotted-lps'
+                   : c.allotment_status === 'not_allotted'  ? ' ch-cell--not-allotted'
+                   : '';
+  const allotIcon  = c.allotment_status === 'allotted_rri' ? '▣'
+                   : c.allotment_status === 'allotted_lps' ? '★' : '·';
+  return `<div class="ch-cell ch-cell--free${allotClass}" data-freq="${c.freq}">
     <span class="ch-cell__freq">${c.freq.toFixed(1)}</span>
-    <span class="ch-cell__name">★</span>
+    <span class="ch-cell__name">${allotIcon}</span>
   </div>`;
 }
 
@@ -740,11 +769,17 @@ function showTooltip(e,info) {
       ['Proteksi','10 dB separation required'],
     ];
   } else {
-    title=info.freq.toFixed(1)+' MHz — Kosong ★';
+    const aStatus = info.allotment_status;
+    const aLabel  = aStatus === 'allotted_rri' ? 'Allotted — LPP RRI (KM 570/2025)'
+                  : aStatus === 'allotted_lps' ? 'Allotted — LPS/LPP Lokal (KM 570/2025)'
+                  : aStatus === 'not_allotted'  ? 'Tidak dijatahkan di wilayah ini'
+                  : 'Tersedia (wilayah komunitas / tidak diketahui)';
+    const icon    = aStatus === 'allotted_rri' ? ' ▣' : aStatus === 'allotted_lps' ? ' ★' : '';
+    title=info.freq.toFixed(1)+' MHz — Kosong'+icon;
     rows=[
       ['Lower',(info.lower??info.freq-.1).toFixed(4)+' MHz'],
       ['Upper',(info.upper??info.freq+.1).toFixed(4)+' MHz'],
-      ['Status','Tersedia untuk alokasi'],
+      ['Allotment', aLabel],
     ];
   }
   tt.innerHTML=`<div class="tooltip-float__title">${esc(title)}</div>`
