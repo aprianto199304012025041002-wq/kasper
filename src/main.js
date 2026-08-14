@@ -159,7 +159,7 @@ async function handleClick(e) {
       const city = cell.closest('.city-row-block')?.querySelector('.city-row-label')?.childNodes[0]?.textContent?.trim();
       const coStations = city
         ? state.data.stations
-            .filter(s => Math.abs(parseFloat(s.freq) - freq) < 0.01 && (s.kota || s.city) === city)
+            .filter(s => Math.abs(parseFloat(s.freq) - freq) < 0.01 && (s.wilayah_layanan || s.kota || s.city) === city)
             .sort((a, b) => (a.stn_name||'').localeCompare(b.stn_name||''))
         : null;
       openInlineDetail(coStations?.length ? { ...ch, coStations } : ch);
@@ -302,7 +302,7 @@ function renderControls() {
   const el = document.getElementById('controlsBar');
   if (!el) return;
   const cities = state.data
-    ? [...new Set(state.data.stations.map(s=>s.kota||s.city).filter(Boolean))].sort()
+    ? [...new Set(state.data.stations.map(s=>s.wilayah_layanan||s.kota||s.city).filter(Boolean))].sort()
     : [];
   const src = isUsingFallback()
     ? '<span class="source-badge">⬡ data lokal</span>'
@@ -380,8 +380,8 @@ function renderContent() {
     ? state.data.channel_map
     : state.data.channel_map.map(c => {
         if (c.type === 'used') {
-          const kota = c.station?.kota || c.station?.city;
-          return activeCities.includes(kota) ? c : { ...c, type: 'free', station: null };
+          const wl = c.station?.wilayah_layanan || c.station?.kota || c.station?.city;
+          return activeCities.includes(wl) ? c : { ...c, type: 'free', station: null };
         }
         // Adjacent tetap tampil — proteksi berlaku universal
         if (c.type === 'adjacent_1' || c.type === 'adjacent_2') return c;
@@ -410,13 +410,13 @@ function renderContent() {
     : [...new Set(
         state.data.channel_map
           .filter(c => c.type === 'used')
-          .map(c => c.station?.kota || c.station?.city || '')
+          .map(c => c.station?.wilayah_layanan || c.station?.kota || c.station?.city || '')
           .filter(Boolean)
       )].sort();
 
   // ── Build city rows ─────────────────────────────────────────────────
   const cityRows = cityList.map(city => {
-    const cityStations = state.data.stations.filter(s => (s.kota || s.city) === city);
+    const cityStations = state.data.stations.filter(s => (s.wilayah_layanan || s.kota || s.city) === city);
 
     const row = baseMap.map(c => {
       // Cari semua stasiun kota ini di frekuensi ini (bisa > 1 = co-channel)
@@ -444,7 +444,7 @@ function renderContent() {
         <div class="city-grid-scroll">
           <div class="city-grid-inner">
             ${cityRows.map(({ city, row }) => {
-              const usedCount = state.data.stations.filter(s => (s.kota || s.city) === city).length;
+              const usedCount = state.data.stations.filter(s => (s.wilayah_layanan || s.kota || s.city) === city).length;
               return `<div class="city-row-block">
                 <div class="city-row-label">${esc(city)} <span class="city-row-count">${usedCount}</span></div>
                 <div class="band-svg-row" data-city="${esc(city)}">${renderBandSVG(row, city)}</div>
@@ -464,7 +464,7 @@ function renderContent() {
         const city = cityEl?.childNodes[0]?.textContent?.trim();
         const coStations = city
           ? state.data.stations
-              .filter(s => Math.abs(parseFloat(s.freq) - freq) < 0.01 && (s.kota || s.city) === city)
+              .filter(s => Math.abs(parseFloat(s.freq) - freq) < 0.01 && (s.wilayah_layanan || s.kota || s.city) === city)
               .sort((a, b) => (a.stn_name||'').localeCompare(b.stn_name||''))
           : null;
         openInlineDetail(coStations?.length ? { ...ch, coStations } : ch);
@@ -481,7 +481,7 @@ function renderContent() {
       <div class="city-grid-scroll">
         <div class="city-grid-inner">
           ${cityRows.map(({ city, row }) => {
-            const usedCount = state.data.stations.filter(s => (s.kota || s.city) === city).length;
+            const usedCount = state.data.stations.filter(s => (s.wilayah_layanan || s.kota || s.city) === city).length;
             const filtered = applyFilter(row);
             return `<div class="city-row-block">
               <div class="city-row-label">${esc(city)} <span class="city-row-count">${usedCount}</span></div>
@@ -718,7 +718,7 @@ function showTooltip(e,info) {
     rows=[
       ['Frekuensi',info.freq.toFixed(3)+' MHz'],
       ['ERP',(s?.erp_dbm||'—')+' dBm'],
-      ['Wilayah',s?.kota||s?.city||'—'],
+      ['Wilayah Layanan',s?.wilayah_layanan||s?.kota||s?.city||'—'],
       ['','▸ Klik untuk detail'],
     ];
   } else if (info.type==='adjacent_1') {
@@ -851,7 +851,7 @@ function openInlineDetail(info) {
     const s = stations[0] || {};
     rows.push(
       ['Nama stasiun', s.stn_name || '—', false],
-      ['Wilayah',     s.kota || s.city || '—', false],
+      ['Wilayah Layanan', s.wilayah_layanan || s.kota || s.city || '—', false],
       ['ERP',         s.erp_dbm ? s.erp_dbm + ' dBm' : '—', true],
     );
     cta = `<button class="cd-cta" id="cdCtaDetail">Lihat detail stasiun →</button>`;

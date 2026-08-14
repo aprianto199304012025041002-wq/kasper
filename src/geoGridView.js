@@ -28,7 +28,7 @@ function resetColors() { _cityColorMap = {}; _colorIdx = 0; }
 function buildCityRows(stations) {
   const map = {};
   stations.forEach(s => {
-    const city = (s.kota || s.city || 'TIDAK DIKETAHUI').toUpperCase().trim();
+    const city = (s.wilayah_layanan || s.kota || s.city || 'TIDAK DIKETAHUI').toUpperCase().trim();
     if (!map[city]) map[city] = [];
     map[city].push(s);
   });
@@ -511,7 +511,7 @@ function showTT(e, cell, cityRow) {
     html = `<div class="gg-tt-title">${esc(s.stn_name || '—')}</div>
       <div class="gg-tt-row"><span class="gg-tt-key">Frekuensi</span><span class="gg-tt-val">${cell.freq.toFixed(1)} MHz</span></div>
       <div class="gg-tt-row"><span class="gg-tt-key">Lower / Upper</span><span class="gg-tt-val">${cell.lower.toFixed(3)} – ${cell.upper.toFixed(3)}</span></div>
-      <div class="gg-tt-row"><span class="gg-tt-key">Kota</span><span class="gg-tt-val">${esc(shortCity(cityRow.city))}</span></div>
+      <div class="gg-tt-row"><span class="gg-tt-key">Wilayah Layanan</span><span class="gg-tt-val">${esc(shortCity(cityRow.city))}</span></div>
       <div class="gg-tt-row"><span class="gg-tt-key">Klien</span><span class="gg-tt-val">${esc(s.clnt_name || '—')}</span></div>
       <div class="gg-tt-row"><span class="gg-tt-key">ERP</span><span class="gg-tt-val">${s.erp_dbm || '—'} dBm</span></div>
       <span class="gg-tt-badge used" style="--badge:${color}">${tag}</span>`;
@@ -519,12 +519,12 @@ function showTT(e, cell, cityRow) {
     html = `<div class="gg-tt-title">${cell.freq.toFixed(1)} MHz — Guard band</div>
       <div class="gg-tt-row"><span class="gg-tt-key">Kiri</span><span class="gg-tt-val">${esc(cell.adjL?.stn_name || '—')}</span></div>
       <div class="gg-tt-row"><span class="gg-tt-key">Kanan</span><span class="gg-tt-val">${esc(cell.adjR?.stn_name || '—')}</span></div>
-      <div class="gg-tt-row"><span class="gg-tt-key">Kota</span><span class="gg-tt-val">${esc(shortCity(cityRow.city))}</span></div>
+      <div class="gg-tt-row"><span class="gg-tt-key">Wilayah Layanan</span><span class="gg-tt-val">${esc(shortCity(cityRow.city))}</span></div>
       <span class="gg-tt-badge adj">ADJACENT</span>`;
   } else {
     html = `<div class="gg-tt-title">${cell.freq.toFixed(1)} MHz — Kosong ★</div>
       <div class="gg-tt-row"><span class="gg-tt-key">Lower / Upper</span><span class="gg-tt-val">${cell.lower.toFixed(3)} – ${cell.upper.toFixed(3)}</span></div>
-      <div class="gg-tt-row"><span class="gg-tt-key">Kota</span><span class="gg-tt-val">${esc(shortCity(cityRow.city))}</span></div>
+      <div class="gg-tt-row"><span class="gg-tt-key">Wilayah Layanan</span><span class="gg-tt-val">${esc(shortCity(cityRow.city))}</span></div>
       <span class="gg-tt-badge free">AVAILABLE ★</span>`;
   }
   tt.innerHTML = html;
@@ -734,8 +734,8 @@ export function renderGeoGridView(container, filterCities, geoSettings, preloade
   let stations = (preloadedStations || []).map(s => ({ ...s, freq: parseFloat(s.freq) }));
   if (filterCities && filterCities.length > 0) {
     stations = stations.filter(s =>
-      filterCities.includes((s.kota || s.city || '').toUpperCase().trim()) ||
-      filterCities.includes(s.kota || s.city || '')
+      filterCities.includes((s.wilayah_layanan || s.kota || s.city || '').toUpperCase().trim()) ||
+      filterCities.includes(s.wilayah_layanan || s.kota || s.city || '')
     );
   }
 
@@ -771,7 +771,7 @@ export function renderGeoGridView(container, filterCities, geoSettings, preloade
     const ch = row?.channelMap.find(c => Math.abs(c.freq - freq) < 0.01);
     if (ch && onClickCell) {
       const coStations = (preloadedStations || [])
-        .filter(s => Math.abs(parseFloat(s.freq) - freq) < 0.01 && (s.kota || s.city) === cityName)
+        .filter(s => Math.abs(parseFloat(s.freq) - freq) < 0.01 && (s.wilayah_layanan || s.kota || s.city) === cityName)
         .sort((a, b) => (a.stn_name||'').localeCompare(b.stn_name||''));
       const normalized = {
         freq: ch.freq,

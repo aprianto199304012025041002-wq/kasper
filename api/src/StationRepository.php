@@ -17,6 +17,7 @@ class StationRepository
                 stn_name, clnt_name,
                 city                                        AS kota,
                 district                                    AS kecamatan,
+                area_of_service                             AS wilayah_layanan,
                 province,
                 erp_pwr_dbm                                 AS erp_dbm,
                 status_simf                                 AS status,
@@ -45,7 +46,7 @@ class StationRepository
                 ROUND(freq - bwidth/2/1000, 4) AS lower_mhz,
                 ROUND(freq + bwidth/2/1000, 4) AS upper_mhz,
                 stn_name, clnt_name,
-                city AS kota, district AS kecamatan, province,
+                city AS kota, district AS kecamatan, area_of_service AS wilayah_layanan, province,
                 erp_pwr_dbm AS erp_dbm,
                 status_simf AS status,
                 validity_date AS validity,
@@ -96,7 +97,7 @@ class StationRepository
         [$where, $params] = $this->buildWhere($filters);
         $sql = "
             SELECT id, freq, bwidth AS bw_khz, stn_name, clnt_name,
-                   city AS kota, province,
+                   city AS kota, district AS kecamatan, area_of_service AS wilayah_layanan, province,
                    erp_pwr_dbm AS erp_dbm, status_simf AS status,
                    sid_lat AS latitude, sid_long AS longitude
             FROM " . self::TABLE . "

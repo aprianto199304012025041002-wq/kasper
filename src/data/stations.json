@@ -3,7 +3,7 @@
     "id": 25,
     "no_simf": "1924717/1",
     "freq": 87.9,
-    "bw_khz": 20.0,
+    "bw_khz": 20,
     "lower": 87.89,
     "upper": 87.91,
     "stn_name": "RADIO ARMA SEBELAS",
@@ -16,13 +16,14 @@
     "jenis": "swasta",
     "validity": "—",
     "latitude": null,
-    "longitude": null
+    "longitude": null,
+    "wilayah_layanan": "KOTA YOGYAKARTA"
   },
   {
     "id": 50,
     "no_simf": "0894673/1",
     "freq": 88.3,
-    "bw_khz": 20.0,
+    "bw_khz": 20,
     "lower": 88.29,
     "upper": 88.31,
     "stn_name": "—",
@@ -35,13 +36,14 @@
     "jenis": "swasta",
     "validity": "—",
     "latitude": null,
-    "longitude": null
+    "longitude": null,
+    "wilayah_layanan": "DEPOK"
   },
   {
     "id": 34,
     "no_simf": "0879668",
     "freq": 88.7,
-    "bw_khz": 30.0,
+    "bw_khz": 30,
     "lower": 88.685,
     "upper": 88.715,
     "stn_name": "I Radio Jogja",
@@ -54,15 +56,16 @@
     "jenis": "swasta",
     "validity": "—",
     "latitude": null,
-    "longitude": null
+    "longitude": null,
+    "wilayah_layanan": "KOTA YOGYAKARTA"
   },
   {
     "id": 5,
     "no_simf": "0858798",
     "freq": 89.1,
-    "bw_khz": 1800.0,
+    "bw_khz": 1800,
     "lower": 88.2,
-    "upper": 90.0,
+    "upper": 90,
     "stn_name": "BARA FM",
     "clnt_name": "RADIO SANGGA BUANA CITRA, PT.",
     "kota": "BANTUL",
@@ -73,13 +76,14 @@
     "jenis": "swasta",
     "validity": "—",
     "latitude": null,
-    "longitude": null
+    "longitude": null,
+    "wilayah_layanan": "BANTUL, BANGUNTAPAN"
   },
   {
     "id": 20,
     "no_simf": "1101377/1",
     "freq": 89.5,
-    "bw_khz": 20.0,
+    "bw_khz": 20,
     "lower": 89.49,
     "upper": 89.51,
     "stn_name": "JIZ FM",
@@ -92,13 +96,14 @@
     "jenis": "swasta",
     "validity": "—",
     "latitude": null,
-    "longitude": null
+    "longitude": null,
+    "wilayah_layanan": "BANTUL, BANGUNTAPAN"
   },
   {
     "id": 24,
     "no_simf": "0491150/1",
     "freq": 89.9,
-    "bw_khz": 1500.0,
+    "bw_khz": 1500,
     "lower": 89.15,
     "upper": 90.65,
     "stn_name": "RADIO SUARA DHAKSINARGA",
@@ -111,13 +116,14 @@
     "jenis": "publik_lokal",
     "validity": "—",
     "latitude": null,
-    "longitude": null
+    "longitude": null,
+    "wilayah_layanan": "WONOSARI"
   },
   {
     "id": 19,
     "no_simf": "0956619/1",
     "freq": 90.3,
-    "bw_khz": 30.0,
+    "bw_khz": 30,
     "lower": 90.285,
     "upper": 90.315,
     "stn_name": "SASANDO FM",
@@ -130,13 +136,14 @@
     "jenis": "swasta",
     "validity": "—",
     "latitude": null,
-    "longitude": null
+    "longitude": null,
+    "wilayah_layanan": "DEPOK"
   },
   {
     "id": 18,
     "no_simf": "0858773/1",
     "freq": 90.7,
-    "bw_khz": 11.0,
+    "bw_khz": 11,
     "lower": 90.6945,
     "upper": 90.7055,
     "stn_name": "RADIO UTY FM MEDARI",
@@ -149,13 +156,14 @@
     "jenis": "swasta",
     "validity": "—",
     "latitude": null,
-    "longitude": null
+    "longitude": null,
+    "wilayah_layanan": "SLEMAN, NGAGLIK, KALASAN, NGEMPLAK, PAKEM"
   },
   {
     "id": 54,
     "no_simf": "0924768",
     "freq": 91.1,
-    "bw_khz": 15000.0,
+    "bw_khz": 15000,
     "lower": 83.6,
     "upper": 98.6,
     "stn_name": "LPP RRI YOGYAKARTA",
@@ -168,13 +176,14 @@
     "jenis": "publik",
     "validity": "—",
     "latitude": null,
-    "longitude": null
+    "longitude": null,
+    "wilayah_layanan": "DEPOK"
   },
   {
     "id": 17,
     "no_simf": "1489304/1",
     "freq": 91.9,
-    "bw_khz": 5.0,
+    "bw_khz": 5,
     "lower": 91.8975,
     "upper": 91.9025,
     "stn_name": "RADIO THOMSON JOGJA 91,9FM",
@@ -187,13 +196,14 @@
     "jenis": "swasta",
     "validity": "—",
     "latitude": null,
-    "longitude": null
+    "longitude": null,
+    "wilayah_layanan": "GAMPING"
   },
   {
     "id": 10,
     "no_simf": "0948810",
     "freq": 92.3,
-    "bw_khz": 25.0,
+    "bw_khz": 25,
     "lower": 92.2875,
     "upper": 92.3125,
     "stn_name": "MQFM Jogja",
@@ -206,13 +216,14 @@
     "jenis": "swasta",
     "validity": "—",
     "latitude": null,
-    "longitude": null
+    "longitude": null,
+    "wilayah_layanan": "SLEMAN, NGAGLIK, KALASAN, NGEMPLAK, PAKEM"
   },
   {
     "id": 56,
     "no_simf": "0736968/1",
     "freq": 92.7,
-    "bw_khz": 20.0,
+    "bw_khz": 20,
     "lower": 92.69,
     "upper": 92.71,
     "stn_name": "—",
@@ -225,13 +236,14 @@
     "jenis": "swasta",
     "validity": "—",
     "latitude": null,
-    "longitude": null
+    "longitude": null,
+    "wilayah_layanan": "KOTA YOGYAKARTA"
   },
   {
     "id": 26,
     "no_simf": "1125943",
     "freq": 93.2,
-    "bw_khz": 1000.0,
+    "bw_khz": 1000,
     "lower": 92.7,
     "upper": 93.7,
     "stn_name": "RADIO SAS FM",
@@ -244,13 +256,14 @@
     "jenis": "swasta",
     "validity": "—",
     "latitude": null,
-    "longitude": null
+    "longitude": null,
+    "wilayah_layanan": "WONOSARI"
   },
   {
     "id": 52,
     "no_simf": "0858942",
     "freq": 93.8,
-    "bw_khz": 30.0,
+    "bw_khz": 30,
     "lower": 93.785,
     "upper": 93.815,
     "stn_name": "Megaswara Jogjakarta",
@@ -263,13 +276,14 @@
     "jenis": "swasta",
     "validity": "—",
     "latitude": null,
-    "longitude": null
+    "longitude": null,
+    "wilayah_layanan": "WATES, SENTOLO"
   },
   {
     "id": 9,
     "no_simf": "0888364",
     "freq": 94.2,
-    "bw_khz": 1500.0,
+    "bw_khz": 1500,
     "lower": 93.45,
     "upper": 94.95,
     "stn_name": "Radio Persatuan",
@@ -282,13 +296,14 @@
     "jenis": "swasta",
     "validity": "—",
     "latitude": null,
-    "longitude": null
+    "longitude": null,
+    "wilayah_layanan": "BANTUL, BANGUNTAPAN"
   },
   {
     "id": 45,
     "no_simf": "0826812",
     "freq": 94.6,
-    "bw_khz": 30.0,
+    "bw_khz": 30,
     "lower": 94.585,
     "upper": 94.615,
     "stn_name": "RADIO KOTA PERAK",
@@ -301,13 +316,14 @@
     "jenis": "swasta",
     "validity": "—",
     "latitude": null,
-    "longitude": null
+    "longitude": null,
+    "wilayah_layanan": "PATUK"
   },
   {
     "id": 12,
     "no_simf": "1164818",
-    "freq": 95.0,
-    "bw_khz": 10.0,
+    "freq": 95,
+    "bw_khz": 10,
     "lower": 94.995,
     "upper": 95.005,
     "stn_name": "MASDHA FM",
@@ -320,13 +336,14 @@
     "jenis": "swasta",
     "validity": "—",
     "latitude": null,
-    "longitude": null
+    "longitude": null,
+    "wilayah_layanan": "DEPOK"
   },
   {
     "id": 57,
     "no_simf": "0826571/1",
     "freq": 95.4,
-    "bw_khz": 40.0,
+    "bw_khz": 40,
     "lower": 95.38,
     "upper": 95.42,
     "stn_name": "Yasika FM",
@@ -339,13 +356,14 @@
     "jenis": "swasta",
     "validity": "—",
     "latitude": null,
-    "longitude": null
+    "longitude": null,
+    "wilayah_layanan": "KOTA YOGYAKARTA"
   },
   {
     "id": 16,
     "no_simf": "3715941",
     "freq": 95.8,
-    "bw_khz": 30.0,
+    "bw_khz": 30,
     "lower": 95.785,
     "upper": 95.815,
     "stn_name": "PRAMBORS JOGJA",
@@ -358,13 +376,14 @@
     "jenis": "swasta",
     "validity": "—",
     "latitude": null,
-    "longitude": null
+    "longitude": null,
+    "wilayah_layanan": "DEPOK"
   },
   {
     "id": 33,
     "no_simf": "0739443",
     "freq": 96.2,
-    "bw_khz": 20.0,
+    "bw_khz": 20,
     "lower": 96.19,
     "upper": 96.21,
     "stn_name": "Istakalisa FM",
@@ -377,13 +396,14 @@
     "jenis": "swasta",
     "validity": "—",
     "latitude": null,
-    "longitude": null
+    "longitude": null,
+    "wilayah_layanan": "KOTA YOGYAKARTA"
   },
   {
     "id": 23,
     "no_simf": "0890931/1",
-    "freq": 97.0,
-    "bw_khz": 30.0,
+    "freq": 97,
+    "bw_khz": 30,
     "lower": 96.985,
     "upper": 97.015,
     "stn_name": "MNC TRIJAYA YOGYAKARTA",
@@ -396,13 +416,14 @@
     "jenis": "swasta",
     "validity": "—",
     "latitude": null,
-    "longitude": null
+    "longitude": null,
+    "wilayah_layanan": "DEPOK"
   },
   {
     "id": 30,
     "no_simf": "0943583",
     "freq": 97.4,
-    "bw_khz": 3000.0,
+    "bw_khz": 3000,
     "lower": 95.9,
     "upper": 98.9,
     "stn_name": "SONORA 97,4 FM YOGYAKARTA",
@@ -415,13 +436,14 @@
     "jenis": "swasta",
     "validity": "—",
     "latitude": null,
-    "longitude": null
+    "longitude": null,
+    "wilayah_layanan": "KOTA YOGYAKARTA"
   },
   {
     "id": 7,
     "no_simf": "0864060",
     "freq": 97.8,
-    "bw_khz": 10.0,
+    "bw_khz": 10,
     "lower": 97.795,
     "upper": 97.805,
     "stn_name": "EMC Star Family",
@@ -434,13 +456,14 @@
     "jenis": "swasta",
     "validity": "—",
     "latitude": null,
-    "longitude": null
+    "longitude": null,
+    "wilayah_layanan": "KOTA YOGYAKARTA"
   },
   {
     "id": 41,
     "no_simf": "1017255",
     "freq": 98.6,
-    "bw_khz": 3000.0,
+    "bw_khz": 3000,
     "lower": 97.1,
     "upper": 100.1,
     "stn_name": "RADIO GCD FM",
@@ -453,13 +476,14 @@
     "jenis": "swasta",
     "validity": "—",
     "latitude": null,
-    "longitude": null
+    "longitude": null,
+    "wilayah_layanan": "PATUK"
   },
   {
     "id": 46,
     "no_simf": "0960438",
-    "freq": 99.0,
-    "bw_khz": 1000.0,
+    "freq": 99,
+    "bw_khz": 1000,
     "lower": 98.5,
     "upper": 99.5,
     "stn_name": "RADIO VEDAC",
@@ -468,17 +492,18 @@
     "kecamatan": "NGAGLIK",
     "province": "DAERAH ISTIMEWA YOGYAKARTA",
     "status": "Granted",
-    "erp_dbm": 65.0,
+    "erp_dbm": 65,
     "jenis": "swasta",
     "validity": "—",
     "latitude": null,
-    "longitude": null
+    "longitude": null,
+    "wilayah_layanan": "SLEMAN, NGAGLIK, KALASAN, NGEMPLAK, PAKEM"
   },
   {
     "id": 47,
     "no_simf": "0764569",
     "freq": 99.4,
-    "bw_khz": 2000.0,
+    "bw_khz": 2000,
     "lower": 98.4,
     "upper": 100.4,
     "stn_name": "Radio Retjo Buntung",
@@ -491,13 +516,14 @@
     "jenis": "swasta",
     "validity": "—",
     "latitude": null,
-    "longitude": null
+    "longitude": null,
+    "wilayah_layanan": "KOTA YOGYAKARTA"
   },
   {
     "id": 39,
     "no_simf": "1040216/1",
     "freq": 99.9,
-    "bw_khz": 10.0,
+    "bw_khz": 10,
     "lower": 99.895,
     "upper": 99.905,
     "stn_name": "RADIO HANDAYANI ADHILOKA",
@@ -510,13 +536,14 @@
     "jenis": "swasta",
     "validity": "—",
     "latitude": null,
-    "longitude": null
+    "longitude": null,
+    "wilayah_layanan": "WONOSARI"
   },
   {
     "id": 40,
     "no_simf": "0860908/1",
     "freq": 100.2,
-    "bw_khz": 100.0,
+    "bw_khz": 100,
     "lower": 100.15,
     "upper": 100.25,
     "stn_name": "NABAWI MULIA FM",
@@ -529,13 +556,14 @@
     "jenis": "swasta",
     "validity": "—",
     "latitude": null,
-    "longitude": null
+    "longitude": null,
+    "wilayah_layanan": "BANTUL, BANGUNTAPAN"
   },
   {
     "id": 21,
     "no_simf": "0971371/1",
     "freq": 100.5,
-    "bw_khz": 30.0,
+    "bw_khz": 30,
     "lower": 100.485,
     "upper": 100.515,
     "stn_name": "PASFM",
@@ -548,13 +576,14 @@
     "jenis": "swasta",
     "validity": "—",
     "latitude": null,
-    "longitude": null
+    "longitude": null,
+    "wilayah_layanan": "WATES, SENTOLO"
   },
   {
     "id": 8,
     "no_simf": "0976548",
     "freq": 101.3,
-    "bw_khz": 2000.0,
+    "bw_khz": 2000,
     "lower": 100.3,
     "upper": 102.3,
     "stn_name": "STAR JOGJA FM",
@@ -567,13 +596,14 @@
     "jenis": "swasta",
     "validity": "—",
     "latitude": null,
-    "longitude": null
+    "longitude": null,
+    "wilayah_layanan": "KOTA YOGYAKARTA"
   },
   {
     "id": 14,
     "no_simf": "0888368/2",
     "freq": 101.7,
-    "bw_khz": 20.0,
+    "bw_khz": 20,
     "lower": 101.69,
     "upper": 101.71,
     "stn_name": "Swaragamafm",
@@ -586,13 +616,14 @@
     "jenis": "swasta",
     "validity": "—",
     "latitude": null,
-    "longitude": null
+    "longitude": null,
+    "wilayah_layanan": "DEPOK"
   },
   {
     "id": 22,
     "no_simf": "0881179/1",
     "freq": 102.1,
-    "bw_khz": 30.0,
+    "bw_khz": 30,
     "lower": 102.085,
     "upper": 102.115,
     "stn_name": "SMART 102.1 FM Yogyakarta",
@@ -605,13 +636,14 @@
     "jenis": "swasta",
     "validity": "—",
     "latitude": null,
-    "longitude": null
+    "longitude": null,
+    "wilayah_layanan": "PATUK"
   },
   {
     "id": 27,
     "no_simf": "0924764/2",
     "freq": 102.5,
-    "bw_khz": 30.0,
+    "bw_khz": 30,
     "lower": 102.485,
     "upper": 102.515,
     "stn_name": "—",
@@ -624,13 +656,14 @@
     "jenis": "publik",
     "validity": "—",
     "latitude": null,
-    "longitude": null
+    "longitude": null,
+    "wilayah_layanan": "SLEMAN, NGAGLIK, KALASAN, NGEMPLAK, PAKEM"
   },
   {
     "id": 44,
     "no_simf": "3975025",
     "freq": 102.9,
-    "bw_khz": 7000.0,
+    "bw_khz": 7000,
     "lower": 99.4,
     "upper": 106.4,
     "stn_name": "LPP RRI YOGYAKARTA 102.9 MHZ",
@@ -643,13 +676,14 @@
     "jenis": "publik",
     "validity": "—",
     "latitude": null,
-    "longitude": null
+    "longitude": null,
+    "wilayah_layanan": "DEPOK"
   },
   {
     "id": 29,
     "no_simf": "3048565",
     "freq": 104.1,
-    "bw_khz": 500.0,
+    "bw_khz": 500,
     "lower": 103.85,
     "upper": 104.35,
     "stn_name": "Radio Ardhia Swara",
@@ -662,13 +696,14 @@
     "jenis": "swasta",
     "validity": "—",
     "latitude": null,
-    "longitude": null
+    "longitude": null,
+    "wilayah_layanan": "SLEMAN, NGAGLIK, KALASAN, NGEMPLAK, PAKEM"
   },
   {
     "id": 38,
     "no_simf": "0844132",
     "freq": 104.5,
-    "bw_khz": 22.0,
+    "bw_khz": 22,
     "lower": 104.489,
     "upper": 104.511,
     "stn_name": "Unisi Radio",
@@ -681,13 +716,14 @@
     "jenis": "swasta",
     "validity": "—",
     "latitude": null,
-    "longitude": null
+    "longitude": null,
+    "wilayah_layanan": "KOTA YOGYAKARTA"
   },
   {
     "id": 48,
     "no_simf": "0877106",
     "freq": 105.3,
-    "bw_khz": 1000.0,
+    "bw_khz": 1000,
     "lower": 104.8,
     "upper": 105.8,
     "stn_name": "Female Radio",
@@ -700,13 +736,14 @@
     "jenis": "swasta",
     "validity": "—",
     "latitude": null,
-    "longitude": null
+    "longitude": null,
+    "wilayah_layanan": "DEPOK"
   },
   {
     "id": 31,
     "no_simf": "1128536",
     "freq": 105.7,
-    "bw_khz": 10.0,
+    "bw_khz": 10,
     "lower": 105.695,
     "upper": 105.705,
     "stn_name": "RADIO PETRA FM",
@@ -719,13 +756,14 @@
     "jenis": "swasta",
     "validity": "—",
     "latitude": null,
-    "longitude": null
+    "longitude": null,
+    "wilayah_layanan": "SLEMAN, NGAGLIK, KALASAN, NGEMPLAK, PAKEM"
   },
   {
     "id": 6,
     "no_simf": "0863554",
     "freq": 106.1,
-    "bw_khz": 1000.0,
+    "bw_khz": 1000,
     "lower": 105.6,
     "upper": 106.6,
     "stn_name": "Geronimo",
@@ -738,13 +776,14 @@
     "jenis": "swasta",
     "validity": "—",
     "latitude": null,
-    "longitude": null
+    "longitude": null,
+    "wilayah_layanan": "KOTA YOGYAKARTA"
   },
   {
     "id": 55,
     "no_simf": "3067837",
     "freq": 106.6,
-    "bw_khz": 5000.0,
+    "bw_khz": 5000,
     "lower": 104.1,
     "upper": 109.1,
     "stn_name": "LPP RRI YOGYAKARTA 106.6 MHz",
@@ -757,13 +796,14 @@
     "jenis": "publik",
     "validity": "—",
     "latitude": null,
-    "longitude": null
+    "longitude": null,
+    "wilayah_layanan": "PATUK"
   },
   {
     "id": 11,
     "no_simf": "1068052",
     "freq": 107.2,
-    "bw_khz": 20.0,
+    "bw_khz": 20,
     "lower": 107.19,
     "upper": 107.21,
     "stn_name": "KR RADIO",
@@ -776,13 +816,14 @@
     "jenis": "swasta",
     "validity": "—",
     "latitude": null,
-    "longitude": null
+    "longitude": null,
+    "wilayah_layanan": "WATES, SENTOLO"
   },
   {
     "id": 15,
     "no_simf": "3042991",
     "freq": 107.5,
-    "bw_khz": 20.0,
+    "bw_khz": 20,
     "lower": 107.49,
     "upper": 107.51,
     "stn_name": "RADIO WISATA FM JOGJA",
@@ -795,13 +836,14 @@
     "jenis": "komunitas",
     "validity": "—",
     "latitude": null,
-    "longitude": null
+    "longitude": null,
+    "wilayah_layanan": "2,5 KILOMETER DARI LOKASI ANTENA PEMANCAR"
   },
   {
     "id": 28,
     "no_simf": "3069341",
     "freq": 107.5,
-    "bw_khz": 30.0,
+    "bw_khz": 30,
     "lower": 107.485,
     "upper": 107.515,
     "stn_name": "CITRA DESA RADIO",
@@ -814,13 +856,14 @@
     "jenis": "komunitas",
     "validity": "—",
     "latitude": null,
-    "longitude": null
+    "longitude": null,
+    "wilayah_layanan": "2,5 KILOMETER DARI LOKASI ANTENA PEMANCAR"
   },
   {
     "id": 36,
     "no_simf": "3402514",
     "freq": 107.5,
-    "bw_khz": 30.0,
+    "bw_khz": 30,
     "lower": 107.485,
     "upper": 107.515,
     "stn_name": "RADIO PARADISS FM",
@@ -833,13 +876,14 @@
     "jenis": "komunitas",
     "validity": "—",
     "latitude": null,
-    "longitude": null
+    "longitude": null,
+    "wilayah_layanan": "2,5 KILOMETER DARI LOKASI ANTENA PEMANCAR"
   },
   {
     "id": 2,
     "no_simf": "0484339",
     "freq": 107.7,
-    "bw_khz": 30.0,
+    "bw_khz": 30,
     "lower": 107.685,
     "upper": 107.715,
     "stn_name": "RADIO HASBUNA",
@@ -852,13 +896,14 @@
     "jenis": "komunitas",
     "validity": "—",
     "latitude": null,
-    "longitude": null
+    "longitude": null,
+    "wilayah_layanan": "2,5 KILOMETER DARI LOKASI ANTENA PEMANCAR"
   },
   {
     "id": 3,
     "no_simf": "0482683",
     "freq": 107.7,
-    "bw_khz": 30.0,
+    "bw_khz": 30,
     "lower": 107.685,
     "upper": 107.715,
     "stn_name": "IMTAK FM",
@@ -871,13 +916,14 @@
     "jenis": "komunitas",
     "validity": "—",
     "latitude": null,
-    "longitude": null
+    "longitude": null,
+    "wilayah_layanan": "2,5 KILOMETER DARI LOKASI ANTENA PEMANCAR"
   },
   {
     "id": 4,
     "no_simf": "0493497",
     "freq": 107.7,
-    "bw_khz": 30.0,
+    "bw_khz": 30,
     "lower": 107.685,
     "upper": 107.715,
     "stn_name": "BBM FM",
@@ -890,13 +936,14 @@
     "jenis": "komunitas",
     "validity": "—",
     "latitude": null,
-    "longitude": null
+    "longitude": null,
+    "wilayah_layanan": "2,5 KILOMETER DARI LOKASI ANTENA PEMANCAR"
   },
   {
     "id": 13,
     "no_simf": "1199179",
     "freq": 107.7,
-    "bw_khz": 20.0,
+    "bw_khz": 20,
     "lower": 107.69,
     "upper": 107.71,
     "stn_name": "RADIO SWAKA",
@@ -909,13 +956,14 @@
     "jenis": "komunitas",
     "validity": "—",
     "latitude": null,
-    "longitude": null
+    "longitude": null,
+    "wilayah_layanan": "2,5 KILOMETER DARI LOKASI ANTENA PEMANCAR"
   },
   {
     "id": 42,
     "no_simf": "0493649",
     "freq": 107.7,
-    "bw_khz": 30.0,
+    "bw_khz": 30,
     "lower": 107.685,
     "upper": 107.715,
     "stn_name": "RADIO MARISA",
@@ -928,13 +976,14 @@
     "jenis": "komunitas",
     "validity": "—",
     "latitude": null,
-    "longitude": null
+    "longitude": null,
+    "wilayah_layanan": "2,5 KILOMETER DARI LOKASI ANTENA PEMANCAR"
   },
   {
     "id": 43,
     "no_simf": "0483630",
     "freq": 107.7,
-    "bw_khz": 30.0,
+    "bw_khz": 30,
     "lower": 107.685,
     "upper": 107.715,
     "stn_name": "SWARAKOTA FM JOGJA",
@@ -947,13 +996,14 @@
     "jenis": "komunitas",
     "validity": "—",
     "latitude": null,
-    "longitude": null
+    "longitude": null,
+    "wilayah_layanan": "2,5 KILOMETER DARI LOKASI ANTENA PEMANCAR"
   },
   {
     "id": 49,
     "no_simf": "1106787",
     "freq": 107.7,
-    "bw_khz": 30.0,
+    "bw_khz": 30,
     "lower": 107.685,
     "upper": 107.715,
     "stn_name": "SUARA PASAR",
@@ -966,13 +1016,14 @@
     "jenis": "komunitas",
     "validity": "—",
     "latitude": null,
-    "longitude": null
+    "longitude": null,
+    "wilayah_layanan": "2,5 KILOMETER DARI LOKASI ANTENA PEMANCAR"
   },
   {
     "id": 1,
     "no_simf": "0484025",
     "freq": 107.8,
-    "bw_khz": 30.0,
+    "bw_khz": 30,
     "lower": 107.785,
     "upper": 107.815,
     "stn_name": "SWARAGODEAN FM",
@@ -985,13 +1036,14 @@
     "jenis": "komunitas",
     "validity": "—",
     "latitude": null,
-    "longitude": null
+    "longitude": null,
+    "wilayah_layanan": "2,5 KILOMETER DARI LOKASI ANTENA PEMANCAR"
   },
   {
     "id": 37,
     "no_simf": "0490421",
     "freq": 107.8,
-    "bw_khz": 30.0,
+    "bw_khz": 30,
     "lower": 107.785,
     "upper": 107.815,
     "stn_name": "SWADESI FM 107.9",
@@ -1004,13 +1056,14 @@
     "jenis": "komunitas",
     "validity": "—",
     "latitude": null,
-    "longitude": null
+    "longitude": null,
+    "wilayah_layanan": "2,5 KILOMETER DARI LOKASI ANTENA PEMANCAR"
   },
   {
     "id": 32,
     "no_simf": "0485129",
     "freq": 107.9,
-    "bw_khz": 30.0,
+    "bw_khz": 30,
     "lower": 107.885,
     "upper": 107.915,
     "stn_name": "ROMIKA FM",
@@ -1023,13 +1076,14 @@
     "jenis": "komunitas",
     "validity": "—",
     "latitude": null,
-    "longitude": null
+    "longitude": null,
+    "wilayah_layanan": "2,5 KILOMETER DARI LOKASI ANTENA PEMANCAR"
   },
   {
     "id": 35,
     "no_simf": "0493927",
     "freq": 107.9,
-    "bw_khz": 30.0,
+    "bw_khz": 30,
     "lower": 107.885,
     "upper": 107.915,
     "stn_name": "BINANGUN FM",
@@ -1042,13 +1096,14 @@
     "jenis": "komunitas",
     "validity": "—",
     "latitude": null,
-    "longitude": null
+    "longitude": null,
+    "wilayah_layanan": "2,5 KILOMETER DARI LOKASI ANTENA PEMANCAR"
   },
   {
     "id": 51,
     "no_simf": "0486923",
     "freq": 107.9,
-    "bw_khz": 30.0,
+    "bw_khz": 30,
     "lower": 107.885,
     "upper": 107.915,
     "stn_name": "RADIO NUSANTARA",
@@ -1061,13 +1116,14 @@
     "jenis": "komunitas",
     "validity": "—",
     "latitude": null,
-    "longitude": null
+    "longitude": null,
+    "wilayah_layanan": "2,5 KILOMETER DARI LOKASI ANTENA PEMANCAR"
   },
   {
     "id": 53,
     "no_simf": "0488077",
     "freq": 107.9,
-    "bw_khz": 30.0,
+    "bw_khz": 30,
     "lower": 107.885,
     "upper": 107.915,
     "stn_name": "KARISMA FM",
@@ -1080,6 +1136,7 @@
     "jenis": "komunitas",
     "validity": "—",
     "latitude": null,
-    "longitude": null
+    "longitude": null,
+    "wilayah_layanan": "2,5 KILOMETER DARI LOKASI ANTENA PEMANCAR"
   }
 ]

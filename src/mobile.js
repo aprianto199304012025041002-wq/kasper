@@ -182,7 +182,7 @@ function syncDrawer(state) {
   const cityChipsEl = document.getElementById('drawerCityChips');
   if (cityChipsEl) {
     const cities = state.data
-      ? [...new Set(state.data.stations.map(s => s.kota || s.city).filter(Boolean))].sort()
+      ? [...new Set(state.data.stations.map(s => s.wilayah_layanan || s.kota || s.city).filter(Boolean))].sort()
       : [];
     // filterCities = array of selected cities, atau [] = semua
     const sel = state.filterCities || [];
