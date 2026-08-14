@@ -427,17 +427,21 @@ function renderContent() {
   const cityRows = cityList.map(city => {
     const cityStations = state.data.stations.filter(s => (s.wilayah_layanan || s.kota || s.city) === city);
 
-    // Gunakan channel map per wilayah layanan agar allotment_status ter-inject
+    // Allotment status dari KM 570/2025 (JS-side, per wilayah)
     const wilayahMap = computeChannelMapForWilayah(cityStations, city);
+    const allotmentIndex = {};
+    wilayahMap.forEach(c => { allotmentIndex[c.freq] = c.allotment_status; });
 
-    const row = wilayahMap.map(c => {
+    // Pakai channel_map global dari PHP (punya adj1/adj2 lengkap),
+    // merge allotment_status ke tiap slot
+    const row = state.data.channel_map.map(c => {
+      const allotment_status = allotmentIndex[c.freq] ?? null;
       const ownStations = cityStations.filter(s => Math.abs(parseFloat(s.freq) - c.freq) < 0.01);
       if (ownStations.length > 0) {
-        return { ...c, type: 'used', station: ownStations[0], coStations: ownStations };
+        return { ...c, allotment_status, type: 'used', station: ownStations[0], coStations: ownStations };
       }
-      if (c.type === 'used') return { ...c, type: 'free', station: null };
-      if (c.type === 'adjacent_1' || c.type === 'adjacent_2') return c;
-      return c;
+      if (c.type === 'used') return { ...c, allotment_status, type: 'free', station: null };
+      return { ...c, allotment_status };
     }).filter(matchSearch);
 
     return { city, row };
