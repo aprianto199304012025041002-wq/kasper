@@ -181,8 +181,12 @@ function syncDrawer(state) {
   // City chips — multi-select
   const cityChipsEl = document.getElementById('drawerCityChips');
   if (cityChipsEl) {
+    const KOMUNITAS_AOS = '2,5 KILOMETER DARI LOKASI ANTENA PEMANCAR';
     const cities = state.data
-      ? [...new Set(state.data.stations.map(s => s.wilayah_layanan || s.kota || s.city).filter(Boolean))].sort()
+      ? [...new Set(state.data.stations
+          .map(s => s.wilayah_layanan || s.kota || s.city)
+          .filter(w => w && w !== KOMUNITAS_AOS)
+        )].sort()
       : [];
     // filterCities = array of selected cities, atau [] = semua
     const sel = state.filterCities || [];

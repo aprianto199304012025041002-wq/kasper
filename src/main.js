@@ -314,8 +314,12 @@ function updateStatsBar(summary, allotmentStats = null) {
 function renderControls() {
   const el = document.getElementById('controlsBar');
   if (!el) return;
+  const KOMUNITAS_AOS = '2,5 KILOMETER DARI LOKASI ANTENA PEMANCAR';
   const cities = state.data
-    ? [...new Set(state.data.stations.map(s=>s.wilayah_layanan||s.kota||s.city).filter(Boolean))].sort()
+    ? [...new Set(state.data.stations
+        .map(s=>s.wilayah_layanan||s.kota||s.city)
+        .filter(w => w && w !== KOMUNITAS_AOS)
+      )].sort()
     : [];
   const src = isUsingFallback()
     ? '<span class="source-badge">⬡ data lokal</span>'
