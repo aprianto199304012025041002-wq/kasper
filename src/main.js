@@ -921,7 +921,7 @@ function openInlineDetail(info) {
       ['Upper edge', Number(upper).toFixed(4) + ' MHz',  true],
       ['Guard kiri', a1l?.stn_name || '—',               false],
       ['Guard kanan',a1r?.stn_name || '—',               false],
-      ['Proteksi',   '20 dB separation',                 true],
+      ['Proteksi',   '20 dB (ITU-R BS.412)',             true],
     ];
   } else if (info.type === 'adjacent_2') {
     const a2l = info.adj2_left  || info.adj_left;
@@ -932,15 +932,20 @@ function openInlineDetail(info) {
       ['Upper edge', Number(upper).toFixed(4) + ' MHz',  true],
       ['Guard kiri', a2l?.stn_name || '—',               false],
       ['Guard kanan',a2r?.stn_name || '—',               false],
-      ['Proteksi',   '10 dB separation',                 true],
+      ['Proteksi',   '10 dB (ITU-R BS.412)',             true],
     ];
   } else {
+    const aStatus = info.allotment_status;
+    const aLabel  = aStatus === 'allotted_rri' ? 'Allotted LPP RRI (KM 570/2025)'
+                  : aStatus === 'allotted_lps' ? 'Allotted LPS/LPP Lokal (KM 570/2025)'
+                  : aStatus === 'not_allotted'  ? 'Tidak dijatahkan di wilayah ini'
+                  : 'Tersedia (wilayah komunitas / tidak diketahui)';
     rows = [
       ['Frekuensi',  freq.toFixed(3) + ' MHz',           true],
       ['Lower edge', Number(lower).toFixed(4) + ' MHz',  true],
       ['Upper edge', Number(upper).toFixed(4) + ' MHz',  true],
-      ['Lebar kanal','200 kHz',                          true],
-      ['Status',     'Tersedia untuk alokasi baru',      false],
+      ['Lebar kanal','100 kHz',                          true],
+      ['Allotment',  aLabel,                             false],
     ];
   }
 
