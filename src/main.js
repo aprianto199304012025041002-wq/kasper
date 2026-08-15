@@ -468,12 +468,25 @@ function renderContent() {
     updateStatsBar(state.data.summary, { allottedTotal, allottedUsed, allottedFree });
   }
 
+  // ── Komunitas row (terpisah, bukan per wilayah layanan) ─────────────
+  const komStations = state.data.stations.filter(s => s.jenis === 'komunitas');
+  const komRow = komStations.length > 0
+    ? state.data.channel_map.map(c => {
+        const ownStations = komStations.filter(s => Math.abs(parseFloat(s.freq) - c.freq) < 0.01);
+        if (ownStations.length > 0) {
+          return { ...c, allotment_status: null, type: 'used', station: ownStations[0], coStations: ownStations };
+        }
+        // Tampilkan hanya kanal 107.5–107.9 (kanal komunitas) + adj-nya
+        if (c.freq < 107.4) return null;
+        if (c.type === 'used') return { ...c, allotment_status: null, type: 'free', station: null };
+        return { ...c, allotment_status: null };
+      }).filter(c => c !== null).filter(matchSearch)
+    : null;
+
   const applyFilter = (row) =>
     state.filterChanView === 'free' ? row.filter(c => c.type === 'free') :
     state.filterChanView === 'used' ? row.filter(c => c.type === 'used' || c.type === 'adjacent_1' || c.type === 'adjacent_2') :
     row;
-
-  // ── Band view: SVG spectrum per kota ──────────────────────────────
   if (state.view === 'band') {
     el.innerHTML = `
       <div class="grid-frame" style="padding:12px">
@@ -486,6 +499,10 @@ function renderContent() {
                 <div class="band-svg-row" data-city="${esc(city)}">${renderBandSVG(row, city)}</div>
               </div>`;
             }).join('')}
+            ${komRow ? `<div class="city-row-block city-row-block--komunitas">
+              <div class="city-row-label" style="color:#f97316">KOMUNITAS <span class="city-row-count" style="font-size:9px">±2.5km</span></div>
+              <div class="band-svg-row" data-city="KOMUNITAS">${renderBandSVG(komRow, 'KOMUNITAS')}</div>
+            </div>` : ''}
           </div>
         </div>
       </div>`;
@@ -524,6 +541,10 @@ function renderContent() {
               <div class="ch-grid-row">${filtered.map(c => cellFn(c, city)).join('')}</div>
             </div>`;
           }).join('')}
+          ${komRow ? `<div class="city-row-block city-row-block--komunitas">
+            <div class="city-row-label" style="color:#f97316">KOMUNITAS <span class="city-row-count" style="font-size:9px">±2.5km · ${komStations.length} stasiun</span></div>
+            <div class="ch-grid-row">${applyFilter(komRow).map(c => cellFn(c, 'KOMUNITAS')).join('')}</div>
+          </div>` : ''}
         </div>
       </div>
     </div>`;

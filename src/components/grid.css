@@ -189,6 +189,16 @@ input.control-input:focus{border-color:var(--accent);outline:none;}
   margin-bottom: 18px;
 }
 
+/* Komunitas — row terpisah di bawah, border oranye */
+.city-row-block--komunitas {
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px dashed rgba(249,115,22,.3);
+}
+.city-row-block--komunitas .city-row-label {
+  border-bottom-color: rgba(249,115,22,.3);
+}
+
 .city-row-label {
   font-family: var(--font-mono);
   font-size: 10px;
