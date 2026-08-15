@@ -1,5 +1,5 @@
 // src/geoGridView.js — Geo Grid FM · Design language KOMENK
-import { FM_MIN, FM_MAX, CHANNEL_SPACING, ADJACENT_GUARD } from './channelEngine.js';
+import { FM_MIN, FM_MAX, CHANNEL_SPACING, ADJACENT_GUARD, computeChannelMapForWilayah } from './channelEngine.js';
 
 const GRID = (() => {
   const chs = [], steps = Math.round((FM_MAX - FM_MIN) / CHANNEL_SPACING);
@@ -24,11 +24,13 @@ function cityColor(city) {
 }
 function resetColors() { _cityColorMap = {}; _colorIdx = 0; }
 
-// ── Channel map per kota ──────────────────────────────────────────────
+// ── Channel map per wilayah layanan ──────────────────────────────────
 function buildCityRows(stations) {
+  const KOMUNITAS_AOS = '2,5 KILOMETER DARI LOKASI ANTENA PEMANCAR';
   const map = {};
   stations.forEach(s => {
-    const city = (s.wilayah_layanan || s.kota || s.city || 'TIDAK DIKETAHUI').toUpperCase().trim();
+    const city = s.wilayah_layanan || s.kota || s.city || 'TIDAK DIKETAHUI';
+    if (city === KOMUNITAS_AOS) return; // skip komunitas
     if (!map[city]) map[city] = [];
     map[city].push(s);
   });
@@ -37,16 +39,7 @@ function buildCityRows(stations) {
     .map(([city, stns]) => ({
       city,
       stations: stns,
-      channelMap: GRID.map(ch => {
-        const lower = Math.round((ch - CHANNEL_SPACING / 2) * 100) / 100;
-        const upper = Math.round((ch + CHANNEL_SPACING / 2) * 100) / 100;
-        const used = stns.find(s => Math.abs(parseFloat(s.freq) - ch) < ADJACENT_GUARD);
-        if (used) return { freq: ch, lower, upper, type: 'used', station: used };
-        const adjL = stns.find(s => Math.abs(parseFloat(s.freq) - (ch - CHANNEL_SPACING)) < ADJACENT_GUARD);
-        const adjR = stns.find(s => Math.abs(parseFloat(s.freq) - (ch + CHANNEL_SPACING)) < ADJACENT_GUARD);
-        if (adjL || adjR) return { freq: ch, lower, upper, type: 'adj', adjL, adjR };
-        return { freq: ch, lower, upper, type: 'free' };
-      }),
+      channelMap: computeChannelMapForWilayah(stns, city),
     }));
 }
 
@@ -515,7 +508,7 @@ function showTT(e, cell, cityRow) {
       <div class="gg-tt-row"><span class="gg-tt-key">Klien</span><span class="gg-tt-val">${esc(s.clnt_name || '—')}</span></div>
       <div class="gg-tt-row"><span class="gg-tt-key">ERP</span><span class="gg-tt-val">${s.erp_dbm || '—'} dBm</span></div>
       <span class="gg-tt-badge used" style="--badge:${color}">${tag}</span>`;
-  } else if (cell.type === 'adj') {
+  } else if (cell.type === 'adj' || cell.type === 'adjacent_1' || cell.type === 'adjacent_2') {
     html = `<div class="gg-tt-title">${cell.freq.toFixed(1)} MHz — Guard band</div>
       <div class="gg-tt-row"><span class="gg-tt-key">Kiri</span><span class="gg-tt-val">${esc(cell.adjL?.stn_name || '—')}</span></div>
       <div class="gg-tt-row"><span class="gg-tt-key">Kanan</span><span class="gg-tt-val">${esc(cell.adjR?.stn_name || '—')}</span></div>
@@ -584,7 +577,7 @@ function renderCityRow(row, opts) {
         <span class="gg-ch-tag">${tag}</span>
       </div>`;
     }
-    if (ch.type === 'adj') {
+    if (ch.type === 'adj' || ch.type === 'adjacent_1' || ch.type === 'adjacent_2') {
       if (!opts.showAdj) return `<div class="gg-ch free" data-freq="${ch.freq}" data-city="${esc(city)}"><span class="gg-ch-freq">${ch.freq.toFixed(1)}</span></div>`;
       const dir = ch.adjL && ch.adjR ? '◄►' : ch.adjL ? '◄' : '►';
       return `<div class="gg-ch adj" data-freq="${ch.freq}" data-city="${esc(city)}">
@@ -660,7 +653,7 @@ function updateStats(cityRows) {
   let used = 0, adj = 0, free = 0;
   cityRows.forEach(r => r.channelMap.forEach(ch => {
     if (ch.type === 'used') used++;
-    else if (ch.type === 'adj') adj++;
+    else if (ch.type === 'adj' || ch.type === 'adjacent_1' || ch.type === 'adjacent_2') adj++;
     else free++;
   }));
   const su = document.getElementById('ggStUsed'); if (su) su.textContent = used;
@@ -734,7 +727,6 @@ export function renderGeoGridView(container, filterCities, geoSettings, preloade
   let stations = (preloadedStations || []).map(s => ({ ...s, freq: parseFloat(s.freq) }));
   if (filterCities && filterCities.length > 0) {
     stations = stations.filter(s =>
-      filterCities.includes((s.wilayah_layanan || s.kota || s.city || '').toUpperCase().trim()) ||
       filterCities.includes(s.wilayah_layanan || s.kota || s.city || '')
     );
   }
@@ -777,10 +769,15 @@ export function renderGeoGridView(container, filterCities, geoSettings, preloade
         freq: ch.freq,
         lower: ch.lower,
         upper: ch.upper,
-        type: ch.type === 'adj' ? 'adjacent_1' : ch.type,
+        type: ch.type === 'adj' || ch.type === 'adjacent_1' || ch.type === 'adjacent_2' ? 'adjacent_1' : ch.type,
+        allotment_status: ch.allotment_status || null,
         station: ch.station || null,
-        adj_left:  ch.adjL || null,
-        adj_right: ch.adjR || null,
+        adj1_left:  ch.adj1_left  || ch.adjL || null,
+        adj1_right: ch.adj1_right || ch.adjR || null,
+        adj2_left:  ch.adj2_left  || null,
+        adj2_right: ch.adj2_right || null,
+        adj_left:   ch.adjL || ch.adj1_left || null,
+        adj_right:  ch.adjR || ch.adj1_right || null,
         coStations: coStations.length > 0 ? coStations : null,
       };
       onClickCell(normalized);
