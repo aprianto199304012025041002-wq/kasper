@@ -139,12 +139,17 @@ async function handleClick(e) {
     if (ch) {
       // Cari semua stasiun di frekuensi ini dari kota yang sama (co-channel)
       const city = cell.closest('.city-row-block')?.querySelector('.city-row-label')?.childNodes[0]?.textContent?.trim();
+      const isKomunitas = city === 'KOMUNITAS';
       const coStations = city
         ? state.data.stations
-            .filter(s => Math.abs(parseFloat(s.freq) - freq) < 0.01 && (s.wilayah_layanan || s.kota || s.city) === city)
+            .filter(s => {
+              if (Math.abs(parseFloat(s.freq) - freq) >= 0.01) return false;
+              if (isKomunitas) return s.jenis === 'komunitas';
+              return (s.wilayah_layanan || s.kota || s.city) === city;
+            })
             .sort((a, b) => (a.stn_name||'').localeCompare(b.stn_name||''))
         : null;
-      openInlineDetail(coStations?.length ? { ...ch, coStations } : ch);
+      openInlineDetail(coStations?.length ? { ...ch, coStations, allotment_status: isKomunitas ? null : ch.allotment_status } : { ...ch, allotment_status: isKomunitas ? null : ch.allotment_status });
     }
     return;
   }
