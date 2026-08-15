@@ -779,7 +779,7 @@ function showTooltip(e,info) {
     rows=[
       ['Kiri', a1l?.stn_name||'—'],
       ['Kanan',a1r?.stn_name||'—'],
-      ['Proteksi','20 dB separation required'],
+      ['Proteksi','20 dB (ITU-R BS.412)'],
     ];
   } else if (info.type==='adjacent_2') {
     title=info.freq.toFixed(1)+' MHz — 2nd Adjacent';
@@ -788,7 +788,7 @@ function showTooltip(e,info) {
     rows=[
       ['Kiri', a2l?.stn_name||'—'],
       ['Kanan',a2r?.stn_name||'—'],
-      ['Proteksi','10 dB separation required'],
+      ['Proteksi','10 dB (ITU-R BS.412)'],
     ];
   } else {
     const aStatus = info.allotment_status;
