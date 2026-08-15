@@ -499,12 +499,18 @@ function renderContent() {
         if (!ch) return;
         const cityEl = hit.closest('.city-row-block')?.querySelector('.city-row-label');
         const city = cityEl?.childNodes[0]?.textContent?.trim();
+        const isKomunitas = city === 'KOMUNITAS';
         const coStations = city
           ? state.data.stations
-              .filter(s => Math.abs(parseFloat(s.freq) - freq) < 0.01 && (s.wilayah_layanan || s.kota || s.city) === city)
+              .filter(s => {
+                if (Math.abs(parseFloat(s.freq) - freq) >= 0.01) return false;
+                if (isKomunitas) return s.jenis === 'komunitas';
+                return (s.wilayah_layanan || s.kota || s.city) === city;
+              })
               .sort((a, b) => (a.stn_name||'').localeCompare(b.stn_name||''))
           : null;
-        openInlineDetail(coStations?.length ? { ...ch, coStations } : ch);
+        const info = { ...ch, allotment_status: isKomunitas ? null : ch.allotment_status };
+        openInlineDetail(coStations?.length ? { ...info, coStations } : info);
       });
     });
     return;
