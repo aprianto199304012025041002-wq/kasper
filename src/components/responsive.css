@@ -158,8 +158,6 @@ body.drawer-open { overflow: hidden; }
   margin-bottom: 8px;
 }
 
-
-
 /* ── View row (1 baris, 4 tombol) ────────────────────────────────────── */
 .kd-view-row {
   display: flex; gap: 0;
@@ -305,7 +303,6 @@ body.drawer-open { overflow: hidden; }
   background: var(--accent);
 }
 
-
 .kd-search-wrap {
   position: relative;
 }
@@ -379,9 +376,7 @@ body.drawer-open { overflow: hidden; }
    ══════════════════════════════════════════════════════════════════════ */
 @media (pointer: coarse) {
   .kd-view-btn, .kd-city-chip, .kd-seg-btn { min-height: 44px; }
-  .ch-cell, .slot-row, .neighbor-row, .gg-ch { min-height: 44px; }
   .tooltip-float { display: none !important; }
-  .gg-tooltip    { display: none !important; }
 }
 
 /* ══════════════════════════════════════════════════════════════════════
@@ -427,30 +422,8 @@ body.drawer-open { overflow: hidden; }
    GEO GRID
    ══════════════════════════════════════════════════════════════════════ */
 @media (max-width: 768px) {
-  .gg-city-lbl  { width: 90px !important; padding: 0 6px 0 8px; }
-  .gg-ruler-label { width: 90px !important; font-size: 7px; padding: 6px 4px; }
-  .gg-city-name { font-size: 10px; }
-  .gg-city-meta { font-size: 8px; gap: 3px; }
-  .gg-ch        { min-height: 40px; }
-  .gg-ch-freq   { font-size: 7px; }
-  .gg-ch-lbl    { display: none; }
-  .gg-ch-tag    { display: none; }
-  .gg-stats-float { left: 50%; transform: translateX(-50%); bottom: 6px; }
-  .gg-legend-section {
-    overflow-x: auto; flex-wrap: nowrap; gap: 8px;
-    -webkit-overflow-scrolling: touch; padding: 0 12px 10px;
-  }
-  .gg-leg-row   { flex-shrink: 0; }
-  .gg-slot-bar  { gap: 5px; }
-  .gg-slot-chip { font-size: 9px; padding: 3px 6px; }
-  .gg-drawer    { width: 240px; }
 }
 @media (max-width: 480px) {
-  .gg-city-lbl  { width: 72px !important; }
-  .gg-ruler-label { width: 72px !important; }
-  .gg-city-meta { display: none; }
-  .gg-ch        { min-height: 36px; }
-  .gg-drawer    { width: 100%; border-left: none; border-top: 1px solid var(--border-mid); top: auto; height: 70vh; }
 }
 
 /* ══════════════════════════════════════════════════════════════════════
