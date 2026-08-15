@@ -857,7 +857,7 @@ export function renderGeoGridView(container, filterCities, geoSettings, preloade
     if (ch && onClickCell) {
       const coStations = (preloadedStations || [])
         .filter(s => {
-          if (!Math.abs(parseFloat(s.freq) - freq) < 0.01) return false;
+          if (Math.abs(parseFloat(s.freq) - freq) >= 0.01) return false;
           if (cityName === 'KOMUNITAS') return s.jenis === 'komunitas';
           return (s.wilayah_layanan || s.kota || s.city) === cityName;
         })
