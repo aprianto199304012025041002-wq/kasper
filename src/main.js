@@ -62,7 +62,7 @@ async function boot() {
       if (filters.searchTerm     !== undefined) state.searchTerm     = filters.searchTerm;
       if (filters.geoSettings    !== undefined) state.geoSettings    = { ...state.geoSettings, ...filters.geoSettings };
       renderControls();
-      loadData();
+      renderContent(); // client-side filter, tidak perlu refetch API
     }
   );
   window.__openMobFilter = () => openFilterDrawer();
