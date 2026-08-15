@@ -152,7 +152,7 @@ export function renderDetailPage(data, onBack, allData, targetEl) {
   root.querySelector('#backBtn')?.addEventListener('click', onBack);
 
   // Peta Leaflet
-  initMap(lat, lon, stnName, freq, nbr);
+  initMap(lat, lon, stnName, freq, nbr, parseFloat(s.erp_dbm || s.erp_pwr_dbm || 0));
 }
 
 // ── Mini band strip SVG ───────────────────────────────────────────────
@@ -208,7 +208,7 @@ function renderMiniBand(centerFreq, neighbors, lower, upper, color) {
 }
 
 // ── Leaflet map ───────────────────────────────────────────────────────
-function initMap(lat, lon, stnName, freq, neighbors) {
+function initMap(lat, lon, stnName, freq, neighbors, erp = 0) {
   const mapEl = document.getElementById('stationMap');
   if (!mapEl) return;
 
@@ -221,14 +221,14 @@ function initMap(lat, lon, stnName, freq, neighbors) {
 
     const script = document.createElement('script');
     script.src   = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
-    script.onload = () => initLeaflet(lat, lon, stnName, freq, neighbors, mapEl);
+    script.onload = () => initLeaflet(lat, lon, stnName, freq, neighbors, mapEl, erp);
     document.head.appendChild(script);
   } else {
-    initLeaflet(lat, lon, stnName, freq, neighbors, mapEl);
+    initLeaflet(lat, lon, stnName, freq, neighbors, mapEl, erp);
   }
 }
 
-function initLeaflet(lat, lon, stnName, freq, neighbors, mapEl) {
+function initLeaflet(lat, lon, stnName, freq, neighbors, mapEl, erp = 0) {
   if (!lat || !lon) {
     mapEl.style.display     = 'flex';
     mapEl.style.alignItems  = 'center';
@@ -255,7 +255,7 @@ function initLeaflet(lat, lon, stnName, freq, neighbors, mapEl) {
 
   L.marker([lat, lon], { icon })
     .addTo(map)
-    .bindPopup(`<b>${stnName}</b><br>${freq.toFixed(1)} MHz<br>ERP: — dBm`)
+    .bindPopup(`<b>${stnName}</b><br>${freq.toFixed(1)} MHz<br>ERP: ${erp ? erp.toFixed(1)+' dBm' : '—'}`)
     .openPopup();
 
   // Marker tetangga
@@ -272,7 +272,7 @@ function initLeaflet(lat, lon, stnName, freq, neighbors, mapEl) {
 
     L.marker([nLat, nLon], { icon: nIcon })
       .addTo(map)
-      .bindPopup(`<b>${n.stn_name || '—'}</b><br>${parseFloat(n.freq).toFixed(1)} MHz`);
+      .bindPopup(`<b>${n.stn_name || '—'}</b><br>${parseFloat(n.freq).toFixed(1)} MHz<br>${n.wilayah_layanan || n.kota || '—'}`);
   });
 }
 
