@@ -715,10 +715,7 @@ function renderBandSVG(row, city) {
   </svg>`;
 }
 
-// ── Cell renderer: Pita (lama, tidak dipakai) ─────────────────────────
-// Diganti renderBandSVG di atas
-
-// ── Cell renderer: Geo Grid (warna solid per kota, tanpa nama) ────────
+// ── Cell renderer: Geo Grid (warna solid per wilayah layanan) ────────
 function renderCellGeo(c, city) {
   if (c.type === 'used') {
     const co = c.coStations?.length > 1 ? `<span class="ch-cell__co">${c.coStations.length}</span>` : '';
