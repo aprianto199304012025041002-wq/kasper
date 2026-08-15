@@ -125,11 +125,11 @@ class StationRepository
     {
         [$where, $params] = $this->buildWhere($filters);
         $base = "FROM " . self::TABLE . " WHERE service='Broadcast' AND subservice='FM' AND freq BETWEEN 87.5 AND 108.0 $where";
-        $s1 = $this->db->prepare("SELECT city AS kota, COUNT(*) AS total $base GROUP BY city ORDER BY total DESC");
+        $s1 = $this->db->prepare("SELECT area_of_service AS wilayah_layanan, COUNT(*) AS total $base GROUP BY area_of_service ORDER BY total DESC");
         $s1->execute($params);
         $s2 = $this->db->prepare("SELECT {$this->classifyJenis()} AS jenis, COUNT(*) AS total $base GROUP BY jenis ORDER BY total DESC");
         $s2->execute($params);
-        return ['per_kota'=>$s1->fetchAll(),'per_jenis'=>$s2->fetchAll()];
+        return ['per_wilayah'=>$s1->fetchAll(),'per_jenis'=>$s2->fetchAll()];
     }
 
     public function getCities(?string $province=null): array
