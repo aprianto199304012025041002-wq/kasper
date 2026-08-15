@@ -716,22 +716,8 @@ function updateStats(cityRows) {
   const sau = document.getElementById('ggStAllottedUsed'); if (sau) sau.textContent = `${allottedUsed}/${allottedTotal}`;
 }
 
-// ── Render grid ───────────────────────────────────────────────────────
-function renderGrid(area, cityRows, opts) {
-  const rows = cityRows.map(r => renderCityRow(r, opts)).join('');
-  area.innerHTML = `<div class="gg-grid-min">
-    ${renderRuler()}
-    <div class="gg-table" id="ggTable">${rows}</div>
-  </div>`;
-  attachCellEvents(area, cityRows);
-  updateStats(cityRows);
-  buildSlotBar(cityRows);
-  buildLegend(cityRows);
-}
-
 // ── Cell events ───────────────────────────────────────────────────────
-function attachCellEvents(container, cityRows) {
-  // Only desktop tooltip (touch devices get nothing — prevents jank)
+function attachCellEvents(container, cityRows, komRow = null) {
   const isTouch = window.matchMedia('(pointer: coarse)').matches;
   if (isTouch) return;
 
@@ -739,17 +725,16 @@ function attachCellEvents(container, cityRows) {
     cell.addEventListener('mouseenter', e => {
       const freq = parseFloat(cell.dataset.freq);
       const cityName = cell.dataset.city;
-      // Ruler highlight
       container.querySelectorAll('.gg-ruler-ch').forEach(r => {
         const match = Math.abs(parseFloat(r.dataset.freq) - freq) < 0.01;
         r.classList.toggle('hl-used', match && cell.classList.contains('used'));
         r.classList.toggle('hl-adj',  match && cell.classList.contains('adj'));
         r.classList.toggle('hl-free', match && cell.classList.contains('free'));
       });
-      // Col highlight
       container.querySelectorAll(`.gg-ch[data-freq="${freq}"]`).forEach(c => c.classList.add('col-hl'));
-      // Tooltip
-      const row = cityRows.find(r => r.city === cityName);
+      const row = cityName === 'KOMUNITAS'
+        ? komRow
+        : cityRows.find(r => r.city === cityName);
       const cellData = row?.channelMap.find(c => Math.abs(c.freq - freq) < 0.01);
       if (row && cellData) showTT(e, cellData, row);
     });
@@ -881,5 +866,5 @@ export function renderGeoGridView(container, filterCities, geoSettings, preloade
     }
   });
 
-  attachCellEvents(area, cityRows);
+  attachCellEvents(area, cityRows, komRow);
 }
