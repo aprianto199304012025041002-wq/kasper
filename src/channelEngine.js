@@ -127,8 +127,4 @@ export function summarize(channelMap) {
     pct_free: total ? +(free/total*100).toFixed(1) : 0 };
 }
 
-export function rateSlot(count) {
-  if (count >= 4) return { label: 'Prioritas tinggi', level: 'high' };
-  if (count >= 2) return { label: 'Layak dipertimbangkan', level: 'medium' };
-  return { label: 'Marginal', level: 'low' };
-}
+

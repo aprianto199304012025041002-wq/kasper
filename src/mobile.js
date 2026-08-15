@@ -403,4 +403,4 @@ function injectScrollHints() {
   observer.observe(document.getElementById('app') || document.body, { childList: true, subtree: true });
 }
 
-export function initMobileTap() {}
+
