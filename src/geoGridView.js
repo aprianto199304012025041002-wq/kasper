@@ -590,7 +590,7 @@ function renderCityRow(row, opts) {
   const { city, stations, channelMap } = row;
   const color = cityColor(city);
   const usedN = channelMap.filter(c => c.type === 'used').length;
-  const freeN = channelMap.filter(c => c.type === 'free').length;
+  const freeN = channelMap.filter(c => c.type === 'free' && c.allotment_status !== 'not_allotted').length;
 
   const cells = channelMap.map(ch => {
     if (ch.type === 'used') {
@@ -640,10 +640,15 @@ function renderCityRow(row, opts) {
 
 // ── Slot bar ──────────────────────────────────────────────────────────
 function buildSlotBar(cityRows) {
+  // Hanya kanal yang allotted (bukan not_allotted) DAN free di semua wilayah
   const allFree = GRID.filter(ch =>
     cityRows.length > 0 && cityRows.every(r => {
       const c = r.channelMap.find(x => Math.abs(x.freq - ch) < 0.01);
-      return c && c.type === 'free';
+      if (!c) return false;
+      if (c.type !== 'free') return false;
+      // Jika semua wilayah punya allotment info, exclude not_allotted
+      if (c.allotment_status === 'not_allotted') return false;
+      return true;
     })
   );
   const slotBar = document.getElementById('ggSlotBar');
