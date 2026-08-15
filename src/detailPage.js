@@ -2,10 +2,19 @@
 // Render halaman detail satu stasiun: info lengkap, peta Leaflet, tetangga band, interferensi lokal.
 
 const REGION_COLORS = {
+  'KOTA YOGYAKARTA':                            '#4a90d9',
+  'SLEMAN, NGAGLIK, KALASAN, NGEMPLAK, PAKEM':  '#5ee69c',
+  'DEPOK':                                      '#4fd9d0',
+  'GAMPING':                                    '#a0d94a',
+  'BANTUL, BANGUNTAPAN':                        '#e6b85c',
+  'WONOSARI':                                   '#d97a9c',
+  'PATUK':                                      '#e67c5c',
+  'WATES, SENTOLO':                             '#9d8ce6',
+  // fallback nama kota administratif
   'KOTA YOGYAKARTA': '#4a90d9',
-  SLEMAN:            '#5ee69c',
-  BANTUL:            '#e6b85c',
-  GUNUNGKIDUL:       '#d97a9c',
+  'SLEMAN':          '#5ee69c',
+  'BANTUL':          '#e6b85c',
+  'GUNUNGKIDUL':     '#d97a9c',
   'KULON PROGO':     '#9d8ce6',
 };
 
