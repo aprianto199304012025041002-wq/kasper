@@ -378,10 +378,6 @@ export function initMobileUI(getState, onViewChange, onPageChange, onFilterChang
 
 export { openDrawer as openFilterDrawer };
 
-export function syncFilterBadge(state) {
-  updateFabBadge(state);
-}
-
 // ── Scroll hints ──────────────────────────────────────────────────────
 function injectScrollHints() {
   const observer = new MutationObserver(() => {
@@ -391,13 +387,6 @@ function injectScrollHints() {
       hint.className = 'band-scroll-hint';
       hint.textContent = '← GESER UNTUK LIHAT SPEKTRUM PENUH →';
       trackWrap.parentNode.insertBefore(hint, trackWrap);
-    }
-    const geoScroll = document.querySelector('.gg-scroll-wrap');
-    if (geoScroll && !geoScroll.previousElementSibling?.classList.contains('band-scroll-hint')) {
-      const hint = document.createElement('div');
-      hint.className = 'band-scroll-hint';
-      hint.textContent = '← GESER UNTUK MELIHAT SEMUA 103 KANAL →';
-      geoScroll.parentNode.insertBefore(hint, geoScroll);
     }
   });
   observer.observe(document.getElementById('app') || document.body, { childList: true, subtree: true });
