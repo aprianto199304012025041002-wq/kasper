@@ -310,8 +310,6 @@ function renderControls() {
     ? '<span class="source-badge">⬡ data lokal</span>'
     : '<span class="source-badge is-live"><span class="live-dot"></span> API live</span>';
 
-  // Sembunyikan filter wilayah & tampilkan di geo-grid (ditangani internal)
-  const hideCity = state.view === 'geo';
 
   el.innerHTML = `
     ${state.view !== 'geo' ? `<div class="control-group">
