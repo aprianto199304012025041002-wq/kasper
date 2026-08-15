@@ -188,7 +188,7 @@ class InterferenceEngine
     /**
      * Evaluasi interferensi antar semua pasangan stasiun.
      *
-     * @param  array $stations  Array stasiun dengan keys: freq, erp_dbm, latitude, longitude, stn_name, kota
+     * @param  array $stations  Array stasiun dengan keys: freq, erp_dbm, latitude, longitude, stn_name, wilayah_layanan
      * @return array {
      *   pairs: [ { tx, rx, type, dist_km, pr_db, level } ],
      *   summary: { co_channel, adjacent_1, adjacent_2, clean }
