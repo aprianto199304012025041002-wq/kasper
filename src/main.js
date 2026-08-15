@@ -12,22 +12,10 @@ import { computeChannelMapForWilayah } from './channelEngine.js';
 import './components/responsive.css';
 
 // ── Warna dinamis — di-generate dari HSL berdasar index kota ─────────
-const CITY_PALETTE = [
-  '#4a90d9','#5ee69c','#e6b85c','#d97a9c','#9d8ce6',
-  '#4fd9d0','#e67c5c','#a0d94a','#d9c44a','#7ca8e6',
-  '#e64a7c','#5cb8e6','#b8e65c','#e6a04a','#7c5ce6',
-  '#4ae6b8','#e65c5c','#5c7ce6','#c8e64a','#e64ac8',
-];
-const _cityColorMap = {};
-let _colorIdx = 0;
 
-function cityColor(kota) {
-  if (!kota) return '#888780';
-  if (!_cityColorMap[kota]) {
-    _cityColorMap[kota] = CITY_PALETTE[_colorIdx % CITY_PALETTE.length];
-    _colorIdx++;
-  }
-  return _cityColorMap[kota];
+
+
+
 }
 
 const JENIS_LABELS = {
@@ -180,8 +168,6 @@ async function loadData() {
     state.data    = await fetchSpectrum(filters);
     state.loading = false;
     window._kasperFallback = isUsingFallback();
-    Object.keys(_cityColorMap).forEach(k=>delete _cityColorMap[k]);
-    _colorIdx = 0;
   } catch(e) { state.error=e.message; state.loading=false; }
   renderControls(); renderContent();
 }
