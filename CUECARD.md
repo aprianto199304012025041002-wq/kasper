@@ -1,76 +1,77 @@
-# KASPER — Cue Card Sesi 14 Agu 2026
+# KASPER — Cue Card Sesi 15 Agu 2026
 
 ## Repo
 `github.com/aprianto199304012025041002-wq/kasper.git`
-- READ token: `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`
-- KUNCI token: `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`
+- Token: `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`
 - Live: `kasper.balmonjogja.info`
 
 ---
 
-## Aturan logika spektrum FM (jangan sampai salah)
+## Arsitektur data flow
 
-### Parameter kanal FM
-- Step channel_map: 100kHz
-- Adj-1: ±100kHz, Adj-2: ±200kHz
-- Warna: kuning (used), merah dashed (adj), biru (free/allotted), ungu dashed (allotted RRI), redup (not allotted)
-
-### Arsitektur data flow
 ```
-PHP API /stations
-  → raw stations (termasuk area_of_service AS wilayah_layanan)
-  → channel_map (PHP ChannelEngine.php) — adj1/adj2 per sisi lengkap
-  → summary, free_blocks
+DB (MySQL tabel: isr)
+  → PHP API /stations  → stations[] dengan wilayah_layanan (area_of_service)
+  → PHP API channel_map → adj1_left/adj1_right/adj2_left/adj2_right lengkap
+  → PHP API summary     → {total,used,adjacent_1,adjacent_2,free,pct_used,pct_free}
 
 Frontend fetchSpectrum()
-  → pakai channel_map dari PHP langsung (adj info)
+  → pakai channel_map dari PHP (adj info sumber kebenaran)
 
-main.js renderContent() cityRows
-  → computeChannelMapForWilayah(cityStations, city) → allotmentIndex
-  → merge allotment_status ke channel_map global dari PHP
+main.js / geoGridView.js renderContent() per wilayah:
+  → computeChannelMapForWilayah(cityStations, wilayah) → allotmentIndex
+  → merge allotment_status ke channel_map PHP per freq
   → grouping by wilayah_layanan (bukan kota administratif)
 
 src/data/allotment.js
-  → data penjatahan kanal KM Komdigi 570/2025 untuk DIY
-  → 8 wilayah layanan: KOTA YOGYAKARTA, BANTUL BANGUNTAPAN, DEPOK,
-    GAMPING, SLEMAN NGAGLIK..., WATES SENTOLO, WONOSARI, PATUK
+  → KM Komdigi 570/2025, 8 wilayah layanan DIY
+  → allotted_lps ★ (biru), allotted_rri ▣ (ungu dashed), not_allotted · (redup)
 ```
 
-### Field penting di station object
-- `wilayah_layanan` = area_of_service dari DB (primary group key)
-- `kota` = city administratif (fallback)
+## Field station object
+- `wilayah_layanan` = area_of_service dari DB — primary group key
+- `kota` = city administratif — fallback display saja
 - `kecamatan` = district
-- Komunitas: wilayah_layanan = "2,5 KILOMETER DARI LOKASI ANTENA PEMANCAR"
+- Komunitas AOS: `"2,5 KILOMETER DARI LOKASI ANTENA PEMANCAR"` — exclude dari grid/pita/geo
 
-### allotment_status per slot
-- `allotted_lps` → biru ★ (kanal dijatahkan, kosong, bisa diisi LPS)
-- `allotted_rri` → ungu dashed ▣ (dijatahkan untuk LPP RRI)
-- `not_allotted` → redup · (tidak dijatahkan di wilayah ini)
-- `null` → wilayah komunitas / tidak dikenal
+## 8 Wilayah Layanan DIY (KM 570/2025)
+| Kode | Wilayah | Kelas |
+|------|---------|-------|
+| 34-001 | WATES, SENTOLO | C |
+| 34-002 | BANTUL, BANGUNTAPAN | C |
+| 34-003 | WONOSARI | C |
+| 34-004 | PATUK | C |
+| 34-005 | GAMPING | C |
+| 34-006 | DEPOK | C |
+| 34-007 | SLEMAN, NGAGLIK, KALASAN, NGEMPLAK, PAKEM | C |
+| 34-008 | KOTA YOGYAKARTA | B |
 
----
+## Aturan teknis
+- Step: 100 kHz, Adj-1: ±100 kHz (20dB), Adj-2: ±200 kHz (10dB)
+- summary.adjacent tidak ada → pakai adjacent_1 + adjacent_2
+- PHP ChannelEngine sudah produce adj1_left/adj1_right/adj2_left/adj2_right + backward compat adj_left/adj_right
 
-## Commit history sesi ini (14 Agu 2026)
+## Commit terakhir sesi ini
 ```
-4dfdf16  fix: merge PHP channel_map adj info dengan allotment_status dari JS
-83afbc0  fix: remove duplicate function declarations in channelEngine.js
-89c3ac4  fix: propagate wilayah_layanan ke interferenceView, detailPage, neighbors
-2d04d40  feat: overlay allotment KM 570/2025 per wilayah layanan
-9af132f  feat: group by wilayah_layanan instead of kota administratif
-851fbf1  fix: adj detail panels use adj1_*/adj2_* fields; remove dead bandView.js
+b0db1f8  chore: hapus komentar stale
+ccf3b15  feat: allotment stats di geoGridView stats panel
+fd7a162  fix: TYPE_LABELS adj spacing; summary.adjacent fix
+ee83b57  fix: slotBar dan freeN hanya allotted
+b8d6734  feat: allotment visual di geoGridView
+de7dba3  refactor: geoGridView pakai buildChannelGrid()
+5c1e7f0  fix: exclude komunitas dari chips/renderControls
+334e2cb  fix: geoGridView konsisten wilayah_layanan + allotment
+94da250  fix: getCities return wilayah_layanan
+5782966  refactor: cleanup dead code + allotment stats statsBar
+4dfdf16  fix: merge PHP channel_map adj + allotment_status JS
 ```
 
-## Status akhir sesi
-- ✅ Grouping by wilayah_layanan (area_of_service dari DB)
-- ✅ Overlay allotment KM 570/2025: allotted LPS/RRI/not_allotted
-- ✅ PHP channel_map tetap sumber adj, JS sumber allotment — di-merge di cityRows
-- ✅ detailPage, interferenceView, neighbors pakai wilayah_layanan
-- ✅ Legend 5 item: used, adj, allotted LPS, allotted RRI, not_allotted
-- ✅ stations.json fallback updated dengan wilayah_layanan
-
-## Backlog / next session
-- Verifikasi visual di live setelah deploy 108+
-- Cek apakah allotment_status muncul benar di grid/pita untuk tiap wilayah
-- Pertimbangkan: tampilkan allotment stats (berapa kanal allotted terisi vs kosong)
-- Perlu review: stasiun komunitas "2,5 KILOMETER..." — apakah perlu group sendiri
-  atau disembunyikan dari band/grid view dan hanya muncul di geo view?
+## Status / backlog
+- ✅ Semua view (grid/pita/geo) konsisten wilayah_layanan + allotment
+- ✅ Komunitas excluded dari band/grid/geo
+- ✅ Stats bar + geoGridView stats panel punya allotment breakdown
+- ✅ Legend 5 item di main.js; geoGridView allotment CSS
+- ⚠️ Belum diverifikasi di live (tunggu deploy)
+- 🔲 allotment.js hanya cover DIY — jika scope diperluas perlu data lain
+- 🔲 Komunitas — saat ini tidak ditampilkan sama sekali; mungkin perlu geo-only view
+- 🔲 CSS warning "Unexpected /" di build — dari comment unicode, harmless
