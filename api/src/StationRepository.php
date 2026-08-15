@@ -68,7 +68,15 @@ class StationRepository
 
     public function getById(int $id): ?array
     {
-        $stmt = $this->db->prepare("SELECT * FROM " . self::TABLE . " WHERE id=:id LIMIT 1");
+        $sql = "
+            SELECT id, freq, bwidth AS bw_khz, stn_name, clnt_name,
+                   city AS kota, district AS kecamatan, area_of_service AS wilayah_layanan, province,
+                   erp_pwr_dbm AS erp_dbm, status_simf AS status,
+                   sid_lat AS latitude, sid_long AS longitude,
+                   validity_date AS validity, no_simf, masa_laku,
+                   {$this->classifyJenis()} AS jenis
+            FROM " . self::TABLE . " WHERE id=:id LIMIT 1";
+        $stmt = $this->db->prepare($sql);
         $stmt->execute([':id' => $id]);
         return $stmt->fetch() ?: null;
     }
