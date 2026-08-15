@@ -489,8 +489,9 @@ function createHTML() {
   <div class="gg-stats-float" id="ggStats">
     <div class="gg-stat"><span class="gg-stat-val" id="ggStUsed">—</span><span class="gg-stat-lbl">Terpakai</span></div>
     <div class="gg-stat"><span class="gg-stat-val adj" id="ggStAdj">—</span><span class="gg-stat-lbl">Guard</span></div>
-    <div class="gg-stat"><span class="gg-stat-val free" id="ggStFree">—</span><span class="gg-stat-lbl">Kosong</span></div>
-    <div class="gg-stat"><span class="gg-stat-val city" id="ggStCity">—</span><span class="gg-stat-lbl">Kota</span></div>
+    <div class="gg-stat"><span class="gg-stat-val free" id="ggStFree">—</span><span class="gg-stat-lbl">Allotted kosong</span></div>
+    <div class="gg-stat"><span class="gg-stat-val" style="color:#c084fc" id="ggStAllottedUsed">—</span><span class="gg-stat-lbl">Allotted terisi</span></div>
+    <div class="gg-stat"><span class="gg-stat-val city" id="ggStCity">—</span><span class="gg-stat-lbl">Wilayah</span></div>
   </div>
 
   <!-- Grid area -->
@@ -688,16 +689,27 @@ function buildLegend(cityRows) {
 
 // ── Stats ─────────────────────────────────────────────────────────────
 function updateStats(cityRows) {
-  let used = 0, adj = 0, free = 0;
+  let used = 0, adj = 0, allottedFree = 0, allottedUsed = 0, allottedTotal = 0;
   cityRows.forEach(r => r.channelMap.forEach(ch => {
-    if (ch.type === 'used') used++;
-    else if (ch.type === 'adj' || ch.type === 'adjacent_1' || ch.type === 'adjacent_2') adj++;
-    else free++;
+    if (ch.type === 'used') {
+      used++;
+      if (ch.allotment_status === 'allotted_lps' || ch.allotment_status === 'allotted_rri') {
+        allottedUsed++; allottedTotal++;
+      }
+    } else if (ch.type === 'adj' || ch.type === 'adjacent_1' || ch.type === 'adjacent_2') {
+      adj++;
+    } else if (ch.type === 'free') {
+      if (ch.allotment_status === 'allotted_lps' || ch.allotment_status === 'allotted_rri') {
+        allottedFree++; allottedTotal++;
+      }
+    }
   }));
   const su = document.getElementById('ggStUsed'); if (su) su.textContent = used;
   const sa = document.getElementById('ggStAdj');  if (sa) sa.textContent = adj;
-  const sf = document.getElementById('ggStFree'); if (sf) sf.textContent = free;
+  const sf = document.getElementById('ggStFree'); if (sf) sf.textContent = allottedFree;
   const sc = document.getElementById('ggStCity'); if (sc) sc.textContent = cityRows.length;
+  // Allotment stats
+  const sau = document.getElementById('ggStAllottedUsed'); if (sau) sau.textContent = `${allottedUsed}/${allottedTotal}`;
 }
 
 // ── Render grid ───────────────────────────────────────────────────────
