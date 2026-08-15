@@ -155,7 +155,7 @@ class StationRepository
     {
         $c=[]; $p=[];
         if(!empty($filters['province'])){$c[]="province=:province";$p[':province']=$filters['province'];}
-        if(!empty($filters['city'])){$c[]="city=:city";$p[':city']=$filters['city'];}
+        if(!empty($filters['city'])){$c[]="area_of_service=:city";$p[':city']=$filters['city'];}
         if(!empty($filters['status'])){$c[]="status_simf=:status";$p[':status']=$filters['status'];}
         if(!empty($filters['freq_min'])){$c[]="freq>=:freq_min";$p[':freq_min']=(float)$filters['freq_min'];}
         if(!empty($filters['freq_max'])){$c[]="freq<=:freq_max";$p[':freq_max']=(float)$filters['freq_max'];}
