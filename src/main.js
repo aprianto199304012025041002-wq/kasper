@@ -111,7 +111,7 @@ let _searchDebounce;
 function handleInput(e) {
   if (e.target.id==='fSearch') {
     clearTimeout(_searchDebounce);
-    _searchDebounce = setTimeout(() => { state.searchTerm=e.target.value; loadData(); }, 320);
+    _searchDebounce = setTimeout(() => { state.searchTerm=e.target.value; renderContent(); }, 250);
   }
 }
 
