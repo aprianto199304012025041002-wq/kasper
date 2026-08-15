@@ -7,7 +7,7 @@ import './components/detail-page.css';
 import { fetchSpectrum, fetchStationDetail, fetchInterference, isUsingFallback } from './apiClient.js';
 import { renderDetailPage } from './detailPage.js';
 import { renderInterferencePanel } from './interferenceView.js';
-import { initMobileUI, openFilterDrawer, syncFilterBadge } from './mobile.js';
+import { initMobileUI, openFilterDrawer } from './mobile.js';
 import { computeChannelMapForWilayah } from './channelEngine.js';
 import './components/responsive.css';
 
