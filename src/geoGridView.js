@@ -1,11 +1,7 @@
 // src/geoGridView.js — Geo Grid FM · Design language KOMENK
-import { FM_MIN, FM_MAX, CHANNEL_SPACING, ADJACENT_GUARD, computeChannelMapForWilayah } from './channelEngine.js';
+import { FM_MIN, FM_MAX, CHANNEL_SPACING, ADJACENT_GUARD, computeChannelMapForWilayah, buildChannelGrid } from './channelEngine.js';
 
-const GRID = (() => {
-  const chs = [], steps = Math.round((FM_MAX - FM_MIN) / CHANNEL_SPACING);
-  for (let i = 0; i <= steps; i++) chs.push(Math.round((FM_MIN + i * CHANNEL_SPACING) * 10) / 10);
-  return chs;
-})();
+const GRID = buildChannelGrid();
 
 const PALETTE = [
   '#00e5ff','#a78bfa','#22c55e','#f472b6','#fb923c',
