@@ -42,7 +42,7 @@ async function apiFetch(endpoint, params = {}) {
 
 function buildLocalResponse(filters = {}) {
   let stations = [...fallbackStations];
-  if (filters.city)   stations = stations.filter((s) => (s.kota||s.city) === filters.city);
+  if (filters.city)   stations = stations.filter((s) => (s.wilayah_layanan||s.kota||s.city) === filters.city);
   if (filters.jenis)  stations = stations.filter((s) => s.jenis === filters.jenis);
   if (filters.search) {
     const t = filters.search.toLowerCase();
@@ -58,7 +58,7 @@ function buildLocalResponse(filters = {}) {
     summary: summarize(channelMap), stations: norm,
     channel_map: channelMap, free_blocks: findFreeBlocks(channelMap),
     _source: 'local',
-    meta: { fm_min:87.5, fm_max:108.0, channel_spacing:0.2, generated_at: new Date().toISOString() },
+    meta: { fm_min:87.5, fm_max:108.0, channel_spacing:0.1, generated_at: new Date().toISOString() },
   };
 }
 
@@ -112,8 +112,8 @@ export async function fetchStationDetail(freq) {
   const neighbors = fallbackStations
     .filter((x) => Math.abs(x.freq - freq) >= 0.05 && Math.abs(x.freq - freq) <= 2.0)
     .sort((a, b) => Math.abs(a.freq - freq) - Math.abs(b.freq - freq))
-    .map((x) => ({ ...x, kota: x.kota||x.city, freq_distance: Math.abs(x.freq-freq) }));
-  return { data: { ...s, kota: s.kota||s.city }, neighbors };
+    .map((x) => ({ ...x, wilayah_layanan: x.wilayah_layanan||x.kota||x.city, kota: x.kota||x.city, freq_distance: Math.abs(x.freq-freq) }));
+  return { data: { ...s, wilayah_layanan: s.wilayah_layanan||s.kota||s.city, kota: s.kota||s.city }, neighbors };
 }
 
 export async function fetchInterference(filters = {}) {
