@@ -227,7 +227,7 @@ function renderHeader() {
         </div>
         <div class="app-header__meta-item">
           <span class="app-header__meta-label">Spasi</span>
-          <span class="app-header__meta-val mono">200 kHz</span>
+          <span class="app-header__meta-val mono">100 kHz</span>
         </div>
         <div class="app-header__meta-item">
           <span class="app-header__meta-label"><span class="live-dot"></span>Update</span>
