@@ -2,9 +2,9 @@
 // Render panel analisis interferensi co-channel dan adjacent channel.
 
 const TYPE_LABELS = {
-  co_channel: 'Co-channel',
-  adjacent_1: 'Adjacent ±200kHz',
-  adjacent_2: '2nd Adjacent ±400kHz',
+  co_channel: 'Co-channel (0 kHz)',
+  adjacent_1: '1st Adjacent (±100 kHz)',
+  adjacent_2: '2nd Adjacent (±200 kHz)',
 };
 
 const TYPE_CLASS = {

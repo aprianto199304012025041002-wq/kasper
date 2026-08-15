@@ -277,7 +277,8 @@ function updateStatsBar(summary, allotmentStats = null) {
   if (!el) return;
   const pctU = summary.pct_used  ?? +((summary.used/summary.total)*100).toFixed(1);
   const pctF = summary.pct_free  ?? +((summary.free/summary.total)*100).toFixed(1);
-  const pctA = +((summary.adjacent/summary.total)*100).toFixed(1);
+  const adjTotal = (summary.adjacent ?? ((summary.adjacent_1||0) + (summary.adjacent_2||0)));
+  const pctA = +((adjTotal/summary.total)*100).toFixed(1);
 
   const allotmentHtml = allotmentStats ? `
     <div class="stat-cell">
@@ -298,7 +299,7 @@ function updateStatsBar(summary, allotmentStats = null) {
     </div>
     <div class="stat-cell">
       <div class="stat-cell__label">Adjacent protected</div>
-      <div class="stat-cell__value is-danger">${summary.adjacent}<span class="stat-cell__unit">${pctA}%</span></div>
+      <div class="stat-cell__value is-danger">${adjTotal}<span class="stat-cell__unit">${pctA}%</span></div>
       <div class="stat-cell__bar"><div class="stat-cell__bar-fill" style="width:${pctA}%;background:var(--signal-danger)"></div></div>
     </div>
     <div class="stat-cell">
