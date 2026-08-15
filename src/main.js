@@ -11,13 +11,6 @@ import { initMobileUI, openFilterDrawer, syncFilterBadge } from './mobile.js';
 import { computeChannelMapForWilayah } from './channelEngine.js';
 import './components/responsive.css';
 
-// ── Warna dinamis — di-generate dari HSL berdasar index kota ─────────
-
-
-
-
-}
-
 const JENIS_LABELS = {
   swasta:'Swasta', publik:'Publik (RRI)', publik_lokal:'Publik Lokal (LPPL)', komunitas:'Komunitas',
 };
