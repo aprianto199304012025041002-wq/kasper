@@ -224,7 +224,11 @@ const CSS = `
 
 /* ── Legend ── */
 .gg-legend-section{padding:0 16px 14px;}
-.gg-leg-rows{display:flex;flex-direction:column;gap:5px;margin-top:8px;}
+.gg-city-row--komunitas {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px dashed rgba(249,115,22,.3);
+}
 .gg-leg-row{
   display:flex;align-items:center;gap:8px;
   font-size:11px;color:var(--text,#f1f5f9);
@@ -788,8 +792,44 @@ export function renderGeoGridView(container, filterCities, geoSettings, preloade
 
   const cityRows = buildCityRows(stations);
 
+  // Komunitas row terpisah — hanya kanal 107.4–107.9
+  const komStations = stations.filter(s => s.jenis === 'komunitas');
+  const komChannelMap = komStations.length > 0
+    ? computeChannelMapForWilayah(komStations, null).filter(c => c.freq >= 107.4)
+    : null;
+  const komRow = komChannelMap ? { city: 'KOMUNITAS', stations: komStations, channelMap: komChannelMap } : null;
+
   // Render: sticky label col kiri + shared scroll kanan (konsisten dgn grid & band view)
-  const rows = cityRows.map(r => renderCityRow(r, { showAdj, showLabel, onlyFree })).join('');
+  const rows = cityRows.map(r => renderCityRow(r, { showAdj, showLabel, onlyFree })).join('')
+    + (komRow ? `<div class="gg-city-row gg-city-row--komunitas" data-city="KOMUNITAS">
+    <div class="gg-city-lbl" style="border-left:3px dashed #f97316">
+      <span class="gg-city-name" style="color:#f97316">Komunitas</span>
+      <div class="gg-city-meta">
+        <span class="u">${komStations.length}stn</span>
+        <span style="color:#f97316;font-size:8px">±2.5km</span>
+      </div>
+    </div>
+    <div class="gg-city-chs">${komChannelMap.map(ch => {
+      if (ch.type === 'used') {
+        const s = ch.station;
+        const tag = JENIS_TAG[s.jenis] || 'KOM';
+        const abbr = (s.stn_name || '').replace(/RADIO\s*/gi,'').trim().substring(0,8);
+        return `<div class="gg-ch used" style="--city-color:#f97316" data-freq="${ch.freq}" data-city="KOMUNITAS">
+          <span class="gg-ch-freq">${ch.freq.toFixed(1)}</span>
+          ${showLabel ? `<span class="gg-ch-lbl">${esc(abbr)}</span>` : ''}
+          <span class="gg-ch-tag">${tag}</span>
+        </div>`;
+      }
+      if (ch.type === 'adjacent_1' || ch.type === 'adjacent_2') {
+        return `<div class="gg-ch adj" data-freq="${ch.freq}" data-city="KOMUNITAS">
+          <span class="gg-ch-freq">${ch.freq.toFixed(1)}</span>
+        </div>`;
+      }
+      return `<div class="gg-ch free" data-freq="${ch.freq}" data-city="KOMUNITAS">
+        <span class="gg-ch-freq">${ch.freq.toFixed(1)}</span>
+      </div>`;
+    }).join('')}</div>
+  </div>` : '');
   container.innerHTML = `
     <div class="gg-wrap">
       <div class="gg-grid-area" id="ggGridArea">
@@ -809,11 +849,18 @@ export function renderGeoGridView(container, filterCities, geoSettings, preloade
     if (!cell) return;
     const freq = parseFloat(cell.dataset.freq);
     const cityName = cell.dataset.city;
-    const row = cityRows.find(r => r.city === cityName);
+    // Cari di cityRows biasa atau komRow
+    const row = cityName === 'KOMUNITAS'
+      ? komRow
+      : cityRows.find(r => r.city === cityName);
     const ch = row?.channelMap.find(c => Math.abs(c.freq - freq) < 0.01);
     if (ch && onClickCell) {
       const coStations = (preloadedStations || [])
-        .filter(s => Math.abs(parseFloat(s.freq) - freq) < 0.01 && (s.wilayah_layanan || s.kota || s.city) === cityName)
+        .filter(s => {
+          if (!Math.abs(parseFloat(s.freq) - freq) < 0.01) return false;
+          if (cityName === 'KOMUNITAS') return s.jenis === 'komunitas';
+          return (s.wilayah_layanan || s.kota || s.city) === cityName;
+        })
         .sort((a, b) => (a.stn_name||'').localeCompare(b.stn_name||''));
       const normalized = {
         freq: ch.freq,
