@@ -356,6 +356,23 @@ const CSS = `
 .gg-ch.free{background:transparent;}
 .gg-ch.free:hover{background:rgba(34,197,94,.05);}
 
+/* Allotment states */
+.gg-ch.free.allotted-lps .gg-ch-freq{opacity:.6;color:#1e90ff;}
+.gg-ch.free.allotted-lps .gg-ch-lbl{color:#1e90ff;}
+.gg-ch.free.allotted-lps:hover{background:rgba(30,144,255,.07);}
+
+.gg-ch.free.allotted-rri .gg-ch-freq{opacity:.6;color:#c084fc;}
+.gg-ch.free.allotted-rri .gg-ch-lbl{color:#c084fc;}
+.gg-ch.free.allotted-rri{outline:1px dashed rgba(192,132,252,.3);outline-offset:-1px;}
+.gg-ch.free.allotted-rri:hover{background:rgba(192,132,252,.07);}
+
+.gg-ch.free.not-allotted{opacity:.25;}
+.gg-ch.free.not-allotted .gg-ch-freq{color:rgba(255,255,255,.3);}
+.gg-ch.free.not-allotted:hover{background:transparent;opacity:.35;}
+
+/* Tooltip badge not-allotted */
+.gg-tt-badge.not-allotted{background:rgba(255,255,255,.08);color:rgba(255,255,255,.4);}
+
 /* Col highlight */
 .gg-ch.col-hl{outline:1px solid var(--accent,#00e5ff);outline-offset:-1px;z-index:1;}
 .gg-ch.used.col-hl{z-index:3;}
@@ -511,10 +528,18 @@ function showTT(e, cell, cityRow) {
       <div class="gg-tt-row"><span class="gg-tt-key">Wilayah Layanan</span><span class="gg-tt-val">${esc(shortCity(cityRow.city))}</span></div>
       <span class="gg-tt-badge adj">ADJACENT</span>`;
   } else {
-    html = `<div class="gg-tt-title">${cell.freq.toFixed(1)} MHz — Kosong ★</div>
+    const aStatus = cell.allotment_status;
+    const aLabel  = aStatus === 'allotted_rri' ? 'Allotted LPP RRI (KM 570/2025)'
+                  : aStatus === 'allotted_lps' ? 'Allotted LPS/LPP Lokal (KM 570/2025)'
+                  : aStatus === 'not_allotted'  ? 'Tidak dijatahkan di wilayah ini'
+                  : 'Tersedia';
+    const aIcon   = aStatus === 'allotted_rri' ? '▣' : aStatus === 'allotted_lps' ? '★' : '·';
+    const badgeClass = aStatus === 'not_allotted' ? 'not-allotted' : 'free';
+    html = `<div class="gg-tt-title">${cell.freq.toFixed(1)} MHz — Kosong ${aIcon}</div>
       <div class="gg-tt-row"><span class="gg-tt-key">Lower / Upper</span><span class="gg-tt-val">${cell.lower.toFixed(3)} – ${cell.upper.toFixed(3)}</span></div>
       <div class="gg-tt-row"><span class="gg-tt-key">Wilayah Layanan</span><span class="gg-tt-val">${esc(shortCity(cityRow.city))}</span></div>
-      <span class="gg-tt-badge free">AVAILABLE ★</span>`;
+      <div class="gg-tt-row"><span class="gg-tt-key">Allotment</span><span class="gg-tt-val">${aLabel}</span></div>
+      <span class="gg-tt-badge ${badgeClass}">${aStatus === 'not_allotted' ? 'TIDAK DIJATAHKAN' : 'AVAILABLE'} ${aIcon}</span>`;
   }
   tt.innerHTML = html;
   tt.style.display = 'block';
@@ -532,14 +557,19 @@ function hideTT() { const tt = ensureTT(); if (tt) tt.style.display = 'none'; }
 // ── Render helpers ────────────────────────────────────────────────────
 function shortCity(name) {
   const MAP = {
-    'KOTA YOGYAKARTA':'Kota YK','KABUPATEN SLEMAN':'Sleman','KABUPATEN BANTUL':'Bantul',
-    'KABUPATEN GUNUNGKIDUL':'Gunungkidul','KABUPATEN KULON PROGO':'Kulon Progo',
-    'SLEMAN':'Sleman','BANTUL':'Bantul','GUNUNGKIDUL':'Gunungkidul',
-    'KULON PROGO':'Kulon Progo','YOGYAKARTA':'Kota YK',
-    'KOTA MAGELANG':'Kota Magelang','KABUPATEN MAGELANG':'Kab. Magelang',
-    'KOTA SEMARANG':'Semarang','KOTA SURAKARTA':'Solo',
+    'KOTA YOGYAKARTA': 'Kota YK',
+    'BANTUL, BANGUNTAPAN': 'Bantul-Banguntapan',
+    'DEPOK': 'Depok',
+    'GAMPING': 'Gamping',
+    'SLEMAN, NGAGLIK, KALASAN, NGEMPLAK, PAKEM': 'Sleman-Ngaglik',
+    'WATES, SENTOLO': 'Wates-Sentolo',
+    'WONOSARI': 'Wonosari',
+    'PATUK': 'Patuk',
+    'KOTA MAGELANG': 'Kota Magelang',
+    'KOTA SEMARANG': 'Semarang',
+    'KOTA SURAKARTA': 'Solo',
   };
-  return MAP[name] || name.replace(/KABUPATEN\s*/gi,'Kab.').replace(/KOTA\s*/gi,'').trim().substring(0,18);
+  return MAP[name] || name.replace(/KABUPATEN\s*/gi,'Kab.').replace(/KOTA\s*/gi,'Kota ').trim().substring(0,20);
 }
 function esc(s) {
   const d = document.createElement('div');
@@ -582,9 +612,16 @@ function renderCityRow(row, opts) {
       </div>`;
     }
     // free
-    return `<div class="gg-ch free ${opts.onlyFree ? 'col-hl' : ''}" data-freq="${ch.freq}" data-city="${esc(city)}">
+    const aStatus = ch.allotment_status;
+    const aClass  = aStatus === 'allotted_rri' ? 'allotted-rri'
+                  : aStatus === 'allotted_lps' ? 'allotted-lps'
+                  : aStatus === 'not_allotted'  ? 'not-allotted'
+                  : '';
+    const aIcon   = aStatus === 'allotted_rri' ? '▣'
+                  : aStatus === 'allotted_lps' ? '★' : '·';
+    return `<div class="gg-ch free ${aClass} ${opts.onlyFree && aStatus !== 'not_allotted' ? 'col-hl' : ''}" data-freq="${ch.freq}" data-city="${esc(city)}">
       <span class="gg-ch-freq">${ch.freq.toFixed(1)}</span>
-      ${opts.showLabel ? `<span class="gg-ch-lbl">★</span>` : ''}
+      ${opts.showLabel ? `<span class="gg-ch-lbl">${aIcon}</span>` : ''}
     </div>`;
   }).join('');
 
