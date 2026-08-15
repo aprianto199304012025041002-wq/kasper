@@ -1,7 +1,6 @@
 <?php
 declare(strict_types=1);
 
-require_once __DIR__ . '/src/config.php';
 require_once __DIR__ . '/src/Database.php';
 require_once __DIR__ . '/src/Response.php';
 require_once __DIR__ . '/src/Cache.php';
@@ -124,7 +123,7 @@ switch ($route) {
     case 'slots':
         $filters  = array_filter(['province' => $qp['province'] ?? '', 'city' => $qp['city'] ?? null]);
         $minCount = max(1, (int)($qp['min_count'] ?? 1));
-        $cacheKey = 'slots_' . md5(json_encode($filters) . $minCount);
+        $cacheKey = $CACHE_V . '_slots_' . md5(json_encode($filters) . $minCount);
         if ($cached = $cache->get($cacheKey)) { header('X-Cache: HIT'); Response::json($cached); }
         $stations   = $repo->getStations($filters);
         $channelMap = ChannelEngine::computeMap($stations);
@@ -137,7 +136,7 @@ switch ($route) {
     // ── GET /interference?province=&city= ─────────────────────────────────
     case 'interference':
         $filters  = array_filter(['province' => $qp['province'] ?? '', 'city' => $qp['city'] ?? null]);
-        $cacheKey = 'interf_' . md5(json_encode($filters));
+        $cacheKey = $CACHE_V . '_interf_' . md5(json_encode($filters));
         if ($cached = $cache->get($cacheKey)) { header('X-Cache: HIT'); Response::json($cached); }
         $stations = $repo->getStationsWithCoords($filters);
         if (empty($stations)) {
@@ -155,7 +154,7 @@ switch ($route) {
     // ── GET /stats?province=&city= ────────────────────────────────────────
     case 'stats':
         $filters  = array_filter(['province' => $qp['province'] ?? '', 'city' => $qp['city'] ?? null]);
-        $cacheKey = 'stats_' . md5(json_encode($filters));
+        $cacheKey = $CACHE_V . '_stats_' . md5(json_encode($filters));
         if ($cached = $cache->get($cacheKey)) { header('X-Cache: HIT'); Response::json($cached); }
         $stations   = $repo->getStations($filters);
         $channelMap = ChannelEngine::computeMap($stations);
@@ -171,7 +170,7 @@ switch ($route) {
             Response::json([
                 'status'  => 'ok',
                 'db'      => 'connected',
-                'version' => '3.0',
+                'version' => $CACHE_V,
                 'time'    => date('c'),
             ]);
         } catch (Exception $e) {
