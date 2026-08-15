@@ -10,11 +10,9 @@ class ProvinceRepository
         $sql = "
             SELECT
                 province                                        AS name,
-                province                                        AS code,
                 COUNT(*)                                        AS total_stations,
                 SUM(service='Broadcast' AND subservice='FM'
-                    AND freq BETWEEN 87.5 AND 108.0)           AS total_fm,
-                NULL AS balmon, NULL AS lat_center, NULL AS lon_center
+                    AND freq BETWEEN 87.5 AND 108.0)           AS total_fm
             FROM " . self::TABLE . "
             WHERE province IS NOT NULL AND province != ''
             GROUP BY province

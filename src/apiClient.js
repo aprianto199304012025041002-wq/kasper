@@ -89,17 +89,6 @@ export async function fetchSpectrum(filters = {}) {
   return buildLocalResponse(filters);
 }
 
-export async function fetchProvinces() {
-  const available = await checkApi();
-  if (available) {
-    const r = await fetch(`${API_BASE}/provinces`);
-    const d = await r.json();
-    return d.provinces || [];
-  }
-  // API mati: return [] supaya hanya tab "Semua Wilayah" yang aktif
-  return [];
-}
-
 export async function fetchStationDetail(freq) {
   const available = await checkApi();
   if (available) {
