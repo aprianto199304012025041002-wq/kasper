@@ -1,6 +1,6 @@
 # KASPER — Kanal Spektrum Radio
 
-Aplikasi web visualisasi spektrum frekuensi FM berbasis data ISR (Izin Stasiun Radio) Balmon.
+Aplikasi web visualisasi spektrum frekuensi FM berbasis data ISR (Izin Stasiun Radio) Balmon Jogja, dengan overlay allotment berdasarkan KM Komdigi No. 570 Tahun 2025.
 
 - **Live:** `kasper.balmonjogja.info`
 - **Stack:** Vite + Vanilla JS · PHP 8 + MySQL · Deploy Hostinger
@@ -11,13 +11,15 @@ Aplikasi web visualisasi spektrum frekuensi FM berbasis data ISR (Izin Stasiun R
 
 | Fitur | Keterangan |
 |---|---|
-| **Peta kanal grid** | Grid 100 kHz · 87.5–108.0 MHz, warna per wilayah |
+| **Peta kanal grid** | Grid 100 kHz · 87.5–108.0 MHz, grouping per wilayah layanan |
 | **Pita horizontal** | View alternatif, tinggi blok proporsional ERP |
-| **Geo Grid** | Grid per kota dengan drawer filter (guard band, label, slot) |
-| **Slot kosong** | Deteksi dan ranking blok kanal kosong potensial |
+| **Geo Grid** | Grid per wilayah layanan dengan drawer filter |
+| **Overlay allotment** | KM 570/2025: allotted LPS ★, allotted RRI ▣, tidak dijatahkan · |
+| **Komunitas** | Row terpisah (oranye) di bawah, kanal 107.4–107.9 MHz |
+| **Slot kosong** | Deteksi dan ranking blok kanal kosong potensial (hanya allotted) |
 | **Detail stasiun** | Info lengkap + mini band strip + peta Leaflet + tetangga |
-| **Analisis interferensi** | Model ITU-R BS.412: co-channel & adjacent channel |
-| **Universal Drawer** | FAB → drawer kontrol: view, filter kota, search, geo settings |
+| **Analisis interferensi** | Model ITU-R BS.412: co-channel & adjacent (±100/±200 kHz) |
+| **Universal Drawer** | FAB → drawer kontrol: view, filter wilayah, search, geo settings |
 | **API PHP** | Backend MySQL dengan 8 endpoint, file cache 5 menit |
 | **Offline fallback** | Jika API tidak tersedia, pakai data JSON lokal otomatis |
 
@@ -27,160 +29,108 @@ Aplikasi web visualisasi spektrum frekuensi FM berbasis data ISR (Izin Stasiun R
 
 ```
 kasper/
-├── index.html                  # Entry point frontend
+├── index.html
 ├── vite.config.js
 ├── package.json
 │
-├── src/                        # Frontend (Vite, Vanilla JS)
+├── src/
 │   ├── main.js                 # App utama + state management
-│   ├── apiClient.js            # HTTP client + offline fallback + retry
-│   ├── channelEngine.js        # Logic grid/gap analysis (JS)
-│   ├── bandView.js             # Renderer pita horizontal
-│   ├── geoGridView.js          # Geo Grid per kota + drawer internal
+│   ├── apiClient.js            # HTTP client + offline fallback
+│   ├── channelEngine.js        # Logic grid/allotment (JS)
+│   ├── geoGridView.js          # Geo Grid per wilayah layanan
 │   ├── detailPage.js           # Halaman detail stasiun + Leaflet map
 │   ├── interferenceView.js     # Panel analisis interferensi
 │   ├── mobile.js               # Universal Drawer + FAB
-│   ├── style.css               # Design tokens global (komenk palette)
+│   ├── style.css               # Design tokens global
 │   ├── data/
-│   │   └── stations.json       # Data stasiun FM fallback (offline)
+│   │   ├── stations.json       # Fallback data stasiun FM
+│   │   └── allotment.js        # Data allotment KM 570/2025 (8 wilayah DIY)
 │   └── components/
-│       ├── responsive.css      # Drawer layout + breakpoints
+│       ├── responsive.css
 │       ├── header.css
 │       ├── stats.css
 │       ├── grid.css
 │       ├── band.css
 │       └── detail-page.css
 │
-└── api/                        # Backend PHP
-    ├── index.php               # Router API (8 endpoint)
+└── api/
+    ├── index.php               # Router API
     └── src/
-        ├── config.php          # Konfigurasi DB (env vars)
-        ├── Database.php        # PDO singleton
-        ├── Response.php        # JSON response helper
-        ├── Cache.php           # File cache TTL 5 menit
-        ├── ChannelEngine.php   # Logic kanal (PHP port)
+        ├── config.php
+        ├── Database.php
+        ├── Response.php
+        ├── Cache.php
+        ├── ChannelEngine.php
         ├── StationRepository.php
         ├── ProvinceRepository.php
-        └── InterferenceEngine.php  # Model ITU-R BS.412
+        └── InterferenceEngine.php
 ```
+
+---
+
+## Wilayah Layanan DIY (KM 570/2025)
+
+| Kode | Wilayah | Kelas |
+|------|---------|-------|
+| 34-001 | WATES, SENTOLO | C |
+| 34-002 | BANTUL, BANGUNTAPAN | C |
+| 34-003 | WONOSARI | C |
+| 34-004 | PATUK | C |
+| 34-005 | GAMPING | C |
+| 34-006 | DEPOK | C |
+| 34-007 | SLEMAN, NGAGLIK, KALASAN, NGEMPLAK, PAKEM | C |
+| 34-008 | KOTA YOGYAKARTA | B |
 
 ---
 
 ## Setup lokal
 
-### Prasyarat
-- Node.js ≥ 18
-- PHP ≥ 8.1 + MySQL (opsional, bisa tanpa backend)
-
-### 1. Clone dan install
-
 ```bash
 git clone https://github.com/aprianto199304012025041002-wq/kasper.git
 cd kasper
 npm install
-```
-
-### 2. Jalankan tanpa backend (mode offline)
-
-```bash
-npm run dev
-```
-
-Buka `http://localhost:5173`. Data diambil dari `src/data/stations.json`.
-
-### 3. Setup backend PHP (opsional)
-
-```bash
-# Import skema
-mysql -u root -p < api/schema.sql
-
-# Import data ISR
-mysql -u root -p isr_db < /path/to/isr.sql
-
-# Konfigurasi env (edit api/src/config.php atau set env vars)
-# DB_HOST, DB_NAME, DB_USER, DB_PASS, CORS_ORIGIN
-
-# Salin folder api/ ke web root PHP
-cp -r api/ /var/www/html/kasper-api/
-
-npm run dev
-```
-
----
-
-## Deploy ke Hostinger
-
-### Backend PHP
-
-1. Upload folder `api/` ke `public_html/api/`
-2. Buat database MySQL di hPanel → **Databases**
-3. Import `api/schema.sql` via phpMyAdmin
-4. Import data ISR via phpMyAdmin atau SSH
-5. Edit `api/src/config.php` — isi DB credentials
-6. Pastikan `api/cache/` writable: `chmod 755 api/cache/`
-
-### Frontend
-
-Frontend di-serve langsung dari Hostinger (`kasper.balmonjogja.info`). API URL sudah hardcode di `src/apiClient.js`:
-
-```js
-const API_BASE = 'https://kasper.balmonjogja.info/api';
+npm run dev   # offline mode, data dari src/data/stations.json
 ```
 
 ---
 
 ## Endpoint API
 
-| Method | Endpoint | Keterangan |
-|---|---|---|
-| GET | `/stations` | Daftar stasiun + channel map + free blocks |
-| GET | `/stations/:freq` | Detail satu stasiun + tetangga |
-| GET | `/provinces` | Daftar provinsi + jumlah stasiun |
-| GET | `/cities?province=` | Daftar kota/kabupaten |
-| GET | `/channels` | Channel map saja |
-| GET | `/slots?min_count=2` | Slot kosong potensial |
-| GET | `/interference` | Analisis interferensi co-channel & adjacent |
-| GET | `/stats` | Statistik ringkasan |
-| GET | `/health` | Cek koneksi DB |
+| Endpoint | Keterangan |
+|---|---|
+| `GET /stations` | Stasiun + channel map + free blocks |
+| `GET /stations/:freq` | Detail stasiun + tetangga |
+| `GET /provinces` | Daftar provinsi |
+| `GET /cities?province=` | Daftar wilayah layanan per provinsi |
+| `GET /channels` | Channel map saja |
+| `GET /slots?min_count=2` | Slot kosong potensial |
+| `GET /interference` | Analisis interferensi |
+| `GET /stats` | Statistik per wilayah layanan + per jenis |
+| `GET /health` | Cek koneksi DB |
 
-**Query params umum:** `province=`, `city=`, `jenis=`, `search=`, `status=`
+**Query params:** `province=`, `city=` (match ke `area_of_service`), `jenis=`, `search=`
 
-### Contoh request
+---
 
-```bash
-# Slot kosong dengan minimal 2 kanal berurutan
-curl "https://kasper.balmonjogja.info/api/slots?min_count=2"
+## Model interferensi
 
-# Detail stasiun 106.1 MHz
-curl "https://kasper.balmonjogja.info/api/stations/106.1"
+ITU-R BS.412 free-space approximation:
 
-# Interferensi Sleman
-curl "https://kasper.balmonjogja.info/api/interference?city=SLEMAN"
-```
+- **Co-channel**: PR minimum 30 dB
+- **1st Adjacent ±100 kHz**: PR minimum 20 dB
+- **2nd Adjacent ±200 kHz**: PR minimum 10 dB
+- Radius evaluasi: 150 km
+- Prasyarat: kolom `latitude`/`longitude` di tabel `isr` terisi
 
 ---
 
 ## Update data ISR
 
 ```bash
-# Truncate dan reimport
+# Bust cache
+rm -f api/cache/*.cache
+
+# Reimport
 mysql -u root -p isr_db -e "TRUNCATE TABLE isr;"
 mysql -u root -p isr_db < isr_baru.sql
-
-# Bust cache API
-rm -f api/cache/*.cache
 ```
-
----
-
-## Model interferensi
-
-Analisis menggunakan **free-space path loss** berbasis ITU-R BS.412:
-
-- **Co-channel**: protection ratio minimum 30 dB
-- **Adjacent ±200 kHz**: protection ratio minimum 20 dB
-- **2nd Adjacent ±400 kHz**: protection ratio minimum 10 dB
-- Radius evaluasi: 150 km per pasangan stasiun
-- **Prasyarat**: kolom `latitude` dan `longitude` di tabel `isr` harus terisi
-
-Model ini adalah aproksimasi — untuk analisis resmi gunakan ITU-R P.1546 atau SEAMCAT.
