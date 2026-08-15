@@ -138,7 +138,7 @@ class StationRepository
         $params=$province?[':province'=>$province]:[];
         $stmt=$this->db->prepare("SELECT DISTINCT area_of_service AS wilayah_layanan FROM ".self::TABLE." WHERE service='Broadcast' AND subservice='FM' $where ORDER BY area_of_service");
         $stmt->execute($params);
-        return array_column($stmt->fetchAll(),'kota');
+        return array_column($stmt->fetchAll(), 'wilayah_layanan');
     }
 
     private function classifyJenis(): string
