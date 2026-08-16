@@ -27,18 +27,6 @@ async function checkApi() {
   }
 }
 
-async function apiFetch(endpoint, params = {}) {
-  const available = await checkApi();
-  if (available) {
-    const url = new URL(`${API_BASE}${endpoint}`);
-    Object.entries(params).forEach(([k, v]) => { if (v) url.searchParams.set(k, v); });
-    const r = await fetch(url.toString(), { signal: AbortSignal.timeout(FETCH_TIMEOUT_MS) });
-    if (!r.ok) throw new Error(`API error ${r.status}`);
-    return r.json();
-  }
-  // Fallback ke data JSON lokal
-  return buildLocalResponse(params);
-}
 
 function buildLocalResponse(filters = {}) {
   let stations = [...fallbackStations];
@@ -142,13 +130,5 @@ export async function fetchCities(province = '') {
   )].sort();
 }
 
-export async function fetchHealth() {
-  try {
-    const r = await fetch(`${API_BASE}/health`, { signal: AbortSignal.timeout(4000) });
-    return r.json();
-  } catch {
-    return { status: 'error', source: 'local' };
-  }
-}
 
 export const isUsingFallback = () => _apiAvailable === false;
