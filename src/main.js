@@ -369,7 +369,14 @@ function renderContent() {
     return;
   }
   if (state.error) {
-    el.innerHTML=`<div class="empty-state">Error: ${state.error}</div>`;
+    el.innerHTML=`<div class="empty-state" style="padding:32px;text-align:center">
+      <div style="font-size:20px;margin-bottom:8px">⚠️</div>
+      <div style="color:var(--signal-danger);margin-bottom:6px">Gagal memuat data</div>
+      <div style="font-size:11px;color:var(--text-tertiary);margin-bottom:16px">${state.error}</div>
+      <button onclick="location.reload()" style="padding:6px 16px;border:1px solid var(--border-mid);border-radius:var(--radius-sm);background:var(--bg-input);color:var(--text-primary);cursor:pointer;font-size:12px">
+        ↺ Coba lagi
+      </button>
+    </div>`;
     return;
   }
 
