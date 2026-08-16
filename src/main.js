@@ -373,7 +373,7 @@ const WILAYAH_SHORT = {
 };
 function shortWilayah(w) { return WILAYAH_SHORT[w] || w; }
 
-
+function renderContent() {
   const el = document.getElementById('dynamicContent');
   if (!el) return;
 
