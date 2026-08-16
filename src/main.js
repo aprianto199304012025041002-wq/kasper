@@ -66,7 +66,6 @@ async function boot() {
     }
   );
   window.__openMobFilter = () => openFilterDrawer();
-  window.__mobSync = mob;
   window._kasperFallback = false; // diupdate setelah loadData
 }
 
