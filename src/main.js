@@ -853,6 +853,7 @@ function openCellDrawer(html) {
     el.className = 'cell-drawer';
     el.innerHTML = `<div class="cell-drawer__backdrop"></div><div class="cell-drawer__panel" id="cellDrawerPanel"></div>`;
     document.body.appendChild(el);
+    el.querySelector('.cell-drawer__backdrop').addEventListener('click', closeCellDrawer);
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeCellDrawer(); }, { passive: true });
   }
 
