@@ -8,7 +8,7 @@ import { fetchSpectrum, fetchStationDetail, fetchInterference, isUsingFallback }
 import { renderDetailPage } from './detailPage.js';
 import { renderInterferencePanel } from './interferenceView.js';
 import { initMobileUI, openFilterDrawer } from './mobile.js';
-import { computeChannelMapForWilayah } from './channelEngine.js';
+import { computeChannelMapForWilayah, FM_MIN, FM_MAX } from './channelEngine.js';
 import './components/responsive.css';
 
 const JENIS_LABELS = {
@@ -610,7 +610,7 @@ function renderCell(c) {
 }
 
 // ── Band view: SVG spectrum per kota ─────────────────────────────────
-const FM_MIN_B = 87.5, FM_MAX_B = 108.0;
+const FM_MIN_B = FM_MIN, FM_MAX_B = FM_MAX;
 const SVG_W_PER_MHZ = 200;  // 200px per MHz = 20px per 100kHz step
 const SVG_H = 110;           // lebih tinggi untuk ruler di bawah
 const RULER_H = 20;          // tinggi area ruler
