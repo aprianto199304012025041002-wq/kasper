@@ -1,6 +1,6 @@
 // src/apiClient.js — koneksi ke API Hostinger
 import fallbackStations from './data/stations.json';
-import { computeChannelMap, findFreeBlocks, summarize } from './channelEngine.js';
+import { computeChannelMap, summarize } from './channelEngine.js';
 
 // URL API — langsung hardcode ke domain Hostinger
 const API_BASE = 'https://kasper.balmonjogja.info/api';
@@ -44,7 +44,7 @@ function buildLocalResponse(filters = {}) {
   const channelMap = computeChannelMap(norm);
   return {
     summary: summarize(channelMap), stations: norm,
-    channel_map: channelMap, free_blocks: findFreeBlocks(channelMap),
+    channel_map: channelMap,
     _source: 'local',
     meta: { fm_min:87.5, fm_max:108.0, channel_spacing:0.1, generated_at: new Date().toISOString() },
   };
@@ -71,7 +71,7 @@ export async function fetchSpectrum(filters = {}) {
       stations,
       channel_map: channelMap,
       summary: raw.summary || summarize(channelMap),
-      free_blocks: raw.free_blocks || findFreeBlocks(channelMap),
+      free_blocks: raw.free_blocks || [],
     };
   }
   return buildLocalResponse(filters);
