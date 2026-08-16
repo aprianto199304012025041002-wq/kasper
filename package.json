@@ -1,7 +1,7 @@
 {
-  "name": "isr-fm-spectrum",
-  "version": "3.0.0",
-  "description": "Peta Spektrum FM ISR — multi-provinsi, detail stasiun, interferensi",
+  "name": "kasper",
+  "version": "4.0.0",
+  "description": "KASPER — Kanal Spektrum Radio FM DIY, overlay allotment KM Komdigi 570/2025",
   "type": "module",
   "scripts": {
     "dev": "vite",

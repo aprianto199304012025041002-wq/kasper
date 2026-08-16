@@ -3,6 +3,9 @@ name: Build & Deploy to Hostinger
 on:
   push:
     branches: [main]
+    paths-ignore:
+      - '**.md'
+      - '.gitignore'
   workflow_dispatch:
 
 jobs:
@@ -20,7 +23,7 @@ jobs:
           cache: npm
 
       - name: Install & build frontend
-        run: npm install && npm run build
+        run: npm ci && npm run build
 
       - name: Generate config.php dari secrets
         env:
