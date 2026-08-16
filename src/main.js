@@ -193,6 +193,7 @@ async function openDetailPage(stationOrFreq) {
     el.innerHTML = `<div class="station-drawer__backdrop"></div><div class="station-drawer__panel" id="stationDrawerPanel"></div>`;
     document.body.appendChild(el);
     el.querySelector('.station-drawer__backdrop').addEventListener('click', closeStationDrawer);
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeStationDrawer(); }, { passive: true });
   }
   document.getElementById('stationDrawerPanel').innerHTML =
     `<div style="padding:48px;text-align:center;font-family:var(--font-mono);font-size:13px;color:var(--text-tertiary)"><span class="live-dot"></span> Memuat detail…</div>`;
