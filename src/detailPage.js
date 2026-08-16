@@ -11,11 +11,10 @@ const REGION_COLORS = {
   'PATUK':                                      '#e67c5c',
   'WATES, SENTOLO':                             '#9d8ce6',
   // fallback nama kota administratif
-  'KOTA YOGYAKARTA': '#4a90d9',
-  'SLEMAN':          '#5ee69c',
-  'BANTUL':          '#e6b85c',
-  'GUNUNGKIDUL':     '#d97a9c',
-  'KULON PROGO':     '#9d8ce6',
+  'SLEMAN':     '#5ee69c',
+  'BANTUL':     '#e6b85c',
+  'GUNUNGKIDUL':'#d97a9c',
+  'KULON PROGO':'#9d8ce6',
 };
 
 const JENIS_LABELS = {
@@ -162,58 +161,6 @@ export function renderDetailPage(data, onBack, allData, targetEl) {
 
   // Peta Leaflet
   initMap(lat, lon, stnName, freq, nbr, parseFloat(s.erp_dbm || s.erp_pwr_dbm || 0));
-}
-
-// ── Mini band strip SVG ───────────────────────────────────────────────
-function renderMiniBand(centerFreq, neighbors, lower, upper, color) {
-  const wrap  = document.getElementById('miniBand');
-  if (!wrap) return;
-
-  const viewMin = Math.max(FM_MIN, centerFreq - 2.2);
-  const viewMax = Math.min(FM_MAX, centerFreq + 2.2);
-  const W       = 800;
-  const H       = 60;
-
-  function px(f) { return ((f - viewMin) / (viewMax - viewMin)) * (W - 40) + 20; }
-
-  // Current station block
-  const cx    = px(centerFreq);
-  const lx    = px(Number(lower));
-  const ux    = px(Number(upper));
-  const bw    = Math.max(ux - lx, 4);
-
-  let rects = '';
-
-  // Neighbors
-  neighbors.forEach((n) => {
-    const nf = parseFloat(n.freq);
-    if (nf < viewMin || nf > viewMax) return;
-    const nx = px(nf);
-    rects += `<rect x="${nx-3}" y="8" width="6" height="32" rx="2" fill="var(--text-tertiary)" opacity="0.6"/>
-              <text x="${nx}" y="${H - 2}" text-anchor="middle" font-size="9" font-family="monospace" fill="var(--text-tertiary)">${nf.toFixed(1)}</text>`;
-  });
-
-  // Current station
-  rects += `<rect x="${lx}" y="6" width="${bw}" height="36" rx="3" fill="${color}33" stroke="${color}" stroke-width="1.5"/>
-            <text x="${cx}" y="27" text-anchor="middle" font-size="10" font-weight="600" font-family="monospace" fill="${color}">${centerFreq.toFixed(1)}</text>`;
-
-  // Ruler ticks
-  let ticks = '';
-  for (let f = Math.ceil(viewMin * 10) / 10; f <= viewMax; f = Math.round((f + 0.2) * 10) / 10) {
-    const x = px(f);
-    const isMajor = Math.abs(f % 1) < 0.05 || Math.abs(f % 1 - 1) < 0.05;
-    ticks += `<line x1="${x}" y1="44" x2="${x}" y2="${44 + (isMajor ? 8 : 4)}" stroke="var(--text-tertiary)" stroke-width="0.5" opacity="${isMajor ? 0.5 : 0.25}"/>`;
-    if (isMajor) {
-      ticks += `<text x="${x}" y="60" text-anchor="middle" font-size="9" font-family="monospace" fill="var(--text-tertiary)" opacity="0.6">${f.toFixed(0)}</text>`;
-    }
-  }
-
-  wrap.innerHTML = `
-    <svg width="100%" viewBox="0 0 ${W} ${H + 4}" style="display:block">
-      <rect x="0" y="0" width="${W}" height="${H}" rx="4" fill="var(--bg-input)" opacity="0.5"/>
-      ${rects}
-      ${ticks}
-    </svg>`;
 }
 
 // ── Leaflet map ───────────────────────────────────────────────────────
