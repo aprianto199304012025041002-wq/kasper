@@ -164,6 +164,8 @@ async function loadData() {
   try {
     state.data    = await fetchSpectrum(filters);
     state.loading = false;
+    state._allotmentCache = null;
+    state._allotmentCacheData = null;
     window._kasperFallback = isUsingFallback();
   } catch(e) { state.error=e.message; state.loading=false; }
   renderControls(); renderContent();
@@ -418,14 +420,24 @@ function renderContent() {
     ? filterCities.filter(c => c !== KOMUNITAS_AOS)
     : allWilayah;
 
+  // Cache allotmentIndex per wilayah (tidak berubah selama data sama)
+  if (!state._allotmentCache || state._allotmentCacheData !== state.data) {
+    state._allotmentCache = {};
+    state._allotmentCacheData = state.data;
+  }
+
   // ── Build city rows ─────────────────────────────────────────────────
   const cityRows = cityList.map(city => {
     const cityStations = state.data.stations.filter(s => (s.wilayah_layanan || s.kota || s.city) === city);
 
-    // Allotment status dari KM 570/2025 (JS-side, per wilayah)
-    const wilayahMap = computeChannelMapForWilayah(cityStations, city);
-    const allotmentIndex = {};
-    wilayahMap.forEach(c => { allotmentIndex[c.freq] = c.allotment_status; });
+    // Allotment index — per wilayah, di-cache
+    if (!state._allotmentCache[city]) {
+      const wilayahMap = computeChannelMapForWilayah(cityStations, city);
+      const idx = {};
+      wilayahMap.forEach(c => { idx[c.freq] = c.allotment_status; });
+      state._allotmentCache[city] = idx;
+    }
+    const allotmentIndex = state._allotmentCache[city];
 
     // Pakai channel_map global dari PHP (punya adj1/adj2 lengkap),
     // merge allotment_status ke tiap slot
