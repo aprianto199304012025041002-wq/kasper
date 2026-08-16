@@ -95,7 +95,10 @@ export function computeChannelMapForWilayah(stations, wilayah) {
 }
 
 export function findFreeBlocks(channelMap) {
-  const freeFreqs = channelMap.filter((c) => c.type === 'free').map((c) => c.freq);
+  // Hanya kanal yang free DAN allotted (bukan not_allotted) yang dihitung sebagai slot tersedia
+  const freeFreqs = channelMap
+    .filter((c) => c.type === 'free' && c.allotment_status !== 'not_allotted')
+    .map((c) => c.freq);
   const blocks = [];
   let i = 0;
   while (i < freeFreqs.length) {
