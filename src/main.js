@@ -361,7 +361,19 @@ function renderLegend() {
 }
 
 // ── Dynamic content ───────────────────────────────────────────────────
-function renderContent() {
+const WILAYAH_SHORT = {
+  'KOTA YOGYAKARTA':                            'Kota Yogyakarta',
+  'BANTUL, BANGUNTAPAN':                        'Bantul – Banguntapan',
+  'SLEMAN, NGAGLIK, KALASAN, NGEMPLAK, PAKEM':  'Sleman – Ngaglik – Pakem',
+  'WATES, SENTOLO':                             'Wates – Sentolo',
+  'WONOSARI':                                   'Wonosari',
+  'GAMPING':                                    'Gamping',
+  'DEPOK':                                      'Depok',
+  'PATUK':                                      'Patuk',
+};
+function shortWilayah(w) { return WILAYAH_SHORT[w] || w; }
+
+
   const el = document.getElementById('dynamicContent');
   if (!el) return;
 
@@ -495,7 +507,7 @@ function renderContent() {
             ${cityRows.map(({ city, row }) => {
               const usedCount = state.data.stations.filter(s => (s.wilayah_layanan || s.kota || s.city) === city).length;
               return `<div class="city-row-block">
-                <div class="city-row-label">${esc(city)} <span class="city-row-count">${usedCount}</span></div>
+                <div class="city-row-label">${esc(shortWilayah(city))} <span class="city-row-count">${usedCount}</span></div>
                 <div class="band-svg-row" data-city="${esc(city)}">${renderBandSVG(row, city)}</div>
               </div>`;
             }).join('')}
@@ -543,7 +555,7 @@ function renderContent() {
             const usedCount = state.data.stations.filter(s => (s.wilayah_layanan || s.kota || s.city) === city).length;
             const filtered = applyFilter(row);
             return `<div class="city-row-block">
-              <div class="city-row-label">${esc(city)} <span class="city-row-count">${usedCount}</span></div>
+              <div class="city-row-label">${esc(shortWilayah(city))} <span class="city-row-count">${usedCount}</span></div>
               <div class="ch-grid-row">${filtered.map(c => cellFn(c, city)).join('')}</div>
             </div>`;
           }).join('')}
