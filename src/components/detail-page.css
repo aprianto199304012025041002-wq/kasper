@@ -95,30 +95,6 @@
 .dmeta__val.is-expired { color: var(--signal-danger); }
 
 /* Freq band strip */
-.freq-band-strip {
-  border: 1px solid var(--border-hairline);
-  border-radius: var(--radius-md);
-  background: var(--bg-panel);
-  padding: 18px;
-  margin-bottom: 20px;
-  overflow-x: auto;
-}
-
-.fbs-label {
-  font-size: 11px;
-  font-family: var(--font-mono);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--text-tertiary);
-  margin-bottom: 12px;
-}
-
-.fbs-ruler {
-  position: relative;
-  height: 56px;
-}
-
-.fbs-bg { fill: var(--bg-input); }
 
 /* Neighbor list */
 .neighbor-section {
@@ -194,28 +170,6 @@
 }
 
 /* Interferensi panel */
-.interference-section {
-  border: 1px solid var(--border-hairline);
-  border-radius: var(--radius-md);
-  background: var(--bg-panel);
-  overflow: hidden;
-}
-
-.interf-header {
-  padding: 14px 18px;
-  border-bottom: 1px solid var(--border-hairline);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.interf-title {
-  font-size: 11px;
-  font-family: var(--font-mono);
-  text-transform: uppercase;
-  letter-spacing: 0.07em;
-  color: var(--text-tertiary);
-}
 
 .interf-row {
   display: grid;
