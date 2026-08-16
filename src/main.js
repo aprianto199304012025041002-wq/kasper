@@ -244,10 +244,6 @@ function renderHeader() {
   </header>`;
 }
 
-// ── Province tabs ─────────────────────────────────────────────────────
-
-
-
 // ── Stats bar ─────────────────────────────────────────────────────────
 function updateStatsBar(summary, allotmentStats = null) {
   const el = document.getElementById('statsBar');
