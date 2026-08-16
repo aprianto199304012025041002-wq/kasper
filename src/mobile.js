@@ -182,6 +182,16 @@ function syncDrawer(state) {
   const cityChipsEl = document.getElementById('drawerCityChips');
   if (cityChipsEl) {
     const KOMUNITAS_AOS = '2,5 KILOMETER DARI LOKASI ANTENA PEMANCAR';
+    const SHORT = {
+      'KOTA YOGYAKARTA':                            'KOTA YK',
+      'BANTUL, BANGUNTAPAN':                        'BANTUL',
+      'SLEMAN, NGAGLIK, KALASAN, NGEMPLAK, PAKEM':  'SLEMAN',
+      'WATES, SENTOLO':                             'WATES',
+      'WONOSARI':                                   'WONOSARI',
+      'GAMPING':                                    'GAMPING',
+      'DEPOK':                                      'DEPOK',
+      'PATUK':                                      'PATUK',
+    };
     const cities = state.data
       ? [...new Set(state.data.stations
           .map(s => s.wilayah_layanan || s.kota || s.city)
@@ -193,7 +203,7 @@ function syncDrawer(state) {
     cityChipsEl.innerHTML =
       `<button class="kd-city-chip ${sel.length === 0 ? 'is-active' : ''}" data-city="">SEMUA</button>` +
       cities.map(c =>
-        `<button class="kd-city-chip ${sel.includes(c) ? 'is-active' : ''}" data-city="${c}">${c.toUpperCase()}</button>`
+        `<button class="kd-city-chip ${sel.includes(c) ? 'is-active' : ''}" data-city="${c}">${SHORT[c] || c}</button>`
       ).join('');
 
     // Handler: chip "SEMUA" exclusive, chip lain multi-toggle
