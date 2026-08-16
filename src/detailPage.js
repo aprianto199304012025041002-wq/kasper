@@ -47,7 +47,8 @@ export function renderDetailPage(data, onBack, allData, targetEl) {
   const kota      = s.wilayah_layanan || s.kota || s.city || '—';
   const stnName   = s.stn_name || '—';
   const clntName  = s.clnt_name || '—';
-  const erp       = s.erp_dbm || s.erp_pwr_dbm || '—';
+  const erpRaw    = s.erp_dbm || s.erp_pwr_dbm || null;
+  const erp       = erpRaw ? parseFloat(erpRaw).toFixed(1) : '—';
   const status    = s.status || s.lic_status || '—';
   const validity  = s.validity || s.lic_expiry || '—';
   const noSimf    = s.no_simf || '—';
@@ -149,7 +150,7 @@ export function renderDetailPage(data, onBack, allData, targetEl) {
                   </div>
                   <div style="color:var(--text-primary);font-size:13px">${esc(n.stn_name || '—')}</div>
                   <div style="color:var(--text-secondary);font-size:12px">${esc(n.wilayah_layanan || n.kota || '—')}</div>
-                  <div class="neighbor-row__erp">${n.erp_dbm || '—'} dBm</div>
+                  <div class="neighbor-row__erp">${n.erp_dbm ? parseFloat(n.erp_dbm).toFixed(1)+' dBm' : '—'}</div>
                   <div><span class="badge badge--${statusBadge(n.status)}">${n.status || '—'}</span></div>
                 </div>`;
             }).join('')}
