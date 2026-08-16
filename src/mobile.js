@@ -41,9 +41,9 @@ function injectDrawer() {
           </div>
         </section>
 
-        <!-- ── FILTER KABUPATEN ── -->
+        <!-- ── FILTER WILAYAH LAYANAN ── -->
         <section class="kd-section" id="drawerSectionCity">
-          <div class="kd-section__label">KABUPATEN / KOTA</div>
+          <div class="kd-section__label">WILAYAH LAYANAN</div>
           <div class="kd-city-chips" id="drawerCityChips"></div>
         </section>
 
@@ -369,11 +369,6 @@ export function initMobileUI(getState, onViewChange, onPageChange, onFilterChang
   });
 
   syncDrawer(getState());
-
-  return {
-    syncNav:    () => syncDrawer(getState()),
-    syncDrawer: () => syncDrawer(getState()),
-  };
 }
 
 export { openDrawer as openFilterDrawer };

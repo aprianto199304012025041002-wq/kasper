@@ -42,7 +42,7 @@ async function boot() {
   await loadData();
 
   // Mobile UI
-  const mob = initMobileUI(
+  initMobileUI(
     () => state,
     (view) => {
       state.view = view;
