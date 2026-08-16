@@ -116,29 +116,10 @@ input.control-input:focus{border-color:var(--accent);outline:none;}
 .ch-cell--not-allotted .ch-cell__freq { color: rgba(255,255,255,.3); }
 .ch-cell--not-allotted .ch-cell__name { color: rgba(255,255,255,.2); }
 
-
 /* ── Slot rows ── */
-.slot-list{display:flex;flex-direction:column;gap:6px;}
-.slot-row{
-  display:grid;grid-template-columns:130px 110px 110px 90px 1fr;
-  align-items:center;gap:12px;padding:12px 16px;
-  background:var(--bg-panel);
-  border:1px solid var(--border-mid);
-  border-left:3px solid var(--accent);
-  border-radius:var(--radius-sm);cursor:pointer;transition:background .1s;
-}
-.slot-row:hover{background:var(--bg-panel-raised);}
-.slot-row--medium{border-left-color:var(--signal-warn);}
-.slot-row--low{border-left-color:var(--text-tertiary);}
-.slot-row__main{font-family:var(--font-mono);font-size:14px;font-weight:700;color:var(--text-primary);}
-.slot-row__sub{font-size:10.5px;color:var(--text-tertiary);margin-top:2px;text-transform:uppercase;letter-spacing:.04em;}
-.slot-row__val{font-family:var(--font-mono);font-size:13px;color:var(--text-primary);}
 
 /* ── Badges ── */
 .badge{display:inline-block;font-size:10.5px;font-family:var(--font-mono);padding:3px 9px;border-radius:3px;font-weight:700;}
-.badge--high  {background:var(--accent-dim);color:var(--accent);}
-.badge--medium{background:var(--accent2-dim);color:var(--signal-warn);}
-.badge--low   {background:var(--bg-input);color:var(--text-tertiary);}
 
 /* ── Source badge ── */
 .source-badge{
@@ -151,16 +132,6 @@ input.control-input:focus{border-color:var(--accent);outline:none;}
 
 /* ── Detail panel (inline) ── */
 .empty-state{text-align:center;padding:40px;color:var(--text-tertiary);font-size:13px;}
-.detail-panel{margin-top:18px;border:1px solid var(--border-mid);border-radius:var(--radius-md);background:var(--bg-panel-raised);padding:18px 20px;display:none;}
-.detail-panel.is-open{display:block;}
-.detail-panel__head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;}
-.detail-panel__title{font-size:15px;font-weight:600;color:var(--text-primary);}
-.detail-panel__close{background:none;border:none;color:var(--text-tertiary);font-size:18px;line-height:1;padding:2px 6px;}
-.detail-panel__close:hover{color:var(--text-primary);}
-.detail-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px 24px;}
-.detail-item__label{font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-tertiary);margin-bottom:4px;font-family:var(--font-mono);}
-.detail-item__value{font-size:13.5px;color:var(--text-primary);font-weight:500;}
-.detail-item__value.mono{font-family:var(--font-mono);}
 
 /* ── Tooltip ── */
 .tooltip-float{
@@ -180,8 +151,6 @@ input.control-input:focus{border-color:var(--accent);outline:none;}
 
 @media(max-width:760px){
   .main-content{padding:16px 14px 48px;}
-  .slot-row{grid-template-columns:100px 1fr;row-gap:4px;}
-  .detail-grid{grid-template-columns:1fr 1fr;}
 }
 
 /* ── Per-city row grid ───────────────────────────────────────────────── */
@@ -257,18 +226,8 @@ input.control-input:focus{border-color:var(--accent);outline:none;}
 }
 .ch-cell__freq { font-size: 10px; }
 .ch-cell__name { font-size: 9px; max-width: 52px; }
-.ch-cell__tag  { display: none; }
 
 /* ── Band view cell ── */
-.city-row-block--band .ch-grid-row { align-items: flex-end; }
-.ch-cell--band-used {
-  display: flex; flex-direction: column;
-  align-items: center; justify-content: flex-end;
-  gap: 2px; padding-bottom: 4px;
-}
-.ch-cell__bar { width: 10px; border-radius: 2px 2px 0 0; flex-shrink: 0; }
-.ch-cell__bar--adj1 { background: rgba(255,160,0,.4); }
-.ch-cell__bar--adj2 { background: rgba(255,100,0,.3); }
 
 /* ── Geo view cell ── */
 .ch-cell--geo-used { border: 1px solid; }
