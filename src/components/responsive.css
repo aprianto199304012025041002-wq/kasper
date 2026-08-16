@@ -10,13 +10,6 @@
 #controlsBar,
 #legendBar,
 .controls-bar,
-.province-bar,
-.stats-bar,
-.mob-filter-btn,
-.mob-bottom-nav,
-.source-badge {
-  display: none !important;
-}
 
 /* ── Body saat drawer terbuka ─────────────────────────────────────────── */
 body.drawer-open { overflow: hidden; }
@@ -395,16 +388,12 @@ body.drawer-open { overflow: hidden; }
   .ch-cell { width: 38px !important; height: 48px !important; }
   .ch-cell__freq { font-size: 8px !important; }
   .ch-cell__name { display: none; }
-  .ch-cell__tag  { font-size: 7px; }
 }
 
 /* ══════════════════════════════════════════════════════════════════════
    SLOT LIST
    ══════════════════════════════════════════════════════════════════════ */
 @media (max-width: 640px) {
-  .slot-row { grid-template-columns: 1fr 1fr !important; row-gap: 6px; }
-  .slot-row > :nth-child(3), .slot-row > :nth-child(4) { display: none; }
-  .slot-row > :last-child { grid-column: span 2; text-align: left; }
 }
 
 /* ══════════════════════════════════════════════════════════════════════
@@ -435,12 +424,10 @@ body.drawer-open { overflow: hidden; }
   .detail-hero__main { padding: 18px 16px; }
   .detail-hero__freq { font-size: 32px; }
   .detail-hero__meta { padding: 16px; grid-template-columns: 1fr 1fr; gap: 12px; }
-  .detail-grid { grid-template-columns: 1fr 1fr; gap: 10px 16px; }
   #stationMap  { height: 240px; }
 }
 @media (max-width: 480px) {
   .detail-hero__freq { font-size: 26px; }
-  .detail-grid { grid-template-columns: 1fr; }
   .neighbor-row { grid-template-columns: 70px 1fr !important; row-gap: 3px; }
   .neighbor-row > :nth-child(n+3) { display: none; }
 }
@@ -592,10 +579,6 @@ html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
   font-family: var(--font-mono); font-size: 15px; font-weight: 700;
   color: var(--text-primary);
 }
-.cd-title {
-  font-family: var(--font-mono); font-size: 13px; font-weight: 700;
-  color: var(--text-primary);
-}
 .cd-close {
   background: none; border: none; cursor: pointer;
   color: var(--text-tertiary); font-size: 16px; line-height: 1;
@@ -639,16 +622,6 @@ html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
 .cd-cta:hover { background: rgba(0,229,255,.18); border-color: rgba(0,229,255,.4); }
 
 /* ── Co-channel list di drawer ── */
-.cd-colist {
-  margin-top: 12px;
-  display: flex; flex-direction: column; gap: 8px;
-}
-.cd-coitem {
-  padding: 8px 10px;
-  background: var(--bg-input);
-  border-radius: 6px;
-  border-left: 2px solid rgba(255,160,0,.5);
-}
 
 /* ── Co-channel swipe cards ── */
 .cd-swipe-hint {
