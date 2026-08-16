@@ -947,23 +947,29 @@ function openInlineDetail(info) {
   } else if (info.type === 'adjacent_1') {
     const a1l = info.adj1_left  || info.adj_left;
     const a1r = info.adj1_right || info.adj_right;
+    const aStatus = info.allotment_status;
+    const aLabel  = aStatus === 'allotted_lps' ? 'Allotted LPS' : aStatus === 'allotted_rri' ? 'Allotted RRI' : aStatus === 'not_allotted' ? 'Tidak dijatahkan' : '—';
     rows = [
       ['Frekuensi',  freq.toFixed(3) + ' MHz',           true],
       ['Lower edge', Number(lower).toFixed(4) + ' MHz',  true],
       ['Upper edge', Number(upper).toFixed(4) + ' MHz',  true],
       ['Guard kiri', a1l?.stn_name || '—',               false],
       ['Guard kanan',a1r?.stn_name || '—',               false],
+      ['Allotment',  aLabel,                             false],
       ['Proteksi',   '20 dB (ITU-R BS.412)',             true],
     ];
   } else if (info.type === 'adjacent_2') {
     const a2l = info.adj2_left  || info.adj_left;
     const a2r = info.adj2_right || info.adj_right;
+    const aStatus = info.allotment_status;
+    const aLabel  = aStatus === 'allotted_lps' ? 'Allotted LPS' : aStatus === 'allotted_rri' ? 'Allotted RRI' : aStatus === 'not_allotted' ? 'Tidak dijatahkan' : '—';
     rows = [
       ['Frekuensi',  freq.toFixed(3) + ' MHz',           true],
       ['Lower edge', Number(lower).toFixed(4) + ' MHz',  true],
       ['Upper edge', Number(upper).toFixed(4) + ' MHz',  true],
       ['Guard kiri', a2l?.stn_name || '—',               false],
       ['Guard kanan',a2r?.stn_name || '—',               false],
+      ['Allotment',  aLabel,                             false],
       ['Proteksi',   '10 dB (ITU-R BS.412)',             true],
     ];
   } else {
