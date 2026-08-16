@@ -24,6 +24,10 @@ RewriteRule ^ index.html [L]
     Header always set X-Content-Type-Options "nosniff"
     Header always set X-Frame-Options "SAMEORIGIN"
     Header always set Referrer-Policy "strict-origin-when-cross-origin"
+    Header always set X-XSS-Protection "1; mode=block"
+    Header always set Permissions-Policy "geolocation=(), microphone=(), camera=()"
+    # CSP — izinkan fonts Google, Leaflet CDN, data: untuk inline SVG favicon
+    Header always set Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' https://unpkg.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://unpkg.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https://*.tile.openstreetmap.org; connect-src 'self' https://kasper.balmonjogja.info"
 </IfModule>
 
 # ── Cache assets Vite (nama file sudah ada hash) ─────────────────────
