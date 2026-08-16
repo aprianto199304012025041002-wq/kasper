@@ -908,6 +908,7 @@ function openInlineDetail(info) {
             <div class="cd-swipe-num">${i+1} / ${stations.length}</div>
             <div class="cd-swipe-name">${esc(s.stn_name||'—')}</div>
             <div class="cd-grid" style="margin-top:10px">
+              <div class="cd-item"><div class="cd-label">Wilayah</div><div class="cd-val">${esc(s.wilayah_layanan||s.kota||'—')}</div></div>
               <div class="cd-item"><div class="cd-label">Kecamatan</div><div class="cd-val">${esc(s.kecamatan||'—')}</div></div>
               <div class="cd-item"><div class="cd-label">ERP</div><div class="cd-val mono">${s.erp_dbm ? s.erp_dbm.toFixed(1)+' dBm' : '—'}</div></div>
               <div class="cd-item"><div class="cd-label">Jenis</div><div class="cd-val">${esc(s.jenis||'—')}</div></div>
@@ -935,9 +936,12 @@ function openInlineDetail(info) {
     }
     const s = stations[0] || {};
     rows.push(
-      ['Nama stasiun', s.stn_name || '—', false],
-      ['Wilayah Layanan', s.wilayah_layanan || s.kota || s.city || '—', false],
-      ['ERP',         s.erp_dbm ? s.erp_dbm + ' dBm' : '—', true],
+      ['Nama stasiun',    s.stn_name || '—',                           false],
+      ['Wilayah Layanan', s.wilayah_layanan || s.kota || '—',          false],
+      ['Kecamatan',       s.kecamatan || '—',                          false],
+      ['ERP',             s.erp_dbm ? s.erp_dbm + ' dBm' : '—',      true],
+      ['Jenis',           s.jenis || '—',                              false],
+      ['Masa laku',       s.validity || s.masa_laku || '—',            false],
     );
     cta = `<button class="cd-cta" id="cdCtaDetail">Lihat detail stasiun →</button>`;
   } else if (info.type === 'adjacent_1') {
