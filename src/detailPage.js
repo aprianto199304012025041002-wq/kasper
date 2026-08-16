@@ -24,7 +24,7 @@ const JENIS_LABELS = {
   komunitas:   'Komunitas',
 };
 
-const FM_MIN = 87.5, FM_MAX = 108.0;
+
 
 /**
  * Render halaman detail ke #app
