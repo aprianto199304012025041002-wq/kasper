@@ -220,7 +220,7 @@ function renderHeader() {
   return `<header class="app-header">
     <div class="app-header__inner">
       <div class="app-header__brand">
-        <div class="app-header__mark"><span>👻</span></div>
+        <div class="app-header__mark"><span>📻</span></div>
         <div class="app-header__titles">
           <h1>KASPER — KANAL SPEKTRUM RADIO</h1>
           <p>Visualisasi kanal, slot kosong &amp; analisis interferensi</p>
@@ -246,15 +246,7 @@ function renderHeader() {
 
 // ── Province tabs ─────────────────────────────────────────────────────
 
-function shortName(name) {
-  const map = {
-    'DAERAH ISTIMEWA YOGYAKARTA':'D.I. Yogyakarta','JAWA TENGAH':'Jawa Tengah',
-    'JAWA TIMUR':'Jawa Timur','JAWA BARAT':'Jawa Barat','DKI JAKARTA':'DKI Jakarta',
-    'SUMATERA UTARA':'Sumut','BALI':'Bali','KALIMANTAN SELATAN':'Kalsel',
-    'SULAWESI SELATAN':'Sulsel','NUSA TENGGARA BARAT':'NTB',
-  };
-  return map[name] || name.split(' ').slice(0,2).join(' ');
-}
+
 
 // ── Stats bar ─────────────────────────────────────────────────────────
 function updateStatsBar(summary, allotmentStats = null) {
