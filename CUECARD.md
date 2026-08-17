@@ -67,6 +67,7 @@ allotmentIndex      → di-cache per wilayah di state._allotmentCache
 - ✅ Filter/search client-side (tidak refetch API)
 - ✅ Cache allotmentIndex per wilayah
 - ✅ shortWilayah() untuk label readable di row header + chips
+- ✅ geoSettings (showAdj/showLabel/onlyFree) terhubung ke rendering Geo Grid view
 - ✅ Dead code sangat minimal — CSS -19%, JS lean
 - ✅ Security headers (.htaccess): CSP, X-XSS-Protection, Permissions-Policy
 - ✅ Font non-blocking (media=print trick), terser drop_console
