@@ -34,10 +34,9 @@ kasper/
 ├── package.json
 │
 ├── src/
-│   ├── main.js                 # App utama + state management
+│   ├── main.js                 # App utama + state management + Geo Grid view
 │   ├── apiClient.js            # HTTP client + offline fallback
 │   ├── channelEngine.js        # Logic grid/allotment (JS)
-│   ├── geoGridView.js          # Geo Grid per wilayah layanan
 │   ├── detailPage.js           # Halaman detail stasiun + Leaflet map
 │   ├── interferenceView.js     # Panel analisis interferensi
 │   ├── mobile.js               # Universal Drawer + FAB

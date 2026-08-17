@@ -484,10 +484,19 @@ function renderContent() {
       }).filter(c => c !== null).filter(matchSearch)
     : null;
 
-  const applyFilter = (row) =>
-    state.filterChanView === 'free' ? row.filter(c => c.type === 'free') :
-    state.filterChanView === 'used' ? row.filter(c => c.type === 'used' || c.type === 'adjacent_1' || c.type === 'adjacent_2') :
-    row;
+  const geo = state.geoSettings || {};
+  const applyFilter = (row) => {
+    // Geo view: onlyFree override; showAdj hides adjacent cells
+    if (state.view === 'geo') {
+      let r = row;
+      if (geo.onlyFree)         r = r.filter(c => c.type === 'free');
+      if (geo.showAdj === false) r = r.filter(c => c.type !== 'adjacent_1' && c.type !== 'adjacent_2');
+      return r;
+    }
+    return state.filterChanView === 'free' ? row.filter(c => c.type === 'free') :
+           state.filterChanView === 'used' ? row.filter(c => c.type === 'used' || c.type === 'adjacent_1' || c.type === 'adjacent_2') :
+           row;
+  };
   if (state.view === 'band') {
     el.innerHTML = `
       <div class="grid-frame" style="padding:12px">
@@ -534,7 +543,7 @@ function renderContent() {
   }
 
   // ── Grid & Geo: cell-per-cell ──────────────────────────────────────
-  const cellFn = state.view === 'geo' ? renderCellGeo : renderCell;
+  const cellFn = state.view === 'geo' ? (c, city) => renderCellGeo(c, city, geo) : renderCell;
 
   el.innerHTML = `
     <div class="grid-frame" style="padding:12px">
@@ -744,22 +753,24 @@ function renderBandSVG(row, city) {
 }
 
 // ── Cell renderer: Geo Grid (warna solid per wilayah layanan) ────────
-function renderCellGeo(c, city) {
+function renderCellGeo(c, city, opts = {}) {
+  const showLabel = opts.showLabel !== false;
+  const freqSpan = showLabel ? `<span class="ch-cell__freq">${c.freq.toFixed(1)}</span>` : '';
   if (c.type === 'used') {
     const co = c.coStations?.length > 1 ? `<span class="ch-cell__co">${c.coStations.length}</span>` : '';
     return `<div class="ch-cell ch-cell--used ch-cell--geo-used" data-freq="${c.freq}" title="${esc(c.station?.stn_name||'')}">
-      <span class="ch-cell__freq">${c.freq.toFixed(1)}</span>
+      ${freqSpan}
       ${co}
     </div>`;
   }
   if (c.type === 'adjacent_1') {
     return `<div class="ch-cell ch-cell--adjacent ch-cell--adj1" data-freq="${c.freq}">
-      <span class="ch-cell__freq">${c.freq.toFixed(1)}</span>
+      ${freqSpan}
     </div>`;
   }
   if (c.type === 'adjacent_2') {
     return `<div class="ch-cell ch-cell--adjacent ch-cell--adj2" data-freq="${c.freq}">
-      <span class="ch-cell__freq">${c.freq.toFixed(1)}</span>
+      ${freqSpan}
     </div>`;
   }
   const allotClass = c.allotment_status === 'allotted_rri' ? ' ch-cell--allotted-rri'
@@ -769,7 +780,7 @@ function renderCellGeo(c, city) {
   const allotIcon  = c.allotment_status === 'allotted_rri' ? '▣'
                    : c.allotment_status === 'allotted_lps' ? '★' : '·';
   return `<div class="ch-cell ch-cell--free${allotClass}" data-freq="${c.freq}">
-    <span class="ch-cell__freq">${c.freq.toFixed(1)}</span>
+    ${freqSpan}
     <span class="ch-cell__name">${allotIcon}</span>
   </div>`;
 }
