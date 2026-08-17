@@ -81,7 +81,6 @@
   .app-header__meta { display: none; }
 }
 
-/* ── View tab bar ─────────────────────────────────────────────────── */
 .view-tab-bar {
   display: flex;
   align-items: center;

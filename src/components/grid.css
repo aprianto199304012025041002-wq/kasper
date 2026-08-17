@@ -41,7 +41,6 @@ input.control-input:focus{border-color:var(--accent);outline:none;}
   background:var(--bg-panel);padding:18px;overflow-x:auto;
 }
 
-/* ── Channel cells ── */
 .ch-grid{display:flex;flex-wrap:wrap;gap:4px;}
 .ch-cell{
   width:58px;height:64px;border-radius:var(--radius-sm);border:1px solid;
@@ -52,7 +51,6 @@ input.control-input:focus{border-color:var(--accent);outline:none;}
 }
 .ch-cell:hover{transform:translateY(-2px);z-index:5;}
 
-/* Used — kuning nyala seragam semua */
 .ch-cell--used{
   background: rgba(255,214,0,.13);
   border-color: #ffd600;
@@ -61,7 +59,6 @@ input.control-input:focus{border-color:var(--accent);outline:none;}
 .ch-cell--used .ch-cell__name { color: rgba(255,214,0,.75); }
 .ch-cell--used:hover { box-shadow: 0 0 14px -2px #ffd600; }
 
-/* Adjacent 1 — merah, border putus */
 .ch-cell--adjacent{
   background: rgba(255,45,45,.1);
   border-color: #ff2d2d;
@@ -70,7 +67,6 @@ input.control-input:focus{border-color:var(--accent);outline:none;}
 .ch-cell--adjacent .ch-cell__freq { color: #ff2d2d; }
 .ch-cell--adjacent .ch-cell__name { color: rgba(255,45,45,.7); }
 
-/* Adjacent 2 — merah lebih redup */
 .ch-cell--adj2{
   background: rgba(255,45,45,.06);
   border-color: rgba(255,45,45,.5);
@@ -79,7 +75,6 @@ input.control-input:focus{border-color:var(--accent);outline:none;}
 }
 .ch-cell--adj2 .ch-cell__freq { color: rgba(255,45,45,.7); }
 
-/* Free — biru langit */
 .ch-cell--free{
   background: rgba(30,144,255,.1);
   border-color: #1e90ff;
@@ -88,7 +83,6 @@ input.control-input:focus{border-color:var(--accent);outline:none;}
 .ch-cell--free .ch-cell__name { color: rgba(30,144,255,.7); }
 .ch-cell--free:hover { box-shadow: 0 0 14px -2px #1e90ff; }
 
-/* allotted LPS — kanal dijatahkan, kosong */
 .ch-cell--allotted-lps{
   background: rgba(30,144,255,.13);
   border-color: #1e90ff;
@@ -97,7 +91,6 @@ input.control-input:focus{border-color:var(--accent);outline:none;}
 .ch-cell--allotted-lps .ch-cell__name { color: rgba(30,144,255,.85); }
 .ch-cell--allotted-lps:hover { box-shadow: 0 0 14px -2px #1e90ff; }
 
-/* allotted RRI — kanal dijatahkan untuk LPP RRI */
 .ch-cell--allotted-rri{
   background: rgba(192,132,252,.13);
   border-color: #c084fc;
@@ -107,7 +100,6 @@ input.control-input:focus{border-color:var(--accent);outline:none;}
 .ch-cell--allotted-rri .ch-cell__name { color: rgba(192,132,252,.85); }
 .ch-cell--allotted-rri:hover { box-shadow: 0 0 14px -2px #c084fc; }
 
-/* not allotted — kanal tidak dijatahkan di wilayah ini */
 .ch-cell--not-allotted{
   background: rgba(255,255,255,.03);
   border-color: rgba(255,255,255,.1);
@@ -116,12 +108,8 @@ input.control-input:focus{border-color:var(--accent);outline:none;}
 .ch-cell--not-allotted .ch-cell__freq { color: rgba(255,255,255,.3); }
 .ch-cell--not-allotted .ch-cell__name { color: rgba(255,255,255,.2); }
 
-/* ── Slot rows ── */
-
-/* ── Badges ── */
 .badge{display:inline-block;font-size:10.5px;font-family:var(--font-mono);padding:3px 9px;border-radius:3px;font-weight:700;}
 
-/* ── Source badge ── */
 .source-badge{
   display:inline-flex;align-items:center;gap:5px;
   font-size:10.5px;font-family:var(--font-mono);
@@ -130,10 +118,8 @@ input.control-input:focus{border-color:var(--accent);outline:none;}
 }
 .source-badge.is-live{border-color:rgba(0,229,255,.25);color:var(--accent);}
 
-/* ── Detail panel (inline) ── */
 .empty-state{text-align:center;padding:40px;color:var(--text-tertiary);font-size:13px;}
 
-/* ── Tooltip ── */
 .tooltip-float{
   position:fixed;
   background:var(--glass-bg);
@@ -153,12 +139,10 @@ input.control-input:focus{border-color:var(--accent);outline:none;}
   .main-content{padding:16px 14px 48px;}
 }
 
-/* ── Per-city row grid ───────────────────────────────────────────────── */
 .city-row-block {
   margin-bottom: 18px;
 }
 
-/* Komunitas — row terpisah di bawah, border oranye */
 .city-row-block--komunitas {
   margin-top: 24px;
   padding-top: 16px;
@@ -192,20 +176,17 @@ input.control-input:focus{border-color:var(--accent);outline:none;}
   color: var(--accent);
 }
 
-/* ── Shared horizontal scroll wrapper ───────────────────────────────── */
 .city-grid-scroll {
   overflow-x: auto;
   overflow-y: visible;
   padding-bottom: 8px;
 }
 
-/* Scrollbar tunggal di bawah semua grid */
 .city-grid-scroll::-webkit-scrollbar { height: 6px; }
 .city-grid-scroll::-webkit-scrollbar-track { background: var(--bg-input); border-radius: 3px; }
 .city-grid-scroll::-webkit-scrollbar-thumb { background: var(--border-mid); border-radius: 3px; }
 .city-grid-scroll::-webkit-scrollbar-thumb:hover { background: var(--text-tertiary); }
 
-/* Inner container — lebar mengikuti konten, semua row sejajar */
 .city-grid-inner {
   display: inline-block;
   min-width: 100%;
@@ -215,10 +196,9 @@ input.control-input:focus{border-color:var(--accent);outline:none;}
   display: flex;
   flex-wrap: nowrap;
   gap: 2px;
-  /* tidak ada overflow sendiri — ikut parent scroll */
+  
 }
 
-/* Ukuran cell baru — lebih ramping */
 .ch-cell {
   width: 56px;
   height: 62px;
@@ -227,19 +207,14 @@ input.control-input:focus{border-color:var(--accent);outline:none;}
 .ch-cell__freq { font-size: 10px; }
 .ch-cell__name { font-size: 9px; max-width: 52px; }
 
-/* ── Band view cell ── */
-
-/* ── Geo view cell ── */
 .ch-cell--geo-used { border: 1px solid; }
 
-/* ── Band SVG row ── */
 .band-svg-row {
   display: block;
   line-height: 0;
 }
 .band-svg-row svg { display: block; }
 
-/* ── Co-channel badge di cell ── */
 .ch-cell__co {
   position: absolute;
   top: 3px; right: 3px;
@@ -254,7 +229,6 @@ input.control-input:focus{border-color:var(--accent);outline:none;}
 }
 .ch-cell { position: relative; }
 
-/* ── Skeleton loading ─────────────────────────────────────────────── */
 @keyframes kasper-shimmer {
   0%   { background-position: -400px 0; }
   100% { background-position: 400px 0; }

@@ -1,18 +1,4 @@
-/* ══════════════════════════════════════════════════════════════════════
-   BAND VIEW — per-kota rows, shared horizontal scroll
-   ══════════════════════════════════════════════════════════════════════ */
 
-/* Layout: sticky label col + scrollable body */
-
-/* Sticky label column (kiri) */
-
-/* Scrollable body */
-
-/* Ruler */
-
-/* Track per kota */
-
-/* Blok per channel */
 
 @media (max-width: 640px) {
 }

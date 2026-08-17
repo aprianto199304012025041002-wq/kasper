@@ -1,43 +1,43 @@
-/* Design tokens — KASPER dark theme */
+
 :root {
-  /* ── Base surfaces ── */
+  
   --bg-base:        #080b10;
   --bg-panel:       #0d1117;
   --bg-panel-raised:#111827;
   --bg-input:       #060911;
 
-  /* ── Borders ── */
+  
   --border-hairline:#1a2535;
   --border-mid:     #2a3a50;
   --border-hi:      #3a4f6a;
 
-  /* ── Text ── */
+  
   --text-primary:   #e2eaf4;
   --text-secondary: #7a93b0;
   --text-tertiary:  #3d5470;
 
-  /* ── Accents (komenk palette) ── */
+  
   --accent:         #00e5ff;
   --accent-dim:     #002f40;
   --accent2:        #ff6b35;
   --accent3:        #a78bfa;
 
-  /* ── Signals (mapped to komenk) ── */
+  
   --signal-phosphor:     #00e5ff;
   --signal-occupied:     #a78bfa;
   --signal-warn:         #ff6b35;
   --signal-danger:       #f43f5e;
 
-  /* ── Glass ── */
+  
   --glass-bg:       rgba(13,17,23,.92);
   --glass-border:   rgba(42,58,80,.7);
   --shadow-float:   0 8px 32px rgba(0,0,0,.6), 0 1px 0 rgba(255,255,255,.04) inset;
 
-  /* ── Typography ── */
+  
   --font-mono: 'Space Mono', ui-monospace, 'SF Mono', Menlo, monospace;
   --font-sans: 'DM Sans', -apple-system, system-ui, sans-serif;
 
-  /* ── Layout ── */
+  
   --radius-sm:    4px;
   --radius-md:    8px;
   --container-max:1320px;

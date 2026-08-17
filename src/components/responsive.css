@@ -1,21 +1,12 @@
-/* ═══════════════════════════════════════════════════════════════════════
-   responsive.css — Universal Drawer layout
-   Semua kontrol (province tabs, filter, view toggle) tersembunyi dari
-   layout utama; accessible via FAB → Drawer.
-   ═══════════════════════════════════════════════════════════════════════ */
 
-/* ── Sembunyikan semua kontrol dari layout utama ─────────────────────── */
+
 #statsBar,
 #controlsBar,
 #legendBar,
 .controls-bar,
 
-/* ── Body saat drawer terbuka ─────────────────────────────────────────── */
 body.drawer-open { overflow: hidden; }
 
-/* ══════════════════════════════════════════════════════════════════════
-   FAB — kiri bawah
-   ══════════════════════════════════════════════════════════════════════ */
 .kasper-fab {
   position: fixed;
   bottom: 28px;
@@ -51,9 +42,6 @@ body.drawer-open { overflow: hidden; }
 }
 .kasper-fab__badge.has-filter { display: flex; }
 
-/* ══════════════════════════════════════════════════════════════════════
-   DRAWER — full universal control panel
-   ══════════════════════════════════════════════════════════════════════ */
 .kasper-drawer {
   display: none;
   position: fixed; inset: 0; z-index: 500;
@@ -132,7 +120,6 @@ body.drawer-open { overflow: hidden; }
   flex-shrink: 0;
 }
 
-/* ── Section ─────────────────────────────────────────────────────────── */
 .kd-section {
   padding: 14px 20px 0;
 }
@@ -150,7 +137,6 @@ body.drawer-open { overflow: hidden; }
   margin-bottom: 8px;
 }
 
-/* ── View row (1 baris, 4 tombol) ────────────────────────────────────── */
 .kd-view-row {
   display: flex; gap: 0;
   border: 1px solid var(--border-mid);
@@ -178,7 +164,6 @@ body.drawer-open { overflow: hidden; }
 }
 .kd-view-btn:active { opacity: .75; }
 
-/* ── City chips (multi-select) ───────────────────────────────────────── */
 .kd-city-chips {
   display: flex; flex-wrap: wrap; gap: 6px;
   max-height: 120px;
@@ -210,7 +195,6 @@ body.drawer-open { overflow: hidden; }
 }
 .kd-city-chip:active { opacity: .75; }
 
-/* ── Select ──────────────────────────────────────────────────────────── */
 .kd-select {
   width: 100%;
   background: var(--bg-input);
@@ -229,7 +213,6 @@ body.drawer-open { overflow: hidden; }
 }
 .kd-select:focus { outline: none; border-color: var(--accent); }
 
-/* ── Segmented (chanview) ─────────────────────────────────────────────── */
 .kd-segmented {
   display: flex; gap: 0;
   border: 1px solid var(--border-mid);
@@ -256,7 +239,6 @@ body.drawer-open { overflow: hidden; }
 }
 .kd-seg-btn:active { opacity: .75; }
 
-/* ── Geo toggles ─────────────────────────────────────────────────────── */
 .kd-toggle-list { display: flex; flex-direction: column; gap: 2px; }
 
 .kd-toggle-row {
@@ -313,7 +295,6 @@ body.drawer-open { overflow: hidden; }
   color: var(--text-tertiary); font-size: 16px; pointer-events: none;
 }
 
-/* ── API status ──────────────────────────────────────────────────────── */
 .kd-api-status {
   display: flex; align-items: center; gap: 8px;
   font-family: var(--font-mono); font-size: 11px;
@@ -321,7 +302,6 @@ body.drawer-open { overflow: hidden; }
 }
 .kd-api-status .live-dot { flex-shrink: 0; }
 
-/* ── Footer buttons ──────────────────────────────────────────────────── */
 .kd-btn-reset {
   flex: 1;
   background: var(--bg-input);
@@ -348,14 +328,10 @@ body.drawer-open { overflow: hidden; }
 }
 .kd-btn-apply:active { opacity: .85; }
 
-/* ══════════════════════════════════════════════════════════════════════
-   MAIN CONTENT — padding atas untuk header, bawah untuk FAB
-   ══════════════════════════════════════════════════════════════════════ */
 .main-content {
   padding: 12px 20px 100px !important;
 }
 
-/* Header tetap compact */
 .app-header { padding: 12px 20px; }
 .app-header__inner { gap: 12px; }
 .app-header__meta { display: none; }
@@ -363,17 +339,11 @@ body.drawer-open { overflow: hidden; }
 .app-header__mark { width: 34px; height: 34px; font-size: 11px; }
 .app-header__titles h1 { font-size: 15px; }
 
-/* ══════════════════════════════════════════════════════════════════════
-   TOUCH TARGETS
-   ══════════════════════════════════════════════════════════════════════ */
 @media (pointer: coarse) {
   .kd-view-btn, .kd-city-chip, .kd-seg-btn { min-height: 44px; }
   .tooltip-float { display: none !important; }
 }
 
-/* ══════════════════════════════════════════════════════════════════════
-   GRID VIEW — ch-cell sizing
-   ══════════════════════════════════════════════════════════════════════ */
 @media (max-width: 1024px) {
   .ch-cell { width: 58px !important; height: 64px !important; }
 }
@@ -389,15 +359,9 @@ body.drawer-open { overflow: hidden; }
   .ch-cell__name { display: none; }
 }
 
-/* ══════════════════════════════════════════════════════════════════════
-   SLOT LIST
-   ══════════════════════════════════════════════════════════════════════ */
 @media (max-width: 640px) {
 }
 
-/* ══════════════════════════════════════════════════════════════════════
-   BAND VIEW
-   ══════════════════════════════════════════════════════════════════════ */
 .band-scroll-hint {
   display: block;
   font-size: 10.5px; font-family: var(--font-mono);
@@ -406,17 +370,11 @@ body.drawer-open { overflow: hidden; }
 }
 .band-track-wrap { -webkit-overflow-scrolling: touch; }
 
-/* ══════════════════════════════════════════════════════════════════════
-   GEO GRID
-   ══════════════════════════════════════════════════════════════════════ */
 @media (max-width: 768px) {
 }
 @media (max-width: 480px) {
 }
 
-/* ══════════════════════════════════════════════════════════════════════
-   DETAIL PAGE
-   ══════════════════════════════════════════════════════════════════════ */
 @media (max-width: 768px) {
   .page-detail { padding: 14px 12px 100px; }
   .detail-hero { grid-template-columns: 1fr; }
@@ -431,9 +389,6 @@ body.drawer-open { overflow: hidden; }
   .neighbor-row > :nth-child(n+3) { display: none; }
 }
 
-/* ══════════════════════════════════════════════════════════════════════
-   INTERFERENCE TABLE
-   ══════════════════════════════════════════════════════════════════════ */
 @media (max-width: 900px) {
   .interf-summary { grid-template-columns: repeat(2, 1fr); }
 }
@@ -452,15 +407,9 @@ body.drawer-open { overflow: hidden; }
   .interf-card__val { font-size: 20px; }
 }
 
-/* ══════════════════════════════════════════════════════════════════════
-   GLOBAL UTILS
-   ══════════════════════════════════════════════════════════════════════ */
 html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
 * { -webkit-tap-highlight-color: transparent; }
 
-/* ══════════════════════════════════════════════════════════════════════
-   STATION DETAIL DRAWER — full-height bottom sheet
-   ══════════════════════════════════════════════════════════════════════ */
 .station-drawer {
   position: fixed; inset: 0; z-index: 1200;
   pointer-events: none;
@@ -490,7 +439,6 @@ html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
 }
 .station-drawer.is-open .station-drawer__panel { transform: translateY(0); }
 
-/* handle bar */
 .station-drawer__panel::before {
   content: '';
   display: block;
@@ -501,7 +449,6 @@ html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
   position: sticky; top: 12px; z-index: 1;
 }
 
-/* Tombol kembali di dalam drawer */
 .station-drawer__panel .back-btn {
   margin: 16px 24px 0;
 }
@@ -510,7 +457,7 @@ html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
   .station-drawer__panel { height: 96vh; border-radius: 16px 16px 0 0; }
 }
 
-   ══════════════════════════════════════════════════════════════════════ */
+   ------------------------------------------------------------ */
 .cell-drawer {
   position: fixed; inset: 0; z-index: 1100;
   pointer-events: none;
@@ -546,7 +493,6 @@ html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
 }
 .cell-drawer.is-open .cell-drawer__panel { transform: translateY(0); }
 
-/* handle bar */
 .cell-drawer__panel::before {
   content: '';
   display: block;
@@ -556,7 +502,6 @@ html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
   margin: 0 auto 16px;
 }
 
-/* header row */
 .cd-head {
   display: flex; align-items: center; justify-content: space-between;
   margin-bottom: 16px;
@@ -586,7 +531,6 @@ html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
 }
 .cd-close:hover { color: var(--text-primary); background: var(--bg-input); }
 
-/* content grid */
 .cd-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -607,7 +551,6 @@ html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
   .cd-grid { grid-template-columns: 1fr; }
 }
 
-/* CTA button */
 .cd-cta {
   display: block; width: 100%; margin-top: 16px;
   padding: 11px 16px;
@@ -620,9 +563,6 @@ html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
 }
 .cd-cta:hover { background: rgba(0,229,255,.18); border-color: rgba(0,229,255,.4); }
 
-/* ── Co-channel list di drawer ── */
-
-/* ── Co-channel swipe cards ── */
 .cd-swipe-hint {
   font-family: var(--font-mono); font-size: 9px;
   color: var(--text-tertiary); text-align: center;
@@ -658,7 +598,6 @@ html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
   margin-bottom: 4px;
 }
 
-/* ── Co-channel swipe cards ── */
 .cd-swipe-hint {
   text-align: center;
   font-size: 10px;

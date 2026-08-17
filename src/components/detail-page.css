@@ -1,4 +1,4 @@
-/* src/components/detail-page.css */
+
 
 .page-detail {
   max-width: var(--container-max);
@@ -94,9 +94,6 @@
 .dmeta__val.is-granted { color: var(--accent); }
 .dmeta__val.is-expired { color: var(--signal-danger); }
 
-/* Freq band strip */
-
-/* Neighbor list */
 .neighbor-section {
   border: 1px solid var(--border-hairline);
   border-radius: var(--radius-md);
@@ -145,7 +142,6 @@
 
 .neighbor-row__erp { font-family: var(--font-mono); color: var(--text-secondary); }
 
-/* Map placeholder */
 .map-frame {
   border: 1px solid var(--border-hairline);
   border-radius: var(--radius-md);
@@ -168,8 +164,6 @@
   height: 320px;
   background: var(--bg-input);
 }
-
-/* Interferensi panel */
 
 .interf-row {
   display: grid;
