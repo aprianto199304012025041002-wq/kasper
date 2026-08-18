@@ -20,19 +20,21 @@ PHP API:
   filter ?city=   → match ke area_of_service (BUKAN kolom city)
   /cities         → DISTINCT area_of_service
   /stats          → GROUP BY area_of_service → per_wilayah + per_jenis
+  /allotment      → serve api/data/allotment_nasional.json (filter ?provinsi= ?kode=)
   cache keys      → semua prefix $CACHE_V (saat ini v4)
   summary         → {total, used, adjacent_1, adjacent_2, free, pct_used, pct_free}
                     NB: tidak ada 'adjacent' — pakai adjacent_1 + adjacent_2
 
 Frontend src/:
-  main.js (1008 ln) → app utama, state, render semua view
+  main.js         → app utama, state, render semua view
   channelEngine.js  → computeChannelMapForWilayah() + allotment merge
   apiClient.js      → fetch + offline fallback
   detailPage.js     → detail stasiun + Leaflet
   interferenceView.js → panel interferensi
   mobile.js         → drawer + FAB
-  data/allotment.js → KM 570/2025 (8 wilayah DIY)
+  data/allotment.js → KM 570/2025 (8 DIY + 76 Jateng = 84 wilayah layanan)
   data/stations.json → fallback offline
+  api/data/allotment_nasional.json → data nasional (placeholder kosong, lihat handoff)
 
 View "geo" (tab ⊟) → renderCellGeo() di main.js
 Filter/search       → client-side renderContent(), TIDAK refetch API
@@ -44,7 +46,7 @@ allotmentIndex      → di-cache per wilayah di state._allotmentCache
 2. `kota` = fallback display, jangan pakai untuk grouping/filter
 3. Komunitas AOS `"2,5 KILOMETER..."` → row terpisah, kanal 107.4–107.9
 4. DB/live/postel.go.id blocked dari sandbox
-5. allotment.js hanya cover DIY — 8 wilayah layanan
+5. allotment.js sudah cover DIY (8) + Jateng (76) = 84 wilayah
 6. summary.adjacent tidak ada → pakai adjacent_1 + adjacent_2
 7. CSS warning "Unexpected /" → harmless, dari esbuild/comment syntax
 
@@ -72,5 +74,28 @@ allotmentIndex      → di-cache per wilayah di state._allotmentCache
 - ✅ Security headers (.htaccess): CSP, X-XSS-Protection, Permissions-Policy
 - ✅ Font non-blocking (media=print trick), terser drop_console
 - ✅ CI: npm ci + paths-ignore **.md
+- ✅ allotment.js: 84 wilayah DIY + Jateng dari KM 570/2025
+- ✅ Endpoint /allotment siap serve api/data/allotment_nasional.json
+- ✅ geoSettings (showAdj/showLabel/onlyFree) bug fixed — sebelumnya tidak efektif
 - ⚠️ Perlu verifikasi visual di live
-- 🔲 allotment.js hanya DIY
+- 🔲 api/data/allotment_nasional.json masih kosong (lihat HANDOFF di bawah)
+
+---
+
+## HANDOFF — Sesi Berikutnya
+
+### Yang perlu dikerjakan berikutnya:
+**Isi `api/data/allotment_nasional.json` dengan data KM 570/2025 nasional**
+
+### Cara:
+1. User punya tool browser: `extract_allotment.html` (ada di Downloads user)
+   - Pakai Gemini API (gratis, daftar di aistudio.google.com/apikey)
+   - Upload PDF `2025kepmen570_1_.pdf` (182 halaman, nasional)
+   - Klik Mulai → download `allotment_nasional.json`
+2. User taruh file di `api/data/allotment_nasional.json` di repo
+3. Push → endpoint `/allotment` otomatis aktif
+
+### Setelah JSON nasional tersedia:
+- Pertimbangkan: apakah `src/data/allotment.js` (DIY+Jateng, dipakai frontend JS)
+  perlu diganti fetch ke `/allotment` API, atau tetap hardcode untuk performa
+- Kalau diganti: update `channelEngine.js` → fetch allotment dari API saat init
