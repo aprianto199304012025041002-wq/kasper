@@ -178,6 +178,26 @@ switch ($route) {
         }
         break;
 
+    case 'allotment':
+        $allotment_file = __DIR__ . '/data/allotment_nasional.json';
+        if (!file_exists($allotment_file)) {
+            Response::json(['error' => 'Data allotment belum tersedia'], 404);
+            break;
+        }
+        $data = json_decode(file_get_contents($allotment_file), true);
+        // Filter by provinsi or kode if requested
+        $provinsi = $_GET['provinsi'] ?? null;
+        $kode     = $_GET['kode'] ?? null;
+        if ($provinsi) {
+            $data = array_values(array_filter($data, fn($r) => stripos($r['provinsi'] ?? '', $provinsi) !== false));
+        }
+        if ($kode) {
+            $data = array_values(array_filter($data, fn($r) => ($r['kode'] ?? '') === $kode));
+        }
+        header('Cache-Control: public, max-age=86400');
+        Response::json(['data' => $data, 'count' => count($data)]);
+        break;
+
     default:
-        Response::notFound('Endpoint tidak ada. Tersedia: /stations, /provinces, /cities, /channels, /slots, /interference, /stats');
+        Response::notFound('Endpoint tidak ada. Tersedia: /stations, /provinces, /cities, /channels, /slots, /interference, /stats, /allotment');
 }
