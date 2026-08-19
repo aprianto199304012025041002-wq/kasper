@@ -29,6 +29,27 @@ let state = {
   error:          null,
 };
 
+// ── URL state sync ────────────────────────────────────────────────────
+function syncURL() {
+  const p = new URLSearchParams();
+  if (state.view !== 'grid')          p.set('view', state.view);
+  if (state.page !== 'main')          p.set('page', state.page);
+  if (state.filterChanView !== 'all') p.set('chan', state.filterChanView);
+  if (state.filterCities?.length)     p.set('city', state.filterCities.join('|'));
+  if (state.searchTerm)               p.set('q', state.searchTerm);
+  const qs = p.toString();
+  history.replaceState(null, '', qs ? `?${qs}` : location.pathname);
+}
+
+function restoreFromURL() {
+  const p = new URLSearchParams(location.search);
+  if (p.has('view'))  state.view           = p.get('view');
+  if (p.has('page'))  state.page           = p.get('page');
+  if (p.has('chan'))  state.filterChanView  = p.get('chan');
+  if (p.has('city'))  state.filterCities    = p.get('city').split('|').filter(Boolean);
+  if (p.has('q'))     state.searchTerm      = p.get('q');
+}
+
 // ── Boot ──────────────────────────────────────────────────────────────
 async function boot() {
   document.getElementById('app').innerHTML = `
@@ -37,6 +58,7 @@ async function boot() {
       <span class="live-dot"></span>&nbsp;Memuat data spektrum…
     </div>`;
 
+  restoreFromURL();
   renderShell();
   attachEvents();
   await loadData();
@@ -47,12 +69,14 @@ async function boot() {
     (view) => {
       state.view = view;
       state.page = 'main';
+      syncURL();
       renderControls();
       renderContent();
     },
     async (page) => {
       state.page = page;
       state.view = state.view || 'grid';
+      syncURL();
       if (page === 'interference' && !state.interfData) await loadInterference();
       else renderContent();
     },
@@ -61,6 +85,7 @@ async function boot() {
       if (filters.filterChanView !== undefined) state.filterChanView = filters.filterChanView;
       if (filters.searchTerm     !== undefined) state.searchTerm     = filters.searchTerm;
       if (filters.geoSettings    !== undefined) state.geoSettings    = { ...state.geoSettings, ...filters.geoSettings };
+      syncURL();
       renderControls();
       renderContent(); // client-side filter, tidak perlu refetch API
     }
@@ -94,6 +119,7 @@ function attachEvents() {
   document.addEventListener('change', handleChange);
   document.addEventListener('kasper:search', (e) => {
     state.searchTerm = e.detail.searchTerm || '';
+    syncURL();
     renderContent();
   });
   document.addEventListener('input',  handleInput);
@@ -103,14 +129,14 @@ function attachEvents() {
 function handleChange(e) {
   // filterCity dihapus — filter kabupaten via drawer chips
 
-  if (e.target.id==='fChanView') { state.filterChanView=e.target.value; renderContent(); }
+  if (e.target.id==='fChanView') { state.filterChanView=e.target.value; syncURL(); renderContent(); }
 }
 
 let _searchDebounce;
 function handleInput(e) {
   if (e.target.id==='fSearch') {
     clearTimeout(_searchDebounce);
-    _searchDebounce = setTimeout(() => { state.searchTerm=e.target.value; renderContent(); }, 250);
+    _searchDebounce = setTimeout(() => { state.searchTerm=e.target.value; syncURL(); renderContent(); }, 250);
   }
 }
 
@@ -121,13 +147,14 @@ async function handleClick(e) {
     document.querySelectorAll('[data-view]').forEach(b=>b.classList.toggle('is-active',b.dataset.view===state.view));
     document.querySelectorAll('[data-page]').forEach(b=>b.classList.remove('is-active'));
     state.page = 'main';
-    renderControls(); renderContent(); return;
+    syncURL(); renderControls(); renderContent(); return;
   }
   const pagBtn = e.target.closest('[data-page]');
   if (pagBtn) {
     state.page=pagBtn.dataset.page;
     document.querySelectorAll('[data-page]').forEach(b=>b.classList.toggle('is-active',b.dataset.page===state.page));
     document.querySelectorAll('[data-view]').forEach(b=>b.classList.remove('is-active'));
+    syncURL();
     if (state.page==='interference' && !state.interfData) await loadInterference();
     else renderContent(); return;
   }
