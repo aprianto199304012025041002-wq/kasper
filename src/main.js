@@ -4,6 +4,7 @@ import './components/stats.css';
 import './components/grid.css';
 import './components/band.css';
 import './components/detail-page.css';
+import './components/sidebar.css';
 import { fetchSpectrum, fetchStationDetail, fetchInterference, isUsingFallback } from './apiClient.js';
 import { renderDetailPage } from './detailPage.js';
 import { renderInterferencePanel } from './interferenceView.js';
@@ -17,16 +18,18 @@ const JENIS_LABELS = {
 
 // ── State ─────────────────────────────────────────────────────────────
 let state = {
-  page:           'main',
-  view:           'grid',
-  filterCities:   [],
-  filterChanView: 'all',
-  searchTerm:     '',
-  geoSettings:    { showAdj: true, showLabel: true, onlyFree: false },
-  data:           null,
-  interfData:     null,
-  loading:        false,
-  error:          null,
+  page:             'main',
+  view:             'grid',
+  filterCities:     [],
+  filterChanView:   'all',
+  searchTerm:       '',
+  geoSettings:      { showAdj: true, showLabel: true, onlyFree: false },
+  data:             null,
+  interfData:       null,
+  loading:          false,
+  error:            null,
+  selectedWilayah:  null,   // wilayah aktif di sidebar
+  sidebarCollapsed: false,  // sidebar collapse state
 };
 
 // ── URL state sync ────────────────────────────────────────────────────
@@ -37,17 +40,19 @@ function syncURL() {
   if (state.filterChanView !== 'all') p.set('chan', state.filterChanView);
   if (state.filterCities?.length)     p.set('city', state.filterCities.join('|'));
   if (state.searchTerm)               p.set('q', state.searchTerm);
+  if (state.selectedWilayah)          p.set('w', state.selectedWilayah);
   const qs = p.toString();
   history.replaceState(null, '', qs ? `?${qs}` : location.pathname);
 }
 
 function restoreFromURL() {
   const p = new URLSearchParams(location.search);
-  if (p.has('view'))  state.view           = p.get('view');
-  if (p.has('page'))  state.page           = p.get('page');
-  if (p.has('chan'))  state.filterChanView  = p.get('chan');
-  if (p.has('city'))  state.filterCities    = p.get('city').split('|').filter(Boolean);
-  if (p.has('q'))     state.searchTerm      = p.get('q');
+  if (p.has('view'))  state.view              = p.get('view');
+  if (p.has('page'))  state.page              = p.get('page');
+  if (p.has('chan'))  state.filterChanView     = p.get('chan');
+  if (p.has('city'))  state.filterCities       = p.get('city').split('|').filter(Boolean);
+  if (p.has('q'))     state.searchTerm         = p.get('q');
+  if (p.has('w'))     state.selectedWilayah    = p.get('w');
 }
 
 // ── Boot ──────────────────────────────────────────────────────────────
@@ -98,22 +103,139 @@ async function boot() {
 function renderShell() {
   document.getElementById('app').innerHTML = `
     ${renderHeader()}
-    <div id="statsBar" style="padding:0 32px;margin-top:16px"></div>
-    <div class="view-tab-bar">
-      <button class="view-tab ${state.view==='grid'?'is-active':''}" data-view="grid">⊞ Grid</button>
-      <button class="view-tab ${state.view==='band'?'is-active':''}" data-view="band">▬ Pita</button>
-      <button class="view-tab ${state.view==='geo'?'is-active':''}" data-view="geo">⊟ Geo Grid</button>
-      <div class="view-tab-sep"></div>
-      <button class="view-tab ${state.page==='interference'?'is-active':''}" data-page="interference">⚡ Interferensi</button>
+    <div class="app-body">
+      <aside class="sidebar" id="sidebar">
+        <div class="sidebar__header">
+          <span class="sidebar__title">Wilayah Layanan</span>
+          <button class="sidebar__collapse-btn" id="sidebarCollapseBtn">‹</button>
+        </div>
+        <div class="sidebar__search-wrap">
+          <input type="search" class="sidebar__search" id="sidebarSearch" placeholder="Cari wilayah…"/>
+        </div>
+        <nav class="sidebar__nav" id="sidebarNav">
+          <div class="sidebar__loading">Memuat…</div>
+        </nav>
+      </aside>
+      <button class="sidebar-toggle-btn" id="sidebarToggle">›</button>
+      <div class="app-main" id="appMain">
+        <div class="main-toolbar">
+          <div class="toolbar-tabs">
+            <button class="toolbar-tab ${state.view==='grid'?'is-active':''}" data-view="grid">Grid</button>
+            <button class="toolbar-tab ${state.view==='band'?'is-active':''}" data-view="band">Pita</button>
+            <button class="toolbar-tab ${state.view==='geo'?'is-active':''}" data-view="geo">Geo</button>
+          </div>
+          <div class="toolbar-right">
+            <input type="search" class="toolbar-search" id="fSearch" placeholder="Cari stasiun / frekuensi…" value="${esc(state.searchTerm)}"/>
+            <select class="toolbar-select" id="fChanView">
+              <option value="all"  ${state.filterChanView==='all' ?'selected':''}>Semua kanal</option>
+              <option value="free" ${state.filterChanView==='free'?'selected':''}>Kosong saja</option>
+              <option value="used" ${state.filterChanView==='used'?'selected':''}>Terpakai saja</option>
+            </select>
+          </div>
+        </div>
+        <div class="main-statsbar" id="statsBar"></div>
+        <div id="legendBar"></div>
+        <div id="dynamicContent" class="main-content-area"></div>
+      </div>
     </div>
-    <main class="main-content" style="padding-top:12px">
-      <div id="controlsBar" class="controls-bar"></div>
-      <div id="legendBar"></div>
-      <div id="dynamicContent"></div>
-    </main>
     <div class="tooltip-float" id="tooltip"></div>`;
+
   renderControls();
+  document.getElementById('sidebarCollapseBtn')?.addEventListener('click', toggleSidebar);
+  document.getElementById('sidebarToggle')?.addEventListener('click', toggleSidebar);
+  document.getElementById('sidebarSearch')?.addEventListener('input', filterSidebarNav);
 }
+
+function toggleSidebar() {
+  state.sidebarCollapsed = !state.sidebarCollapsed;
+  document.getElementById('sidebar')?.classList.toggle('is-collapsed', state.sidebarCollapsed);
+  document.getElementById('sidebarToggle')?.classList.toggle('is-visible', state.sidebarCollapsed);
+  const btn = document.getElementById('sidebarCollapseBtn');
+  if (btn) btn.textContent = state.sidebarCollapsed ? '›' : '‹';
+}
+
+function filterSidebarNav() {
+  const q = (document.getElementById('sidebarSearch')?.value || '').toLowerCase();
+  document.querySelectorAll('.sidebar__nav-item').forEach(el => {
+    const name = (el.dataset.wilayah !== undefined ? el.dataset.wilayah : el.textContent || '').toLowerCase();
+    el.style.display = (!q || name.includes(q)) ? '' : 'none';
+  });
+  document.querySelectorAll('.sidebar__province-label').forEach(label => {
+    const group = label.nextElementSibling;
+    if (!group) return;
+    const anyVisible = [...group.querySelectorAll('.sidebar__nav-item')].some(i => i.style.display !== 'none');
+    label.style.display = anyVisible ? '' : 'none';
+    group.style.display = anyVisible ? '' : 'none';
+  });
+}
+
+function renderSidebar() {
+  const nav = document.getElementById('sidebarNav');
+  if (!nav || !state.data) return;
+
+  const KOMUNITAS_AOS = '2,5 KILOMETER DARI LOKASI ANTENA PEMANCAR';
+  const allWilayah = [...new Set(
+    state.data.stations
+      .map(s => s.wilayah_layanan || s.kota || s.city || '')
+      .filter(w => w && w !== KOMUNITAS_AOS)
+  )].sort();
+
+  const stationCount = (w) =>
+    state.data.stations.filter(s => (s.wilayah_layanan||s.kota||s.city) === w).length;
+
+  const DIY = new Set(['KOTA YOGYAKARTA','BANTUL, BANGUNTAPAN',
+    'SLEMAN, NGAGLIK, KALASAN, NGEMPLAK, PAKEM','WATES, SENTOLO',
+    'WONOSARI','GAMPING','DEPOK','PATUK']);
+  const diy    = allWilayah.filter(w => DIY.has(w));
+  const jateng = allWilayah.filter(w => !DIY.has(w));
+
+  const itemHtml = (w) => {
+    const cnt    = stationCount(w);
+    const active = state.selectedWilayah === w;
+    return `<button class="sidebar__nav-item${active?' is-active':''}" data-wilayah="${esc(w)}">
+      <span class="sidebar__nav-label">${esc(shortWilayah(w))}</span>
+      <span class="sidebar__nav-badge">${cnt}</span>
+    </button>`;
+  };
+
+  const groupHtml = (label, list) => list.length === 0 ? '' : `
+    <div class="sidebar__province-label">${label}</div>
+    <div class="sidebar__province-group">${list.map(itemHtml).join('')}</div>`;
+
+  const allActive = !state.selectedWilayah && state.page !== 'interference';
+  nav.innerHTML = `
+    <button class="sidebar__nav-item sidebar__nav-all${allActive?' is-active':''}" data-wilayah="">
+      <span class="sidebar__nav-label">Semua Wilayah</span>
+      <span class="sidebar__nav-badge">${allWilayah.length}</span>
+    </button>
+    ${groupHtml('D.I. Yogyakarta', diy)}
+    ${groupHtml('Jawa Tengah', jateng)}
+    <div class="sidebar__province-label">Analisis</div>
+    <button class="sidebar__nav-item${state.page==='interference'?' is-active':''}" data-page="interference">
+      <span class="sidebar__nav-label">⚡ Interferensi</span>
+    </button>`;
+
+  nav.querySelectorAll('.sidebar__nav-item[data-wilayah]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const w = btn.dataset.wilayah;
+      state.selectedWilayah = w || null;
+      state.filterCities    = w ? [w] : [];
+      state.page            = 'main';
+      syncURL();
+      renderSidebar();
+      renderContent();
+    });
+  });
+  nav.querySelector('[data-page="interference"]')?.addEventListener('click', () => {
+    state.page            = 'interference';
+    state.selectedWilayah = null;
+    syncURL();
+    renderSidebar();
+    renderContent();
+    if (!state.interfData) loadInterference();
+  });
+}
+
 
 function attachEvents() {
   document.addEventListener('change', handleChange);
@@ -195,7 +317,7 @@ async function loadData() {
     state._allotmentCacheData = null;
     window._kasperFallback = isUsingFallback();
   } catch(e) { state.error=e.message; state.loading=false; }
-  renderControls(); renderContent();
+  renderControls(); renderSidebar(); renderContent();
 }
 
 async function loadInterference() {
@@ -314,38 +436,12 @@ function updateStatsBar(summary, allotmentStats = null) {
 
 // ── Controls ──────────────────────────────────────────────────────────
 function renderControls() {
-  const el = document.getElementById('controlsBar');
-  if (!el) return;
-  const KOMUNITAS_AOS = '2,5 KILOMETER DARI LOKASI ANTENA PEMANCAR';
-  const cities = state.data
-    ? [...new Set(state.data.stations
-        .map(s=>s.wilayah_layanan||s.kota||s.city)
-        .filter(w => w && w !== KOMUNITAS_AOS)
-      )].sort()
-    : [];
-  const src = isUsingFallback()
-    ? '<span class="source-badge">⬡ data lokal</span>'
-    : '<span class="source-badge is-live"><span class="live-dot"></span> API live</span>';
-
-
-  el.innerHTML = `
-    ${state.view !== 'geo' ? `<div class="control-group">
-      <span class="control-group__label">Tampilkan</span>
-      <select class="control-input" id="fChanView">
-        <option value="all"  ${state.filterChanView==='all' ?'selected':''}>Semua kanal</option>
-        <option value="free" ${state.filterChanView==='free'?'selected':''}>Kosong saja</option>
-        <option value="used" ${state.filterChanView==='used'?'selected':''}>Terpakai saja</option>
-      </select>
-    </div>` : ''}
-    <input type="search" class="control-input search-input" id="fSearch"
-      placeholder="Cari stasiun / frekuensi…" value="${state.searchTerm}" style="width:200px"/>
-    <button class="mob-filter-btn" id="mobFilterBtn" onclick="window.__openMobFilter()">
-      ⚙ Filter
-      <span class="mob-badge"></span>
-    </button>
-    <div style="margin-left:auto;display:flex;align-items:center">
-      ${src}
-    </div>`;
+  // Controls now live in the main toolbar (renderShell). This is a no-op kept for compat.
+  // Update toolbar tab active states
+  document.querySelectorAll('.toolbar-tab[data-view]').forEach(b =>
+    b.classList.toggle('is-active', b.dataset.view === state.view));
+  document.querySelectorAll('.toolbar-tab[data-page]').forEach(b =>
+    b.classList.toggle('is-active', b.dataset.page === state.page));
 }
 
 // ── Legend dinamis ────────────────────────────────────────────────────
@@ -459,6 +555,11 @@ function renderContent() {
   }
 
   if (!state.data) return;
+
+  // Sync filterCities dari selectedWilayah
+  if (state.selectedWilayah && !state.filterCities.includes(state.selectedWilayah)) {
+    state.filterCities = [state.selectedWilayah];
+  }
 
   // ── Pipeline filter — sama untuk semua 3 view ──────────────────────
   updateStatsBar(state.data.summary);
