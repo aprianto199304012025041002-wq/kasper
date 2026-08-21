@@ -1,6 +1,6 @@
 # KASPER — Kanal Spektrum Radio
 
-Aplikasi web visualisasi spektrum frekuensi FM berbasis data ISR (Izin Stasiun Radio) Balmon Jogja, dengan overlay allotment berdasarkan KM Komdigi No. 570 Tahun 2025.
+Aplikasi web visualisasi spektrum frekuensi FM berbasis data ISR (Izin Stasiun Radio) Balmon Jogja, dengan overlay allotment berdasarkan KM Komdigi No. 570 Tahun 2025. Mencakup **84 wilayah layanan** di D.I. Yogyakarta dan Jawa Tengah.
 
 - **Live:** `kasper.balmonjogja.info`
 - **Stack:** Vite + Vanilla JS · PHP 8 + MySQL · Deploy Hostinger
@@ -11,16 +11,16 @@ Aplikasi web visualisasi spektrum frekuensi FM berbasis data ISR (Izin Stasiun R
 
 | Fitur | Keterangan |
 |---|---|
-| **Peta kanal grid** | Grid 100 kHz · 87.5–108.0 MHz, grouping per wilayah layanan |
+| **Sidebar wilayah** | Navigasi cepat 84 wilayah, dikelompokkan per provinsi (DIY / Jateng) |
+| **Peta kanal grid** | Grid 100 kHz · 87.5–108.0 MHz, per wilayah layanan terpilih |
 | **Pita horizontal** | View alternatif, tinggi blok proporsional ERP |
-| **Geo Grid** | Grid per wilayah layanan dengan drawer filter |
+| **Geo Grid** | Grid per wilayah layanan dengan filter slot kosong |
 | **Overlay allotment** | KM 570/2025: allotted LPS ★, allotted RRI ▣, tidak dijatahkan · |
 | **Komunitas** | Row terpisah (oranye) di bawah, kanal 107.4–107.9 MHz |
-| **Slot kosong** | Deteksi dan ranking blok kanal kosong potensial (hanya allotted) |
 | **Detail stasiun** | Info lengkap + mini band strip + peta Leaflet + tetangga |
 | **Analisis interferensi** | Model ITU-R BS.412: co-channel & adjacent (±100/±200 kHz) |
-| **Universal Drawer** | FAB → drawer kontrol: view, filter wilayah, search, geo settings |
-| **API PHP** | Backend MySQL dengan 8 endpoint, file cache 5 menit |
+| **URL state sync** | View/wilayah/filter tersimpan di URL — bookmarkable & shareable |
+| **API PHP** | Backend MySQL dengan endpoint lengkap, file cache 5 menit |
 | **Offline fallback** | Jika API tidak tersedia, pakai data JSON lokal otomatis |
 
 ---
@@ -34,26 +34,29 @@ kasper/
 ├── package.json
 │
 ├── src/
-│   ├── main.js                 # App utama + state management + Geo Grid view
+│   ├── main.js                 # App utama: state, sidebar, toolbar, semua view
 │   ├── apiClient.js            # HTTP client + offline fallback
 │   ├── channelEngine.js        # Logic grid/allotment (JS)
 │   ├── detailPage.js           # Halaman detail stasiun + Leaflet map
 │   ├── interferenceView.js     # Panel analisis interferensi
-│   ├── mobile.js               # Universal Drawer + FAB
+│   ├── mobile.js               # Drawer mobile + FAB
 │   ├── style.css               # Design tokens global
 │   ├── data/
 │   │   ├── stations.json       # Fallback data stasiun FM
-│   │   └── allotment.js        # Data allotment KM 570/2025 (8 wilayah DIY)
+│   │   └── allotment.js        # Data allotment KM 570/2025 (84 wilayah DIY+Jateng)
 │   └── components/
-│       ├── responsive.css
+│       ├── sidebar.css         # Sidebar wilayah + app layout
 │       ├── header.css
-│       ├── stats.css
+│       ├── stats.css           # Stats bar (6-col desktop / 3-col mobile)
 │       ├── grid.css
 │       ├── band.css
-│       └── detail-page.css
+│       ├── detail-page.css
+│       └── responsive.css
 │
 └── api/
     ├── index.php               # Router API
+    ├── data/
+    │   └── allotment_nasional.json   # Data allotment nasional KM 570/2025 (TODO)
     └── src/
         ├── config.php
         ├── Database.php
@@ -67,7 +70,11 @@ kasper/
 
 ---
 
-## Wilayah Layanan DIY (KM 570/2025)
+## Wilayah Layanan (KM 570/2025)
+
+Coverage: **8 wilayah DIY** + **76 wilayah Jawa Tengah** = **84 wilayah total**
+
+### D.I. Yogyakarta
 
 | Kode | Wilayah | Kelas |
 |------|---------|-------|
@@ -79,6 +86,10 @@ kasper/
 | 34-006 | DEPOK | C |
 | 34-007 | SLEMAN, NGAGLIK, KALASAN, NGEMPLAK, PAKEM | C |
 | 34-008 | KOTA YOGYAKARTA | B |
+
+### Jawa Tengah
+
+76 wilayah layanan, kode 33-001 s/d 33-076, mencakup seluruh kabupaten/kota di Jawa Tengah sesuai KM 570/2025. Data lengkap ada di `src/data/allotment.js`.
 
 ---
 
@@ -105,6 +116,7 @@ npm run dev   # offline mode, data dari src/data/stations.json
 | `GET /slots?min_count=2` | Slot kosong potensial |
 | `GET /interference` | Analisis interferensi |
 | `GET /stats` | Statistik per wilayah layanan + per jenis |
+| `GET /allotment` | Data allotment KM 570/2025 (filter ?provinsi= ?kode=) |
 | `GET /health` | Cek koneksi DB |
 
 **Query params:** `province=`, `city=` (match ke `area_of_service`), `jenis=`, `search=`
