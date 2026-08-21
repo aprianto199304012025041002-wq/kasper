@@ -26,7 +26,7 @@ PHP API:
                     NB: tidak ada 'adjacent' — pakai adjacent_1 + adjacent_2
 
 Frontend src/:
-  main.js         → app utama, state, render semua view
+  main.js           → app utama, state, render semua view + sidebar + toolbar
   channelEngine.js  → computeChannelMapForWilayah() + allotment merge
   apiClient.js      → fetch + offline fallback
   detailPage.js     → detail stasiun + Leaflet
@@ -36,9 +36,43 @@ Frontend src/:
   data/stations.json → fallback offline
   api/data/allotment_nasional.json → data nasional (placeholder kosong, lihat handoff)
 
-View "geo" (tab ⊟) → renderCellGeo() di main.js
-Filter/search       → client-side renderContent(), TIDAK refetch API
-allotmentIndex      → di-cache per wilayah di state._allotmentCache
+CSS components/:
+  sidebar.css   → sidebar wilayah + app-body layout (NEW)
+  header.css    → header compact
+  stats.css     → stats bar 6-col desktop / 3-col mobile
+  grid.css      → ch-cell, city-row-block, legend, tooltip
+  band.css      → band SVG row
+  detail-page.css → drawer + inline detail
+  responsive.css  → mobile overrides
+```
+
+## Layout & State
+
+```
+App layout (desktop):
+┌─ header ──────────────────────────────────┐
+├─ sidebar (220px) ──┬─ app-main ───────────┤
+│ [search wilayah]   │ [toolbar: tab+filter] │
+│ Semua Wilayah      │ [stats bar 6-col]     │
+│ ── DIY ──          │ [legend]              │
+│   Kota Yogyakarta  │ [dynamicContent]      │
+│   Bantul …         │   scrollable          │
+│ ── Jateng ──       │                       │
+│   Gandrungmangu…   │                       │
+│ ── Analisis ──     │                       │
+│   ⚡ Interferensi  │                       │
+└────────────────────┴───────────────────────┘
+
+State:
+  state.selectedWilayah → wilayah aktif dari sidebar klik
+  state.filterCities    → sync dari selectedWilayah
+  state.view            → 'grid' | 'band' | 'geo'
+  state.page            → 'main' | 'interference'
+  state.filterChanView  → 'all' | 'free' | 'used'
+  state.searchTerm      → search string
+  state.sidebarCollapsed → boolean
+
+URL params: ?view= &page= &chan= &city= &q= &w=
 ```
 
 ## Rules
@@ -49,6 +83,8 @@ allotmentIndex      → di-cache per wilayah di state._allotmentCache
 5. allotment.js sudah cover DIY (8) + Jateng (76) = 84 wilayah
 6. summary.adjacent tidak ada → pakai adjacent_1 + adjacent_2
 7. CSS warning "Unexpected /" → harmless, dari esbuild/comment syntax
+8. renderControls() sekarang no-op — controls ada di toolbar (renderShell)
+9. renderSidebar() dipanggil setelah loadData() selesai
 
 ## 8 Wilayah Layanan DIY (KM 570/2025)
 | Key allotment.js | Kode | Kelas | Allotted |
@@ -68,23 +104,23 @@ allotmentIndex      → di-cache per wilayah di state._allotmentCache
 - ✅ Komunitas row terpisah di band/grid/geo view + click handler benar
 - ✅ Filter/search client-side (tidak refetch API)
 - ✅ Cache allotmentIndex per wilayah
-- ✅ shortWilayah() untuk label readable di row header + chips
-- ✅ geoSettings (showAdj/showLabel/onlyFree) terhubung ke rendering Geo Grid view
-- ✅ Dead code sangat minimal — CSS -19%, JS lean
+- ✅ WILAYAH_SHORT labels semua 84 wilayah (DIY + Jateng)
+- ✅ URL state sync (?view= &w= &chan= &q= &city=) — bookmarkable
+- ✅ geoSettings (showAdj/showLabel/onlyFree) terhubung ke Geo Grid view
+- ✅ UI/UX rombak total: sidebar wilayah kiri + toolbar atas + main area scrollable
+- ✅ Stats bar 6-col desktop / 3-col mobile (2 baris)
+- ✅ Sidebar collapse/expand + search filter wilayah
+- ✅ Sidebar grouped per provinsi: DIY / Jawa Tengah / Analisis
 - ✅ Security headers (.htaccess): CSP, X-XSS-Protection, Permissions-Policy
-- ✅ Font non-blocking (media=print trick), terser drop_console
+- ✅ Font non-blocking, terser drop_console
 - ✅ CI: npm ci + paths-ignore **.md
-- ✅ allotment.js: 84 wilayah DIY + Jateng dari KM 570/2025
-- ✅ Endpoint /allotment siap serve api/data/allotment_nasional.json
-- ✅ geoSettings (showAdj/showLabel/onlyFree) bug fixed — sebelumnya tidak efektif
-- ⚠️ Perlu verifikasi visual di live
 - 🔲 api/data/allotment_nasional.json masih kosong (lihat HANDOFF di bawah)
 
 ---
 
 ## HANDOFF — Sesi Berikutnya
 
-### Yang perlu dikerjakan berikutnya:
+### Satu-satunya outstanding item:
 **Isi `api/data/allotment_nasional.json` dengan data KM 570/2025 nasional**
 
 ### Cara:
@@ -96,6 +132,6 @@ allotmentIndex      → di-cache per wilayah di state._allotmentCache
 3. Push → endpoint `/allotment` otomatis aktif
 
 ### Setelah JSON nasional tersedia:
-- Pertimbangkan: apakah `src/data/allotment.js` (DIY+Jateng, dipakai frontend JS)
+- Pertimbangkan: apakah `src/data/allotment.js` (DIY+Jateng, hardcode di frontend)
   perlu diganti fetch ke `/allotment` API, atau tetap hardcode untuk performa
 - Kalau diganti: update `channelEngine.js` → fetch allotment dari API saat init
