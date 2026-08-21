@@ -11,7 +11,7 @@ require_once __DIR__ . '/src/InterferenceEngine.php';
 
 $config   = require __DIR__ . '/src/config.php';
 $cache    = new Cache($config['cache']);
-$CACHE_V  = 'v4'; // bump ini untuk bust semua cache
+$CACHE_V  = 'v5'; // bump ini untuk bust semua cache
 $db       = Database::connect($config['db']);
 $repo     = new StationRepository($db);
 $provRepo = new ProvinceRepository($db);
