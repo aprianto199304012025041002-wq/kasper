@@ -1,11 +1,6 @@
 Options -Indexes
 RewriteEngine On
 
-# Block akses langsung ke subfolder sensitif
-RewriteRule ^src/  - [F,L]
-RewriteRule ^cache/ - [F,L]
-
-# Semua request → index.php (kecuali file fisik)
+# Semua request ke /api/... → data.php
 RewriteCond %{REQUEST_FILENAME} !-f
-RewriteCond %{REQUEST_FILENAME} !-d
-RewriteRule ^(.*)$ index.php [QSA,L]
+RewriteRule ^(.*)$ data.php [QSA,L]

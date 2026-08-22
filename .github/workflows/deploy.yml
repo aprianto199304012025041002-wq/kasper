@@ -25,46 +25,18 @@ jobs:
       - name: Install & build frontend
         run: npm ci && npm run build
 
-      - name: Generate config.php dari secrets
+      - name: Inject DB credentials ke data.php
         env:
           DB_HOST: ${{ secrets.DB_HOST }}
           DB_NAME: ${{ secrets.DB_NAME }}
           DB_USER: ${{ secrets.DB_USER }}
           DB_PASS: ${{ secrets.DB_PASS }}
         run: |
-          mkdir -p /tmp/config_only
-          python3 - <<'PYEOF'
-          import os, sys
-          host = os.environ['DB_HOST']
-          name = os.environ['DB_NAME']
-          user = os.environ['DB_USER']
-          pw   = os.environ['DB_PASS']
-          if not all([host, name, user, pw]):
-              print("ERROR: satu atau lebih DB secrets kosong!", file=sys.stderr)
-              sys.exit(1)
-          cfg = (
-              "<?php\nreturn [\n"
-              "    'db' => [\n"
-              f"        'host'    => '{host}',\n"
-              "        'port'    => '3306',\n"
-              f"        'name'    => '{name}',\n"
-              f"        'user'    => '{user}',\n"
-              f"        'pass'    => '{pw}',\n"
-              "        'charset' => 'utf8mb4',\n"
-              "    ],\n"
-              "    'cors'  => ['allowed_origin' => '*'],\n"
-              "    'cache' => ['enabled' => true, 'dir' => __DIR__ . '/../cache', 'ttl' => 300],\n"
-              "];\n"
-          )
-          with open('/tmp/config_only/config.php', 'w') as f:
-              f.write(cfg)
-          print("OK: config.php generated, host=" + host)
-          PYEOF
-
-      # Urutan deploy KRITIS:
-      # 1) dist/ dengan clean-slate -> hapus semua file lama di public_html/
-      # 2) api/ tanpa clean-slate   -> tambah folder api/ ke public_html/
-      # 3) config.php dari /tmp     -> override placeholder yang ada di repo
+          sed -i "s|DB_HOST_PLACEHOLDER|$DB_HOST|g" api/data.php
+          sed -i "s|DB_NAME_PLACEHOLDER|$DB_NAME|g" api/data.php
+          sed -i "s|DB_USER_PLACEHOLDER|$DB_USER|g" api/data.php
+          sed -i "s|DB_PASS_PLACEHOLDER|$DB_PASS|g" api/data.php
+          echo "OK: credentials injected"
 
       - name: Deploy frontend (dist/) via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
@@ -84,14 +56,3 @@ jobs:
           password: ${{ secrets.FTP_PASS }}
           local-dir: ./api/
           server-dir: /public_html/api/
-          exclude: |
-            **/src/config.php
-
-      - name: Upload config.php (generated dari secrets, bukan dari repo)
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
-        with:
-          server: ${{ secrets.FTP_HOST }}
-          username: ${{ secrets.FTP_USER }}
-          password: ${{ secrets.FTP_PASS }}
-          local-dir: /tmp/config_only/
-          server-dir: /public_html/api/src/
