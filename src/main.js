@@ -5,7 +5,7 @@ import './components/grid.css';
 import './components/band.css';
 import './components/detail-page.css';
 import './components/sidebar.css';
-import { fetchSpectrum, fetchStationDetail, fetchInterference, isUsingFallback } from './apiClient.js';
+import { fetchSpectrum, fetchStationDetail, fetchInterference } from './apiClient.js';
 import { renderDetailPage } from './detailPage.js';
 import { renderInterferencePanel } from './interferenceView.js';
 import { initMobileUI, openFilterDrawer } from './mobile.js';
@@ -96,7 +96,7 @@ async function boot() {
     }
   );
   window.__openMobFilter = () => openFilterDrawer();
-  window._kasperFallback = false; // diupdate setelah loadData
+
 }
 
 // ── Shell ─────────────────────────────────────────────────────────────
@@ -315,7 +315,6 @@ async function loadData() {
     state.loading = false;
     state._allotmentCache = null;
     state._allotmentCacheData = null;
-    window._kasperFallback = isUsingFallback();
   } catch(e) { state.error=e.message; state.loading=false; }
   renderControls(); renderSidebar(); renderContent();
 }
