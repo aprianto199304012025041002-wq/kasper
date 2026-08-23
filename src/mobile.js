@@ -258,10 +258,7 @@ function syncDrawer(state) {
   // API status
   const apiEl = document.getElementById('drawerApiStatus');
   if (apiEl) {
-    const live = !window._kasperFallback;
-    apiEl.innerHTML = live
-      ? `<span class="live-dot"></span> API LIVE — KASPER.BALMONJOGJA.INFO`
-      : `<span style="color:var(--signal-warn)">⬡</span> MODE OFFLINE — DATA LOKAL`;
+    apiEl.innerHTML = `<span class="live-dot"></span> KASPER.BALMONJOGJA.INFO`;
   }
 
   updateFabBadge(state);
@@ -292,8 +289,6 @@ export function initMobileUI(getState, onViewChange, onPageChange, onFilterChang
   _getStateFn = getState;
   injectFAB();
   injectDrawer();
-  injectScrollHints();
-
   // Apply button
   document.getElementById('drawerApply').addEventListener('click', () => {
     const state = getState();
@@ -382,19 +377,3 @@ export function initMobileUI(getState, onViewChange, onPageChange, onFilterChang
 }
 
 export { openDrawer as openFilterDrawer };
-
-// ── Scroll hints ──────────────────────────────────────────────────────
-function injectScrollHints() {
-  const observer = new MutationObserver(() => {
-    const trackWrap = document.querySelector('.band-track-wrap');
-    if (trackWrap && !trackWrap.previousElementSibling?.classList.contains('band-scroll-hint')) {
-      const hint = document.createElement('div');
-      hint.className = 'band-scroll-hint';
-      hint.textContent = '← GESER UNTUK LIHAT SPEKTRUM PENUH →';
-      trackWrap.parentNode.insertBefore(hint, trackWrap);
-    }
-  });
-  observer.observe(document.getElementById('app') || document.body, { childList: true, subtree: true });
-}
-
-

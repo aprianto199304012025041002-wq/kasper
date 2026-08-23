@@ -349,16 +349,15 @@ async function handleClick(e) {
     const ch = state.data.channel_map.find(c => c.freq === freq);
     if (!ch) return;
     const city = cell.closest('.city-block')?.querySelector('.city-block__name')?.dataset?.city;
-    const isKom = city === 'KOMUNITAS';
     const coStations = city
       ? state.data.stations.filter(s => {
           if (Math.abs(parseFloat(s.freq) - freq) >= 0.01) return false;
-          return isKom ? s.jenis === 'komunitas' : (s.wilayah_layanan || s.kota) === city;
+          return (s.wilayah_layanan || s.kota) === city;
         }).sort((a,b) => (a.stn_name||'').localeCompare(b.stn_name||''))
       : null;
     openInlineDetail(coStations?.length
-      ? { ...ch, coStations, allotment_status: isKom ? null : ch.allotment_status }
-      : { ...ch, allotment_status: isKom ? null : ch.allotment_status });
+      ? { ...ch, coStations }
+      : ch);
     return;
   }
   const nRow = e.target.closest('.neighbor-row[data-freq]');
@@ -371,11 +370,10 @@ async function handleClick(e) {
     if (!ch) return;
     const cityEl = bandHit.closest('.city-block')?.querySelector('.city-block__name');
     const city = cityEl?.dataset?.city;
-    const isKom = city === 'KOMUNITAS';
     const coStations = city
       ? state.data.stations.filter(s => {
           if (Math.abs(parseFloat(s.freq) - freq) >= 0.01) return false;
-          return isKom ? s.jenis === 'komunitas' : (s.wilayah_layanan || s.kota) === city;
+          return (s.wilayah_layanan || s.kota) === city;
         }).sort((a,b) => (a.stn_name||'').localeCompare(b.stn_name||''))
       : null;
     openInlineDetail(coStations?.length ? { ...ch, coStations } : ch);
@@ -496,7 +494,14 @@ function renderContent() {
   });
   if (allotTotal > 0) renderStatsBar(state.data.summary, { total: allotTotal, used: allotUsed, free: allotFree });
 
+  const geo = state.geoSettings || {};
   const applyFilter = (row) => {
+    if (state.view === 'geo') {
+      let r = row;
+      if (geo.onlyFree) r = r.filter(c => c.type === 'free');
+      if (geo.showAdj === false) r = r.filter(c => c.type !== 'adjacent_1' && c.type !== 'adjacent_2');
+      return r;
+    }
     if (state.filterChanView === 'free') return row.filter(c => c.type === 'free');
     if (state.filterChanView === 'used') return row.filter(c => c.type === 'used' || c.type === 'adjacent_1' || c.type === 'adjacent_2');
     return row;

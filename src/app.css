@@ -1219,3 +1219,172 @@ input, select { font-family: inherit; color: inherit; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
+
+/* -- Mobile drawer detail styles ------------------------------------ */
+.kd-city-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 10px;
+  border-radius: 20px;
+  border: 1px solid var(--border-mid);
+  background: var(--bg-raised);
+  color: var(--txt-2);
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: .06em;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background .12s, color .12s, border-color .12s;
+}
+.kd-city-chip:hover { background: var(--bg-hover); color: var(--txt); }
+.kd-city-chip.is-active {
+  background: var(--cyan-dim);
+  color: var(--cyan);
+  border-color: rgba(0,196,255,.3);
+}
+.kd-city-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.kd-segmented { display: flex; gap: 4px; }
+.kd-seg-btn {
+  flex: 1;
+  padding: 7px 8px;
+  border-radius: var(--r);
+  border: 1px solid var(--border);
+  background: var(--bg-raised);
+  color: var(--txt-2);
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: .06em;
+  text-align: center;
+  cursor: pointer;
+  transition: background .12s, color .12s;
+}
+.kd-seg-btn.is-active {
+  background: var(--cyan-dim);
+  color: var(--cyan);
+  border-color: rgba(0,196,255,.25);
+}
+
+.kd-toggle-list { display: flex; flex-direction: column; gap: 8px; }
+.kd-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--txt-2);
+  cursor: pointer;
+  padding: 2px 0;
+}
+.kd-toggle-row input[type="checkbox"] { display: none; }
+.kd-tog-s {
+  width: 36px; height: 20px;
+  border-radius: 10px;
+  background: var(--bg-raised);
+  border: 1px solid var(--border-mid);
+  position: relative;
+  transition: background .15s;
+  flex-shrink: 0;
+}
+.kd-tog-s::after {
+  content: '';
+  position: absolute;
+  top: 3px; left: 3px;
+  width: 12px; height: 12px;
+  border-radius: 50%;
+  background: var(--txt-3);
+  transition: transform .15s, background .15s;
+}
+.kd-toggle-row input:checked + .kd-tog-s { background: var(--cyan-dim); border-color: rgba(0,196,255,.3); }
+.kd-toggle-row input:checked + .kd-tog-s::after { transform: translateX(16px); background: var(--cyan); }
+
+.kd-search-wrap { position: relative; }
+.kd-search {
+  width: 100%;
+  height: 36px;
+  background: var(--bg-input);
+  border: 1px solid var(--border-mid);
+  border-radius: var(--r);
+  padding: 0 32px 0 10px;
+  font-size: 12px;
+  color: var(--txt);
+  outline: none;
+}
+.kd-search:focus { border-color: var(--cyan); }
+.kd-search::placeholder { color: var(--txt-3); }
+.kd-search__icon {
+  position: absolute;
+  right: 10px; top: 50%;
+  transform: translateY(-50%);
+  color: var(--txt-3);
+  font-size: 14px;
+  pointer-events: none;
+}
+
+.kd-api-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--txt-3);
+}
+
+.kasper-drawer__footer {
+  display: flex;
+  gap: 8px;
+  padding: 12px 0 0;
+  border-top: 1px solid var(--border);
+  margin-top: 8px;
+}
+.kd-btn-reset {
+  flex: 1;
+  padding: 10px;
+  border-radius: var(--r);
+  border: 1px solid var(--border-mid);
+  background: var(--bg-raised);
+  color: var(--txt-2);
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  cursor: pointer;
+}
+.kd-btn-apply {
+  flex: 2;
+  padding: 10px;
+  border-radius: var(--r);
+  border: 1px solid rgba(0,196,255,.3);
+  background: var(--cyan-dim);
+  color: var(--cyan);
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  cursor: pointer;
+  transition: background .15s;
+}
+.kd-btn-apply:hover { background: rgba(0,196,255,.14); }
+
+.kasper-fab__icon { font-size: 18px; }
+.kasper-fab__badge {
+  position: absolute;
+  top: 6px; right: 6px;
+  min-width: 14px; height: 14px;
+  border-radius: 7px;
+  background: var(--cyan);
+  color: #000;
+  font-family: var(--mono);
+  font-size: 8px;
+  font-weight: 700;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 0 2px;
+}
+.kasper-fab__badge.has-filter { display: flex; }
