@@ -496,18 +496,6 @@ function renderContent() {
   });
   if (allotTotal > 0) renderStatsBar(state.data.summary, { total: allotTotal, used: allotUsed, free: allotFree });
 
-  // komunitas row
-  const komStations = state.data.stations.filter(s => s.jenis === 'komunitas');
-  const komRow = komStations.length > 0
-    ? state.data.channel_map.map(c => {
-        const own = komStations.filter(s => Math.abs(parseFloat(s.freq) - c.freq) < 0.01);
-        if (own.length) return { ...c, allotment_status: null, type: 'used', station: own[0], coStations: own };
-        if (c.freq < 107.4) return null;
-        if (c.type === 'used') return { ...c, allotment_status: null, type: 'free', station: null };
-        return { ...c, allotment_status: null };
-      }).filter(Boolean).filter(matchSearch)
-    : null;
-
   const applyFilter = (row) => {
     if (state.filterChanView === 'free') return row.filter(c => c.type === 'free');
     if (state.filterChanView === 'used') return row.filter(c => c.type === 'used' || c.type === 'adjacent_1' || c.type === 'adjacent_2');
@@ -524,13 +512,7 @@ function renderContent() {
         </div>
         <div class="band-scroll">${renderBandSVG(row, city)}</div>
       </div>`
-    ).join('') + (komRow ? `<div class="city-block">
-      <div class="city-block__head">
-        <span class="city-block__name" data-city="KOMUNITAS" style="color:var(--orange)">KOMUNITAS</span>
-        <span class="city-block__count">±2.5km · ${komStations.length} stasiun</span>
-      </div>
-      <div class="band-scroll">${renderBandSVG(komRow, 'KOMUNITAS')}</div>
-    </div>` : '');
+    ).join('');
     return;
   }
 
@@ -544,13 +526,7 @@ function renderContent() {
       </div>
       <div class="ch-row">${applyFilter(row).map(c => cellFn(c)).join('')}</div>
     </div>`
-  ).join('') + (komRow ? `<div class="city-block">
-    <div class="city-block__head">
-      <span class="city-block__name" data-city="KOMUNITAS" style="color:var(--orange)">KOMUNITAS</span>
-      <span class="city-block__count">±2.5km · ${komStations.length} stasiun</span>
-    </div>
-    <div class="ch-row">${applyFilter(komRow).map(c => cellFn(c)).join('')}</div>
-  </div>` : '');
+  ).join('');
 
   attachCellTooltips();
 }
