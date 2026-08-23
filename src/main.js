@@ -1,38 +1,29 @@
-import './style.css';
-import './components/header.css';
-import './components/stats.css';
-import './components/grid.css';
-import './components/band.css';
-import './components/detail-page.css';
-import './components/sidebar.css';
+import './app.css';
 import { fetchSpectrum, fetchStationDetail, fetchInterference } from './apiClient.js';
 import { renderDetailPage } from './detailPage.js';
 import { renderInterferencePanel } from './interferenceView.js';
 import { initMobileUI, openFilterDrawer } from './mobile.js';
 import { computeChannelMapForWilayah, FM_MIN, FM_MAX } from './channelEngine.js';
-import './components/responsive.css';
 
-const JENIS_LABELS = {
-  swasta:'Swasta', publik:'Publik (RRI)', publik_lokal:'Publik Lokal (LPPL)', komunitas:'Komunitas',
-};
-
-// ── State ─────────────────────────────────────────────────────────────
+// ── State ────────────────────────────────────────────────────────────
 let state = {
-  page:             'main',
-  view:             'grid',
-  filterCities:     [],
-  filterChanView:   'all',
-  searchTerm:       '',
-  geoSettings:      { showAdj: true, showLabel: true, onlyFree: false },
-  data:             null,
-  interfData:       null,
-  loading:          false,
-  error:            null,
-  selectedWilayah:  null,   // wilayah aktif di sidebar
-  sidebarCollapsed: false,  // sidebar collapse state
+  page:            'main',
+  view:            'grid',
+  filterCities:    [],
+  filterChanView:  'all',
+  searchTerm:      '',
+  geoSettings:     { showAdj: true, showLabel: true, onlyFree: false },
+  data:            null,
+  interfData:      null,
+  loading:         false,
+  error:           null,
+  selectedWilayah: null,
+  sidebarCollapsed:false,
+  _allotmentCache: null,
+  _allotmentCacheData: null,
 };
 
-// ── URL state sync ────────────────────────────────────────────────────
+// ── URL sync ─────────────────────────────────────────────────────────
 function syncURL() {
   const p = new URLSearchParams();
   if (state.view !== 'grid')          p.set('view', state.view);
@@ -41,47 +32,32 @@ function syncURL() {
   if (state.filterCities?.length)     p.set('city', state.filterCities.join('|'));
   if (state.searchTerm)               p.set('q', state.searchTerm);
   if (state.selectedWilayah)          p.set('w', state.selectedWilayah);
-  const qs = p.toString();
-  history.replaceState(null, '', qs ? `?${qs}` : location.pathname);
+  history.replaceState(null, '', p.toString() ? `?${p}` : location.pathname);
 }
 
-function restoreFromURL() {
+function restoreURL() {
   const p = new URLSearchParams(location.search);
-  if (p.has('view'))  state.view              = p.get('view');
-  if (p.has('page'))  state.page              = p.get('page');
-  if (p.has('chan'))  state.filterChanView     = p.get('chan');
-  if (p.has('city'))  state.filterCities       = p.get('city').split('|').filter(Boolean);
-  if (p.has('q'))     state.searchTerm         = p.get('q');
-  if (p.has('w'))     state.selectedWilayah    = p.get('w');
+  if (p.has('view')) state.view             = p.get('view');
+  if (p.has('page')) state.page             = p.get('page');
+  if (p.has('chan')) state.filterChanView   = p.get('chan');
+  if (p.has('city')) state.filterCities     = p.get('city').split('|').filter(Boolean);
+  if (p.has('q'))    state.searchTerm       = p.get('q');
+  if (p.has('w'))    state.selectedWilayah  = p.get('w');
 }
 
-// ── Boot ──────────────────────────────────────────────────────────────
+// ── Boot ─────────────────────────────────────────────────────────────
 async function boot() {
-  document.getElementById('app').innerHTML = `
-    <div style="display:flex;align-items:center;justify-content:center;height:100vh;
-      font-family:var(--font-mono);font-size:13px;color:var(--text-tertiary)">
-      <span class="live-dot"></span>&nbsp;Memuat data spektrum…
-    </div>`;
-
-  restoreFromURL();
+  document.getElementById('app').innerHTML =
+    `<div class="state-loading"><span class="live-dot"></span>Memuat data spektrum…</div>`;
+  restoreURL();
   renderShell();
   attachEvents();
   await loadData();
-
-  // Mobile UI
   initMobileUI(
     () => state,
-    (view) => {
-      state.view = view;
-      state.page = 'main';
-      syncURL();
-      renderControls();
-      renderContent();
-    },
+    (view) => { state.view = view; state.page = 'main'; syncURL(); renderControls(); renderContent(); },
     async (page) => {
-      state.page = page;
-      state.view = state.view || 'grid';
-      syncURL();
+      state.page = page; syncURL();
       if (page === 'interference' && !state.interfData) await loadInterference();
       else renderContent();
     },
@@ -89,58 +65,48 @@ async function boot() {
       if (filters.filterCities   !== undefined) state.filterCities   = filters.filterCities;
       if (filters.filterChanView !== undefined) state.filterChanView = filters.filterChanView;
       if (filters.searchTerm     !== undefined) state.searchTerm     = filters.searchTerm;
-      if (filters.geoSettings    !== undefined) state.geoSettings    = { ...state.geoSettings, ...filters.geoSettings };
-      syncURL();
-      renderControls();
-      renderContent(); // client-side filter, tidak perlu refetch API
+      syncURL(); renderControls(); renderContent();
     }
   );
   window.__openMobFilter = () => openFilterDrawer();
-
 }
 
-// ── Shell ─────────────────────────────────────────────────────────────
+// ── Shell ────────────────────────────────────────────────────────────
 function renderShell() {
   document.getElementById('app').innerHTML = `
     ${renderHeader()}
     <div class="app-body">
-      <aside class="sidebar" id="sidebar">
-        <div class="sidebar__header">
-          <span class="sidebar__title">Wilayah Layanan</span>
-          <button class="sidebar__collapse-btn" id="sidebarCollapseBtn">‹</button>
-        </div>
-        <div class="sidebar__search-wrap">
+      <aside class="sidebar${state.sidebarCollapsed ? ' is-collapsed' : ''}" id="sidebar">
+        <div class="sidebar__top">
           <input type="search" class="sidebar__search" id="sidebarSearch" placeholder="Cari wilayah…"/>
+          <button class="sidebar__collapse" id="sidebarCollapseBtn" title="Sembunyikan sidebar">‹</button>
         </div>
-        <nav class="sidebar__nav" id="sidebarNav">
-          <div class="sidebar__loading">Memuat…</div>
-        </nav>
+        <nav class="sidebar__nav" id="sidebarNav"><div style="padding:8px 10px;font-size:11px;color:var(--txt-3)">Memuat…</div></nav>
       </aside>
-      <button class="sidebar-toggle-btn" id="sidebarToggle">›</button>
+      <button class="sidebar-toggle" id="sidebarToggle">›</button>
       <div class="app-main" id="appMain">
-        <div class="main-toolbar">
-          <div class="toolbar-tabs">
-            <button class="toolbar-tab ${state.view==='grid'?'is-active':''}" data-view="grid">Grid</button>
-            <button class="toolbar-tab ${state.view==='band'?'is-active':''}" data-view="band">Pita</button>
-            <button class="toolbar-tab ${state.view==='geo'?'is-active':''}" data-view="geo">Geo</button>
-          </div>
+        <div class="toolbar" id="toolbar">
+          <button class="toolbar-tab${state.view==='grid'?' is-active':''}" data-view="grid">GRID</button>
+          <button class="toolbar-tab${state.view==='band'?' is-active':''}" data-view="band">PITA</button>
+          <button class="toolbar-tab${state.view==='geo'?' is-active':''}" data-view="geo">GEO</button>
+          <div class="toolbar-sep"></div>
+          <button class="toolbar-tab${state.page==='interference'?' is-active':''}" data-page="interference">⚡ RF</button>
           <div class="toolbar-right">
             <input type="search" class="toolbar-search" id="fSearch" placeholder="Cari stasiun / frekuensi…" value="${esc(state.searchTerm)}"/>
             <select class="toolbar-select" id="fChanView">
               <option value="all"  ${state.filterChanView==='all' ?'selected':''}>Semua kanal</option>
               <option value="free" ${state.filterChanView==='free'?'selected':''}>Kosong saja</option>
-              <option value="used" ${state.filterChanView==='used'?'selected':''}>Terpakai saja</option>
+              <option value="used" ${state.filterChanView==='used'?'selected':''}>Terisi saja</option>
             </select>
           </div>
         </div>
-        <div class="main-statsbar" id="statsBar"></div>
+        <div id="statsBar"></div>
         <div id="legendBar"></div>
-        <div id="dynamicContent" class="main-content-area"></div>
+        <div id="dynamicContent" class="content-area"></div>
       </div>
     </div>
     <div class="tooltip-float" id="tooltip"></div>`;
 
-  renderControls();
   document.getElementById('sidebarCollapseBtn')?.addEventListener('click', toggleSidebar);
   document.getElementById('sidebarToggle')?.addEventListener('click', toggleSidebar);
   document.getElementById('sidebarSearch')?.addEventListener('input', filterSidebarNav);
@@ -156,19 +122,39 @@ function toggleSidebar() {
 
 function filterSidebarNav() {
   const q = (document.getElementById('sidebarSearch')?.value || '').toLowerCase();
-  document.querySelectorAll('.sidebar__nav-item').forEach(el => {
-    const name = (el.dataset.wilayah !== undefined ? el.dataset.wilayah : el.textContent || '').toLowerCase();
+  document.querySelectorAll('.sidebar__item[data-wilayah]').forEach(el => {
+    const name = el.dataset.wilayah.toLowerCase();
     el.style.display = (!q || name.includes(q)) ? '' : 'none';
   });
-  document.querySelectorAll('.sidebar__province-label').forEach(label => {
-    const group = label.nextElementSibling;
-    if (!group) return;
-    const anyVisible = [...group.querySelectorAll('.sidebar__nav-item')].some(i => i.style.display !== 'none');
-    label.style.display = anyVisible ? '' : 'none';
-    group.style.display = anyVisible ? '' : 'none';
+  document.querySelectorAll('.sidebar__section-label').forEach(label => {
+    const sec = label.nextElementSibling;
+    if (!sec) return;
+    const anyVisible = [...sec.querySelectorAll('.sidebar__item')].some(i => i.style.display !== 'none');
+    label.style.display = sec.style.display = anyVisible ? '' : 'none';
   });
 }
 
+// ── Header ───────────────────────────────────────────────────────────
+function renderHeader() {
+  return `<header class="app-header">
+    <div class="app-header__brand">
+      <span class="app-header__logo">KASPER</span>
+      <span class="app-header__title">Monitoring Spektrum FM · DIY &amp; Jawa Tengah</span>
+    </div>
+    <div class="app-header__divider"></div>
+    <div class="app-header__meta">
+      <span class="app-header__chip">Band <b>87.5–108.0 MHz</b></span>
+      <span class="app-header__chip">Spasi <b>100 kHz</b></span>
+      <span class="app-header__chip">Regulasi <b>KM 570/2025</b></span>
+    </div>
+    <div class="app-header__status">
+      <span class="live-dot"></span>
+      <span id="headerStatus">—</span>
+    </div>
+  </header>`;
+}
+
+// ── Sidebar render ───────────────────────────────────────────────────
 function renderSidebar() {
   const nav = document.getElementById('sidebarNav');
   if (!nav || !state.data) return;
@@ -176,1026 +162,737 @@ function renderSidebar() {
   const KOMUNITAS_AOS = '2,5 KILOMETER DARI LOKASI ANTENA PEMANCAR';
   const allWilayah = [...new Set(
     state.data.stations
-      .map(s => s.wilayah_layanan || s.kota || s.city || '')
+      .map(s => s.wilayah_layanan || s.kota || '')
       .filter(w => w && w !== KOMUNITAS_AOS)
   )].sort();
 
-  const stationCount = (w) =>
-    state.data.stations.filter(s => (s.wilayah_layanan||s.kota||s.city) === w).length;
+  const cnt = (w) => state.data.stations.filter(s => (s.wilayah_layanan || s.kota) === w).length;
 
   const DIY = new Set(['KOTA YOGYAKARTA','BANTUL, BANGUNTAPAN',
     'SLEMAN, NGAGLIK, KALASAN, NGEMPLAK, PAKEM','WATES, SENTOLO',
     'WONOSARI','GAMPING','DEPOK','PATUK']);
+
   const diy    = allWilayah.filter(w => DIY.has(w));
   const jateng = allWilayah.filter(w => !DIY.has(w));
 
   const itemHtml = (w) => {
-    const cnt    = stationCount(w);
     const active = state.selectedWilayah === w;
-    return `<button class="sidebar__nav-item${active?' is-active':''}" data-wilayah="${esc(w)}">
-      <span class="sidebar__nav-label">${esc(shortWilayah(w))}</span>
-      <span class="sidebar__nav-badge">${cnt}</span>
+    return `<button class="sidebar__item${active?' is-active':''}" data-wilayah="${esc(w)}">
+      <span class="sidebar__label">${esc(shortWilayah(w))}</span>
+      <span class="sidebar__badge">${cnt(w)}</span>
     </button>`;
   };
 
-  const groupHtml = (label, list) => list.length === 0 ? '' : `
-    <div class="sidebar__province-label">${label}</div>
-    <div class="sidebar__province-group">${list.map(itemHtml).join('')}</div>`;
-
   const allActive = !state.selectedWilayah && state.page !== 'interference';
   nav.innerHTML = `
-    <button class="sidebar__nav-item sidebar__nav-all${allActive?' is-active':''}" data-wilayah="">
-      <span class="sidebar__nav-label">Semua Wilayah</span>
-      <span class="sidebar__nav-badge">${allWilayah.length}</span>
+    <button class="sidebar__item${allActive?' is-active':''}" data-wilayah="">
+      <span class="sidebar__label">Semua Wilayah</span>
+      <span class="sidebar__badge">${allWilayah.length}</span>
     </button>
-    ${groupHtml('D.I. Yogyakarta', diy)}
-    ${groupHtml('Jawa Tengah', jateng)}
-    <div class="sidebar__province-label">Analisis</div>
-    <button class="sidebar__nav-item${state.page==='interference'?' is-active':''}" data-page="interference">
-      <span class="sidebar__nav-label">⚡ Interferensi</span>
-    </button>`;
+    ${diy.length ? `<div class="sidebar__section">
+      <div class="sidebar__section-label">D.I. Yogyakarta</div>
+      <div>${diy.map(itemHtml).join('')}</div>
+    </div>` : ''}
+    ${jateng.length ? `<div class="sidebar__section">
+      <div class="sidebar__section-label">Jawa Tengah</div>
+      <div>${jateng.map(itemHtml).join('')}</div>
+    </div>` : ''}
+    <div class="sidebar__section">
+      <div class="sidebar__section-label">Analisis</div>
+      <button class="sidebar__item${state.page==='interference'?' is-active':''}" data-page="interference">
+        <span class="sidebar__label">⚡ Interferensi RF</span>
+      </button>
+    </div>`;
 
-  nav.querySelectorAll('.sidebar__nav-item[data-wilayah]').forEach(btn => {
+  nav.querySelectorAll('.sidebar__item[data-wilayah]').forEach(btn => {
     btn.addEventListener('click', () => {
       const w = btn.dataset.wilayah;
       state.selectedWilayah = w || null;
       state.filterCities    = w ? [w] : [];
-      state.page            = 'main';
-      syncURL();
-      renderSidebar();
-      renderContent();
+      state.page = 'main';
+      syncURL(); renderSidebar(); renderContent();
     });
   });
   nav.querySelector('[data-page="interference"]')?.addEventListener('click', () => {
-    state.page            = 'interference';
-    state.selectedWilayah = null;
-    syncURL();
-    renderSidebar();
-    renderContent();
+    state.page = 'interference'; state.selectedWilayah = null;
+    syncURL(); renderSidebar(); renderContent();
     if (!state.interfData) loadInterference();
   });
 }
 
-
-function attachEvents() {
-  document.addEventListener('change', handleChange);
-  document.addEventListener('kasper:search', (e) => {
-    state.searchTerm = e.detail.searchTerm || '';
-    syncURL();
-    renderContent();
-  });
-  document.addEventListener('input',  handleInput);
-  document.addEventListener('click',  handleClick);
-}
-
-function handleChange(e) {
-  // filterCity dihapus — filter kabupaten via drawer chips
-
-  if (e.target.id==='fChanView') { state.filterChanView=e.target.value; syncURL(); renderContent(); }
-}
-
-let _searchDebounce;
-function handleInput(e) {
-  if (e.target.id==='fSearch') {
-    clearTimeout(_searchDebounce);
-    _searchDebounce = setTimeout(() => { state.searchTerm=e.target.value; syncURL(); renderContent(); }, 250);
-  }
-}
-
-async function handleClick(e) {
-  const vtBtn = e.target.closest('[data-view]');
-  if (vtBtn && !vtBtn.dataset.page) {
-    state.view=vtBtn.dataset.view;
-    document.querySelectorAll('[data-view]').forEach(b=>b.classList.toggle('is-active',b.dataset.view===state.view));
-    document.querySelectorAll('[data-page]').forEach(b=>b.classList.remove('is-active'));
-    state.page = 'main';
-    syncURL(); renderControls(); renderContent(); return;
-  }
-  const pagBtn = e.target.closest('[data-page]');
-  if (pagBtn) {
-    state.page=pagBtn.dataset.page;
-    document.querySelectorAll('[data-page]').forEach(b=>b.classList.toggle('is-active',b.dataset.page===state.page));
-    document.querySelectorAll('[data-view]').forEach(b=>b.classList.remove('is-active'));
-    syncURL();
-    if (state.page==='interference' && !state.interfData) await loadInterference();
-    else renderContent(); return;
-  }
-  const cell = e.target.closest('.ch-cell[data-freq]');
-  if (cell && state.data) {
-    const freq = parseFloat(cell.dataset.freq);
-    const ch = state.data.channel_map.find(c => c.freq === freq);
-    if (ch) {
-      // Cari semua stasiun di frekuensi ini dari kota yang sama (co-channel)
-      const city = cell.closest('.city-row-block')?.querySelector('.city-row-label')?.childNodes[0]?.textContent?.trim();
-      const isKomunitas = city === 'KOMUNITAS';
-      const coStations = city
-        ? state.data.stations
-            .filter(s => {
-              if (Math.abs(parseFloat(s.freq) - freq) >= 0.01) return false;
-              if (isKomunitas) return s.jenis === 'komunitas';
-              return (s.wilayah_layanan || s.kota || s.city) === city;
-            })
-            .sort((a, b) => (a.stn_name||'').localeCompare(b.stn_name||''))
-        : null;
-      openInlineDetail(coStations?.length ? { ...ch, coStations, allotment_status: isKomunitas ? null : ch.allotment_status } : { ...ch, allotment_status: isKomunitas ? null : ch.allotment_status });
-    }
-    return;
-  }
-  const nRow = e.target.closest('.neighbor-row[data-freq]');
-  if (nRow) { openDetailPage({freq:parseFloat(nRow.dataset.freq)}); return; }
-}
-
-// ── Data loading ──────────────────────────────────────────────────────
-async function loadData() {
-  state.loading=true; state.error=null; state.data=null;
-  renderContent();
-  const filters = {};
-  try {
-    state.data    = await fetchSpectrum(filters);
-    state.loading = false;
-    state._allotmentCache = null;
-    state._allotmentCacheData = null;
-  } catch(e) { state.error=e.message; state.loading=false; }
-  renderControls(); renderSidebar(); renderContent();
-}
-
-async function loadInterference() {
-  state.loading=true; renderContent();
-  try {
-    state.interfData = await fetchInterference({});
-  } catch(e) {
-    state.interfData = {pairs:[],summary:{},stations_evaluated:0,model:'error:'+e.message};
-  }
-  state.loading=false; renderContent();
-}
-
-async function openDetailPage(stationOrFreq) {
-  const freq = stationOrFreq.freq ?? stationOrFreq;
-
-  // Buka drawer dulu dengan loading state
-  let el = document.getElementById('stationDrawer');
-  if (!el) {
-    el = document.createElement('div');
-    el.id = 'stationDrawer';
-    el.className = 'station-drawer';
-    el.innerHTML = `<div class="station-drawer__backdrop"></div><div class="station-drawer__panel" id="stationDrawerPanel"></div>`;
-    document.body.appendChild(el);
-    el.querySelector('.station-drawer__backdrop').addEventListener('click', closeStationDrawer);
-    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeStationDrawer(); }, { passive: true });
-  }
-  document.getElementById('stationDrawerPanel').innerHTML =
-    `<div style="padding:48px;text-align:center;font-family:var(--font-mono);font-size:13px;color:var(--text-tertiary)"><span class="live-dot"></span> Memuat detail…</div>`;
-  el.classList.add('is-open');
-  document.body.classList.add('drawer-open');
-
-  try {
-    const detail = await fetchStationDetail(parseFloat(freq));
-    const panel = document.getElementById('stationDrawerPanel');
-    renderDetailPage(detail, closeStationDrawer, state.data, panel);
-  } catch(e) {
-    const panel = document.getElementById('stationDrawerPanel');
-    if (panel) panel.innerHTML = `<div class="empty-state" style="padding:32px">Gagal memuat detail: ${e.message}</div>`;
-  }
-}
-
-function closeStationDrawer() {
-  document.getElementById('stationDrawer')?.classList.remove('is-open');
-  document.body.classList.remove('drawer-open');
-}
-
-// ── Header ────────────────────────────────────────────────────────────
-function renderHeader() {
-  const dateStr = new Date().toLocaleDateString('id-ID',{day:'2-digit',month:'short',year:'numeric'});
-  return `<header class="app-header">
-    <div class="app-header__inner">
-      <div class="app-header__brand">
-        <div class="app-header__mark"><span>📻</span></div>
-        <div class="app-header__titles">
-          <h1>KASPER — KANAL SPEKTRUM RADIO</h1>
-          <p>Visualisasi kanal, slot kosong &amp; analisis interferensi</p>
-        </div>
-      </div>
-      <div class="app-header__meta">
-        <div class="app-header__meta-item">
-          <span class="app-header__meta-label">Band</span>
-          <span class="app-header__meta-val mono">87.5–108.0 MHz</span>
-        </div>
-        <div class="app-header__meta-item">
-          <span class="app-header__meta-label">Spasi</span>
-          <span class="app-header__meta-val mono">100 kHz</span>
-        </div>
-        <div class="app-header__meta-item">
-          <span class="app-header__meta-label"><span class="live-dot"></span>Update</span>
-          <span class="app-header__meta-val mono">${dateStr}</span>
-        </div>
-      </div>
-    </div>
-  </header>`;
-}
-
-// ── Stats bar ─────────────────────────────────────────────────────────
-function updateStatsBar(summary, allotmentStats = null) {
+// ── Stats bar ────────────────────────────────────────────────────────
+function renderStatsBar(summary, allotmentStats = null) {
   const el = document.getElementById('statsBar');
   if (!el) return;
-  const pctU = summary.pct_used  ?? +((summary.used/summary.total)*100).toFixed(1);
-  const pctF = summary.pct_free  ?? +((summary.free/summary.total)*100).toFixed(1);
-  const adjTotal = (summary.adjacent ?? ((summary.adjacent_1||0) + (summary.adjacent_2||0)));
-  const pctA = +((adjTotal/summary.total)*100).toFixed(1);
+  const pctU = +((summary.used  / summary.total) * 100).toFixed(1);
+  const pctF = +((summary.free  / summary.total) * 100).toFixed(1);
+  const adj  = (summary.adjacent_1 || 0) + (summary.adjacent_2 || 0);
+  const pctA = +((adj / summary.total) * 100).toFixed(1);
 
-  const allotmentHtml = allotmentStats ? `
+  let extra = '';
+  if (allotmentStats) {
+    extra = `
+      <div class="stat-cell">
+        <div class="stat-cell__label">Allotted terisi</div>
+        <div class="stat-cell__val --amber">${allotmentStats.used}<span class="unit">/ ${allotmentStats.total}</span></div>
+        <div class="stat-cell__meter" style="width:${(allotmentStats.used/allotmentStats.total*100).toFixed(1)}%;background:var(--amber)"></div>
+      </div>
+      <div class="stat-cell">
+        <div class="stat-cell__label">Allotted kosong</div>
+        <div class="stat-cell__val --cyan">${allotmentStats.free}</div>
+        <div class="stat-cell__meter" style="width:${(allotmentStats.free/allotmentStats.total*100).toFixed(1)}%;background:var(--cyan)"></div>
+      </div>`;
+  }
+
+  el.innerHTML = `<div class="statsbar">
     <div class="stat-cell">
-      <div class="stat-cell__label">Allotted terisi</div>
-      <div class="stat-cell__value" style="color:#ffd600">${allotmentStats.allottedUsed}<span class="stat-cell__unit">/ ${allotmentStats.allottedTotal}</span></div>
+      <div class="stat-cell__label">Total kanal FM</div>
+      <div class="stat-cell__val">${summary.total}</div>
     </div>
     <div class="stat-cell">
-      <div class="stat-cell__label">Allotted kosong</div>
-      <div class="stat-cell__value" style="color:#1e90ff">${allotmentStats.allottedFree}</div>
-    </div>` : '';
-
-  el.innerHTML = `<div class="stats-bar" style="padding:0;margin:0">
-    <div class="stat-cell"><div class="stat-cell__label">Total kanal</div><div class="stat-cell__value">${summary.total}</div></div>
-    <div class="stat-cell">
-      <div class="stat-cell__label">Terpakai</div>
-      <div class="stat-cell__value is-occupied">${summary.used}<span class="stat-cell__unit">${pctU}%</span></div>
-      <div class="stat-cell__bar"><div class="stat-cell__bar-fill" style="width:${pctU}%;background:var(--signal-occupied)"></div></div>
+      <div class="stat-cell__label">Terisi</div>
+      <div class="stat-cell__val --amber">${summary.used}<span class="unit">${pctU}%</span></div>
+      <div class="stat-cell__meter" style="width:${pctU}%;background:var(--amber)"></div>
     </div>
     <div class="stat-cell">
-      <div class="stat-cell__label">Adjacent protected</div>
-      <div class="stat-cell__value is-danger">${adjTotal}<span class="stat-cell__unit">${pctA}%</span></div>
-      <div class="stat-cell__bar"><div class="stat-cell__bar-fill" style="width:${pctA}%;background:var(--signal-danger)"></div></div>
+      <div class="stat-cell__label">Adjacent guard</div>
+      <div class="stat-cell__val --red">${adj}<span class="unit">${pctA}%</span></div>
+      <div class="stat-cell__meter" style="width:${pctA}%;background:var(--red)"></div>
     </div>
     <div class="stat-cell">
       <div class="stat-cell__label">Kosong / potensial</div>
-      <div class="stat-cell__value is-phosphor">${summary.free}<span class="stat-cell__unit">${pctF}%</span></div>
-      <div class="stat-cell__bar"><div class="stat-cell__bar-fill" style="width:${pctF}%;background:var(--signal-phosphor)"></div></div>
+      <div class="stat-cell__val --green">${summary.free}<span class="unit">${pctF}%</span></div>
+      <div class="stat-cell__meter" style="width:${pctF}%;background:var(--phosphor)"></div>
     </div>
-    ${allotmentHtml}
+    ${extra}
+  </div>`;
+}
+
+// ── Legend ───────────────────────────────────────────────────────────
+function renderLegend() {
+  const el = document.getElementById('legendBar');
+  if (!el) return;
+  el.innerHTML = `<div class="legend-strip">
+    <div class="legend-chip"><span class="legend-chip__dot" style="background:rgba(255,184,0,.35);border:1px solid var(--amber)"></span>Terisi</div>
+    <div class="legend-chip"><span class="legend-chip__dot" style="background:var(--red-dim);border:1px dashed var(--red)"></span>Adjacent guard</div>
+    <div class="legend-chip"><span class="legend-chip__dot" style="background:var(--cyan-dim);border:1px solid var(--cyan)"></span>Allotted ★ (kosong)</div>
+    <div class="legend-chip"><span class="legend-chip__dot" style="background:var(--purple-dim);border:1px dashed var(--purple)"></span>Allotted RRI ▣</div>
+    <div class="legend-chip"><span class="legend-chip__dot" style="background:transparent;border:1px solid var(--border)"></span>Tidak dijatahkan</div>
   </div>`;
 }
 
 // ── Controls ──────────────────────────────────────────────────────────
 function renderControls() {
-  // Controls now live in the main toolbar (renderShell). This is a no-op kept for compat.
-  // Update toolbar tab active states
   document.querySelectorAll('.toolbar-tab[data-view]').forEach(b =>
     b.classList.toggle('is-active', b.dataset.view === state.view));
   document.querySelectorAll('.toolbar-tab[data-page]').forEach(b =>
     b.classList.toggle('is-active', b.dataset.page === state.page));
 }
 
-// ── Legend dinamis ────────────────────────────────────────────────────
-function renderLegend() {
-  const el = document.getElementById('legendBar');
-  if (!el || !state.data) { if (el) el.innerHTML = ''; return; }
-  el.innerHTML = `<div class="legend-strip">
-    <div class="legend-chip">
-      <span class="legend-chip__swatch" style="background:rgba(255,214,0,.13);border-color:#ffd600"></span>
-      <span>Terpakai</span>
-    </div>
-    <div class="legend-chip">
-      <span class="legend-chip__swatch" style="background:rgba(255,45,45,.1);border-color:#ff2d2d;border-style:dashed"></span>
-      <span>Adjacent (guard)</span>
-    </div>
-    <div class="legend-chip">
-      <span class="legend-chip__swatch" style="background:rgba(30,144,255,.13);border-color:#1e90ff"></span>
-      <span>Allotted ★ (kosong)</span>
-    </div>
-    <div class="legend-chip">
-      <span class="legend-chip__swatch" style="background:rgba(192,132,252,.13);border-color:#c084fc;border-style:dashed"></span>
-      <span>Allotted RRI ▣</span>
-    </div>
-    <div class="legend-chip">
-      <span class="legend-chip__swatch" style="background:rgba(255,255,255,.03);border-color:rgba(255,255,255,.1);opacity:0.5"></span>
-      <span>Tidak dijatahkan ·</span>
-    </div>
-  </div>`;
+// ── Attach events ─────────────────────────────────────────────────────
+function attachEvents() {
+  document.addEventListener('change', e => {
+    if (e.target.id === 'fChanView') { state.filterChanView = e.target.value; syncURL(); renderContent(); }
+  });
+  let _debounce;
+  document.addEventListener('input', e => {
+    if (e.target.id === 'fSearch') {
+      clearTimeout(_debounce);
+      _debounce = setTimeout(() => { state.searchTerm = e.target.value; syncURL(); renderContent(); }, 250);
+    }
+  });
+  document.addEventListener('click', handleClick);
+  document.addEventListener('kasper:search', (e) => {
+    state.searchTerm = e.detail.searchTerm || ''; syncURL(); renderContent();
+  });
+}
+
+async function handleClick(e) {
+  const vtBtn = e.target.closest('[data-view]');
+  if (vtBtn && !vtBtn.dataset.page) {
+    state.view = vtBtn.dataset.view; state.page = 'main';
+    syncURL(); renderControls(); renderContent(); return;
+  }
+  const pgBtn = e.target.closest('[data-page]');
+  if (pgBtn && !pgBtn.closest('.sidebar__item')) {
+    state.page = pgBtn.dataset.page;
+    syncURL(); renderControls();
+    if (state.page === 'interference' && !state.interfData) await loadInterference();
+    else renderContent(); return;
+  }
+  const cell = e.target.closest('.ch-cell[data-freq]');
+  if (cell && state.data) {
+    const freq = parseFloat(cell.dataset.freq);
+    const ch = state.data.channel_map.find(c => c.freq === freq);
+    if (!ch) return;
+    const city = cell.closest('.city-block')?.querySelector('.city-block__name')?.dataset?.city;
+    const isKom = city === 'KOMUNITAS';
+    const coStations = city
+      ? state.data.stations.filter(s => {
+          if (Math.abs(parseFloat(s.freq) - freq) >= 0.01) return false;
+          return isKom ? s.jenis === 'komunitas' : (s.wilayah_layanan || s.kota) === city;
+        }).sort((a,b) => (a.stn_name||'').localeCompare(b.stn_name||''))
+      : null;
+    openInlineDetail(coStations?.length
+      ? { ...ch, coStations, allotment_status: isKom ? null : ch.allotment_status }
+      : { ...ch, allotment_status: isKom ? null : ch.allotment_status });
+    return;
+  }
+  const nRow = e.target.closest('.neighbor-row[data-freq]');
+  if (nRow) { openDetailPage({ freq: parseFloat(nRow.dataset.freq) }); }
+  // band SVG hits
+  const bandHit = e.target.closest('.band-hit[data-freq]');
+  if (bandHit && state.data) {
+    const freq = parseFloat(bandHit.dataset.freq);
+    const ch = state.data.channel_map.find(c => Math.abs(c.freq - freq) < 0.01);
+    if (!ch) return;
+    const cityEl = bandHit.closest('.city-block')?.querySelector('.city-block__name');
+    const city = cityEl?.dataset?.city;
+    const isKom = city === 'KOMUNITAS';
+    const coStations = city
+      ? state.data.stations.filter(s => {
+          if (Math.abs(parseFloat(s.freq) - freq) >= 0.01) return false;
+          return isKom ? s.jenis === 'komunitas' : (s.wilayah_layanan || s.kota) === city;
+        }).sort((a,b) => (a.stn_name||'').localeCompare(b.stn_name||''))
+      : null;
+    openInlineDetail(coStations?.length ? { ...ch, coStations } : ch);
+  }
+}
+
+// ── Data loading ──────────────────────────────────────────────────────
+async function loadData() {
+  state.loading = true; state.error = null; state.data = null;
+  renderContent();
+  try {
+    state.data = await fetchSpectrum({});
+    state.loading = false;
+    state._allotmentCache = null;
+    state._allotmentCacheData = null;
+    const total = state.data.stations?.length ?? 0;
+    const statusEl = document.getElementById('headerStatus');
+    if (statusEl) statusEl.textContent = `${total} stasiun`;
+  } catch(e) {
+    state.error = e.message; state.loading = false;
+  }
+  renderControls(); renderSidebar(); renderContent();
+}
+
+async function loadInterference() {
+  state.loading = true; renderContent();
+  try {
+    state.interfData = await fetchInterference({});
+  } catch(e) {
+    state.interfData = { pairs:[], summary:{}, stations_evaluated:0, model:'error:'+e.message };
+  }
+  state.loading = false; renderContent();
 }
 
 // ── Dynamic content ───────────────────────────────────────────────────
-const WILAYAH_SHORT = {
-  // DIY
-  'KOTA YOGYAKARTA':                            'Kota Yogyakarta',
-  'BANTUL, BANGUNTAPAN':                        'Bantul – Banguntapan',
-  'SLEMAN, NGAGLIK, KALASAN, NGEMPLAK, PAKEM':  'Sleman – Ngaglik – Pakem',
-  'WATES, SENTOLO':                             'Wates – Sentolo',
-  'WONOSARI':                                   'Wonosari',
-  'GAMPING':                                    'Gamping',
-  'DEPOK':                                      'Depok',
-  'PATUK':                                      'Patuk',
-  // Jateng — nama panjang
-  'WANGON, JATILAWANG, PURWOJATI':              'Wangon – Jatilawang',
-  'SOKARAJA, KALIBAGOR':                        'Sokaraja – Kalibagor',
-  'PURWOKERTO, PATIK, RAJA, KARANG LEWAS':      'Purwokerto',
-  'BANJARNEGARA, BANJARMANGU, MADUKARA':        'Banjarnegara',
-  'KALIBENING, PUNGGELAN':                      'Kalibening – Punggelan',
-  'WANAYASA, PEJAWARAN, PAGETAN, KARANG KOBAR': 'Wanayasa – Pejawaran',
-  'KARANGANYAR, GOMBONG, SEMPOR':               'Gombong – Sempor',
-  'KEBUMEN, ALIAN, KALIBONG':                   'Kebumen',
-  'AMBAL, KUTOWINANGUN, MIRIT':                 'Ambal – Kutowinangun',
-  'KARANGANYAR, SADANG':                        'Karanganyar – Sadang',
-  'KUTOARDJO, BAYAN':                           'Kutoarjo – Bayan',
-  'PURWOREJO, BANYUURIP':                       'Purworejo',
-  'BRUNO, KEMIRI, PITURUH':                     'Bruno – Kemiri',
-  'KALIWIRO, WADASLINTANG':                     'Kaliwiro – Wadaslintang',
-  'MUNGKID, MUNTILAN, SALAM':                   'Muntilan',
-  'SUKOHARJO, GROGOL':                          'Sukoharjo – Grogol',
-  'EROMOKO, PRACIMANTORO':                      'Eromoko – Pracimantoro',
-  'GIRIWOYO, BATURETNO':                        'Giriwoyo – Baturetno',
-  'TIRTOMOYO, BATUWARNO, KARANG TENGAH':        'Tirtomoyo',
-  'NGADIROJO, NGUNTORONADI':                    'Ngadirojo',
-  'JATISRONO, JATIPURNO, GIRIMARTO':            'Jatisrono',
-  'JUMANTONO, JUMAPOLO':                        'Jumantono – Jumapolo',
-  'KRAGAN, SEDAN, SARANG':                      'Kragan – Sarang',
-  'PANCUR, LASEM, PAMOTAN':                     'Lasem – Pamotan',
-  'BATANGAN, JUWANA, JAKENAN':                  'Juwana – Jakenan',
-  'GUNUNGWUNGKAL, CLUWAK, TAYU':                'Tayu – Cluwak',
-  'BANGKRI, KELING':                            'Bangkri – Keling',
-  'DORO, LEBAKBARANG, TALUN, PETUNGKRIYONO, KARANGDADAP': 'Doro – Lebakbarang',
-  'KAJEN, KEDUNGWUNI':                          'Kajen – Kedungwuni',
-  'RANDUDONGKAL, BELIK':                        'Randudongkal – Belik',
-  'BUMIJAWA, BOJONG':                           'Bumijawa – Bojong',
-  'SURADADAI, TARUB':                           'Suradadi – Tarub',
-  'BANTARKAWUNG':                               'Bantarkawung',
-  'BANJARHARDJO, KETANGGUNGAN':                 'Banjarharejo – Ketanggungan',
-  'BANJARHAREJO, KETANGGUNGAN':                 'Banjarharejo – Ketanggungan',
-  'KOTA MAGELANG':                              'Kota Magelang',
-  'KOTA SURAKARTA':                             'Kota Surakarta',
-  'KOTA SALATIGA':                              'Kota Salatiga',
-  'KOTA SEMARANG':                              'Kota Semarang',
-  'KOTA PEKALONGAN':                            'Kota Pekalongan',
-  'KOTA TEGAL':                                 'Kota Tegal',
-};
-function shortWilayah(w) { return WILAYAH_SHORT[w] || w; }
-
 function renderContent() {
   const el = document.getElementById('dynamicContent');
   if (!el) return;
 
   if (state.loading) {
-    el.innerHTML=`<div class="skeleton-band" style="margin-top:12px;height:300px"></div>`;
+    el.innerHTML = `<div class="state-loading"><span class="live-dot"></span> Memuat…</div>`;
     return;
   }
   if (state.error) {
-    el.innerHTML=`<div class="empty-state" style="padding:32px;text-align:center">
-      <div style="font-size:20px;margin-bottom:8px">⚠️</div>
-      <div style="color:var(--signal-danger);margin-bottom:6px">Gagal memuat data</div>
-      <div style="font-size:11px;color:var(--text-tertiary);margin-bottom:16px">${state.error}</div>
-      <button onclick="location.reload()" style="padding:6px 16px;border:1px solid var(--border-mid);border-radius:var(--radius-sm);background:var(--bg-input);color:var(--text-primary);cursor:pointer;font-size:12px">
-        ↺ Coba lagi
-      </button>
+    el.innerHTML = `<div class="state-error">
+      <div style="font-size:20px">⚠</div>
+      <div>Gagal memuat data</div>
+      <div class="state-error__msg">${esc(state.error)}</div>
+      <button class="state-retry" onclick="location.reload()">↺ Coba lagi</button>
     </div>`;
     return;
   }
-
-  if (state.page==='interference') {
-    el.innerHTML='<div id="interfPanel"></div>';
-    if (state.interfData) renderInterferencePanel(document.getElementById('interfPanel'),state.interfData);
+  if (state.page === 'interference') {
+    el.innerHTML = '<div class="interf-wrap" id="interfPanel"></div>';
+    if (state.interfData) renderInterferencePanel(document.getElementById('interfPanel'), state.interfData);
     return;
   }
-
   if (!state.data) return;
 
-  // Sync filterCities dari selectedWilayah
-  if (state.selectedWilayah && !state.filterCities.includes(state.selectedWilayah)) {
+  if (state.selectedWilayah && !state.filterCities.includes(state.selectedWilayah))
     state.filterCities = [state.selectedWilayah];
-  }
 
-  // ── Pipeline filter — sama untuk semua 3 view ──────────────────────
-  updateStatsBar(state.data.summary);
+  renderStatsBar(state.data.summary);
   renderLegend();
 
-  // Hitung allotment stats dari semua cityRows
-  let allottedTotal = 0, allottedUsed = 0, allottedFree = 0;
-  // Kita hitung setelah cityRows dibangun di bawah, update stats setelahnya
-
+  const KOMUNITAS_AOS = '2,5 KILOMETER DARI LOKASI ANTENA PEMANCAR';
   const searchLower = (state.searchTerm || '').toLowerCase().trim();
+
   const matchSearch = (c) => {
     if (!searchLower) return true;
     if (c.type !== 'used') return String(c.freq).includes(searchLower);
     return String(c.freq).includes(searchLower)
       || (c.station?.stn_name || '').toLowerCase().includes(searchLower)
-      || (c.station?.wilayah_layanan || c.station?.kota || c.station?.city || '').toLowerCase().includes(searchLower);
+      || (c.station?.wilayah_layanan || c.station?.kota || '').toLowerCase().includes(searchLower);
   };
 
-  const KOMUNITAS_AOS = '2,5 KILOMETER DARI LOKASI ANTENA PEMANCAR';
   const filterCities = state.filterCities || [];
-
-  // Daftar wilayah layanan yang aktif (non-komunitas) — sama untuk semua view
   const allWilayah = [...new Set(
     state.data.stations
-      .map(s => s.wilayah_layanan || s.kota || s.city || '')
-      .filter(wl => wl && wl !== KOMUNITAS_AOS)
+      .map(s => s.wilayah_layanan || s.kota || '')
+      .filter(w => w && w !== KOMUNITAS_AOS)
   )].sort();
+  const cityList = filterCities.length > 0 ? filterCities.filter(c => c !== KOMUNITAS_AOS) : allWilayah;
 
-  const cityList = filterCities.length > 0
-    ? filterCities.filter(c => c !== KOMUNITAS_AOS)
-    : allWilayah;
-
-  // Cache allotmentIndex per wilayah (tidak berubah selama data sama)
   if (!state._allotmentCache || state._allotmentCacheData !== state.data) {
-    state._allotmentCache = {};
-    state._allotmentCacheData = state.data;
+    state._allotmentCache = {}; state._allotmentCacheData = state.data;
   }
 
-  // ── Build city rows ─────────────────────────────────────────────────
-  const cityRows = cityList.map(city => {
-    const cityStations = state.data.stations.filter(s => (s.wilayah_layanan || s.kota || s.city) === city);
+  let allotTotal = 0, allotUsed = 0, allotFree = 0;
 
-    // Allotment index — per wilayah, di-cache
+  const cityRows = cityList.map(city => {
+    const cityStations = state.data.stations.filter(s => (s.wilayah_layanan || s.kota) === city);
     if (!state._allotmentCache[city]) {
-      const wilayahMap = computeChannelMapForWilayah(cityStations, city);
       const idx = {};
-      wilayahMap.forEach(c => { idx[c.freq] = c.allotment_status; });
+      computeChannelMapForWilayah(cityStations, city).forEach(c => { idx[c.freq] = c.allotment_status; });
       state._allotmentCache[city] = idx;
     }
-    const allotmentIndex = state._allotmentCache[city];
-
-    // Pakai channel_map global dari PHP (punya adj1/adj2 lengkap),
-    // merge allotment_status ke tiap slot
+    const allotIdx = state._allotmentCache[city];
     const row = state.data.channel_map.map(c => {
-      const allotment_status = allotmentIndex[c.freq] ?? null;
+      const allotment_status = allotIdx[c.freq] ?? null;
       const ownStations = cityStations.filter(s => Math.abs(parseFloat(s.freq) - c.freq) < 0.01);
-      if (ownStations.length > 0) {
+      if (ownStations.length > 0)
         return { ...c, allotment_status, type: 'used', station: ownStations[0], coStations: ownStations };
-      }
       if (c.type === 'used') return { ...c, allotment_status, type: 'free', station: null };
       return { ...c, allotment_status };
     }).filter(matchSearch);
-
     return { city, row };
   }).filter(({ row }) => row.some(c => c.type === 'used' || (searchLower && matchSearch(c))));
 
-  // Hitung allotment stats dari semua city rows
+  // hitung allotment stats
   cityRows.forEach(({ row }) => {
     row.forEach(c => {
       if (c.allotment_status === 'allotted_lps' || c.allotment_status === 'allotted_rri') {
-        allottedTotal++;
-        if (c.type === 'used') allottedUsed++;
-        else allottedFree++;
+        allotTotal++;
+        if (c.type === 'used') allotUsed++; else allotFree++;
       }
     });
   });
-  if (allottedTotal > 0) {
-    updateStatsBar(state.data.summary, { allottedTotal, allottedUsed, allottedFree });
-  }
+  if (allotTotal > 0) renderStatsBar(state.data.summary, { total: allotTotal, used: allotUsed, free: allotFree });
 
-  // ── Komunitas row (terpisah, bukan per wilayah layanan) ─────────────
+  // komunitas row
   const komStations = state.data.stations.filter(s => s.jenis === 'komunitas');
   const komRow = komStations.length > 0
     ? state.data.channel_map.map(c => {
-        const ownStations = komStations.filter(s => Math.abs(parseFloat(s.freq) - c.freq) < 0.01);
-        if (ownStations.length > 0) {
-          return { ...c, allotment_status: null, type: 'used', station: ownStations[0], coStations: ownStations };
-        }
-        // Tampilkan hanya kanal 107.5–107.9 (kanal komunitas) + adj-nya
+        const own = komStations.filter(s => Math.abs(parseFloat(s.freq) - c.freq) < 0.01);
+        if (own.length) return { ...c, allotment_status: null, type: 'used', station: own[0], coStations: own };
         if (c.freq < 107.4) return null;
         if (c.type === 'used') return { ...c, allotment_status: null, type: 'free', station: null };
         return { ...c, allotment_status: null };
-      }).filter(c => c !== null).filter(matchSearch)
+      }).filter(Boolean).filter(matchSearch)
     : null;
 
-  const geo = state.geoSettings || {};
   const applyFilter = (row) => {
-    // Geo view: onlyFree override; showAdj hides adjacent cells
-    if (state.view === 'geo') {
-      let r = row;
-      if (geo.onlyFree)         r = r.filter(c => c.type === 'free');
-      if (geo.showAdj === false) r = r.filter(c => c.type !== 'adjacent_1' && c.type !== 'adjacent_2');
-      return r;
-    }
-    return state.filterChanView === 'free' ? row.filter(c => c.type === 'free') :
-           state.filterChanView === 'used' ? row.filter(c => c.type === 'used' || c.type === 'adjacent_1' || c.type === 'adjacent_2') :
-           row;
+    if (state.filterChanView === 'free') return row.filter(c => c.type === 'free');
+    if (state.filterChanView === 'used') return row.filter(c => c.type === 'used' || c.type === 'adjacent_1' || c.type === 'adjacent_2');
+    return row;
   };
-  if (state.view === 'band') {
-    el.innerHTML = `
-      <div class="grid-frame" style="padding:12px">
-        <div class="city-grid-scroll">
-          <div class="city-grid-inner">
-            ${cityRows.map(({ city, row }) => {
-              const usedCount = state.data.stations.filter(s => (s.wilayah_layanan || s.kota || s.city) === city).length;
-              return `<div class="city-row-block">
-                <div class="city-row-label">${esc(shortWilayah(city))} <span class="city-row-count">${usedCount}</span></div>
-                <div class="band-svg-row" data-city="${esc(city)}">${renderBandSVG(row, city)}</div>
-              </div>`;
-            }).join('')}
-            ${komRow ? `<div class="city-row-block city-row-block--komunitas">
-              <div class="city-row-label" style="color:#f97316">KOMUNITAS <span class="city-row-count" style="font-size:9px">±2.5km</span></div>
-              <div class="band-svg-row" data-city="KOMUNITAS">${renderBandSVG(komRow, 'KOMUNITAS')}</div>
-            </div>` : ''}
-          </div>
-        </div>
-      </div>`;
 
-    // Click handler untuk band SVG — sama seperti grid, sertakan coStations
-    el.querySelectorAll('.band-hit[data-freq]').forEach(hit => {
-      hit.addEventListener('click', () => {
-        const freq = parseFloat(hit.dataset.freq);
-        const ch = state.data.channel_map.find(c => Math.abs(c.freq - freq) < 0.01);
-        if (!ch) return;
-        const cityEl = hit.closest('.city-row-block')?.querySelector('.city-row-label');
-        const city = cityEl?.childNodes[0]?.textContent?.trim();
-        const isKomunitas = city === 'KOMUNITAS';
-        const coStations = city
-          ? state.data.stations
-              .filter(s => {
-                if (Math.abs(parseFloat(s.freq) - freq) >= 0.01) return false;
-                if (isKomunitas) return s.jenis === 'komunitas';
-                return (s.wilayah_layanan || s.kota || s.city) === city;
-              })
-              .sort((a, b) => (a.stn_name||'').localeCompare(b.stn_name||''))
-          : null;
-        const info = { ...ch, allotment_status: isKomunitas ? null : ch.allotment_status };
-        openInlineDetail(coStations?.length ? { ...info, coStations } : info);
-      });
-    });
+  // ── Band view ─────────────────────────────────────────────────────
+  if (state.view === 'band') {
+    el.innerHTML = cityRows.map(({ city, row }) =>
+      `<div class="city-block">
+        <div class="city-block__head">
+          <span class="city-block__name" data-city="${esc(city)}">${esc(shortWilayah(city))}</span>
+          <span class="city-block__count">${state.data.stations.filter(s=>(s.wilayah_layanan||s.kota)===city).length} stasiun</span>
+        </div>
+        <div class="band-scroll">${renderBandSVG(row, city)}</div>
+      </div>`
+    ).join('') + (komRow ? `<div class="city-block">
+      <div class="city-block__head">
+        <span class="city-block__name" data-city="KOMUNITAS" style="color:var(--orange)">KOMUNITAS</span>
+        <span class="city-block__count">±2.5km · ${komStations.length} stasiun</span>
+      </div>
+      <div class="band-scroll">${renderBandSVG(komRow, 'KOMUNITAS')}</div>
+    </div>` : '');
     return;
   }
 
-  // ── Grid & Geo: cell-per-cell ──────────────────────────────────────
-  const cellFn = state.view === 'geo' ? (c, city) => renderCellGeo(c, city, geo) : renderCell;
-
-  el.innerHTML = `
-    <div class="grid-frame" style="padding:12px">
-      <div class="city-grid-scroll">
-        <div class="city-grid-inner">
-          ${cityRows.map(({ city, row }) => {
-            const usedCount = state.data.stations.filter(s => (s.wilayah_layanan || s.kota || s.city) === city).length;
-            const filtered = applyFilter(row);
-            return `<div class="city-row-block">
-              <div class="city-row-label">${esc(shortWilayah(city))} <span class="city-row-count">${usedCount}</span></div>
-              <div class="ch-grid-row">${filtered.map(c => cellFn(c, city)).join('')}</div>
-            </div>`;
-          }).join('')}
-          ${komRow ? `<div class="city-row-block city-row-block--komunitas">
-            <div class="city-row-label" style="color:#f97316">KOMUNITAS <span class="city-row-count" style="font-size:9px">±2.5km · ${komStations.length} stasiun</span></div>
-            <div class="ch-grid-row">${applyFilter(komRow).map(c => cellFn(c, 'KOMUNITAS')).join('')}</div>
-          </div>` : ''}
-        </div>
+  // ── Grid / Geo view ───────────────────────────────────────────────
+  const cellFn = state.view === 'geo' ? (c) => renderCellGeo(c) : renderCell;
+  el.innerHTML = cityRows.map(({ city, row }) =>
+    `<div class="city-block">
+      <div class="city-block__head">
+        <span class="city-block__name" data-city="${esc(city)}">${esc(shortWilayah(city))}</span>
+        <span class="city-block__count">${state.data.stations.filter(s=>(s.wilayah_layanan||s.kota)===city).length} stasiun</span>
       </div>
-    </div>`;
+      <div class="ch-row">${applyFilter(row).map(c => cellFn(c)).join('')}</div>
+    </div>`
+  ).join('') + (komRow ? `<div class="city-block">
+    <div class="city-block__head">
+      <span class="city-block__name" data-city="KOMUNITAS" style="color:var(--orange)">KOMUNITAS</span>
+      <span class="city-block__count">±2.5km · ${komStations.length} stasiun</span>
+    </div>
+    <div class="ch-row">${applyFilter(komRow).map(c => cellFn(c)).join('')}</div>
+  </div>` : '');
 
-  attachCellTooltips(state.data.channel_map);
+  attachCellTooltips();
 }
 
-// ── Adj direction symbol ──────────────────────────────────────────────
-// adj_left  = ada stasiun di kiri → panah kanan (>) karena interferensi datang dari kiri
-// adj_right = ada stasiun di kanan → panah kiri (<) karena interferensi datang dari kanan
-function adjSymbol(c) {
-  // Panah menunjuk KE ARAH stasiunnya:
-  // adj_left  = stasiun di KIRI  → '<'  (adj-1) atau '<<' (adj-2)
-  // adj_right = stasiun di KANAN → '>'  (adj-1) atau '>>' (adj-2)
-  // Per sisi: adj-1 menang atas adj-2
-  const a1L = !!(c.adj1_left  || (c.type === 'adjacent_1' && c.adj_left));
-  const a1R = !!(c.adj1_right || (c.type === 'adjacent_1' && c.adj_right));
-  const a2L = !!(c.adj2_left  || (c.type === 'adjacent_2' && c.adj_left));
-  const a2R = !!(c.adj2_right || (c.type === 'adjacent_2' && c.adj_right));
+// ── Cell renderers ────────────────────────────────────────────────────
+function firstWord(n) { return (n || '').trim().split(/\s+/)[0]; }
 
-  const fromLeft  = a1L ? '<'  : a2L ? '<<' : '';
-  const fromRight = a1R ? '>'  : a2R ? '>>' : '';
-
-  if (fromLeft || fromRight) return fromLeft + fromRight;
-  return '?';
-}
-
-// ── Cell render ───────────────────────────────────────────────────────
-function firstWord(name) {
-  if (!name) return '';
-  return name.trim().split(/\s+/)[0];
+function adjSym(c) {
+  const a1L = c.adj1_left  || (c.type==='adjacent_1' && c.adj_left);
+  const a1R = c.adj1_right || (c.type==='adjacent_1' && c.adj_right);
+  const a2L = c.adj2_left  || (c.type==='adjacent_2' && c.adj_left);
+  const a2R = c.adj2_right || (c.type==='adjacent_2' && c.adj_right);
+  return ((a1L?'<':a2L?'«':'') + (a1R?'>':a2R?'»':'')).trim() || '—';
 }
 
 function renderCell(c) {
-  if (c.type==='used') {
-    const label = firstWord(c.station?.stn_name);
+  if (c.type === 'used') {
     const co = c.coStations?.length > 1 ? `<span class="ch-cell__co">${c.coStations.length}</span>` : '';
-    return `<div class="ch-cell ch-cell--used" data-freq="${c.freq}" title="${esc(c.station?.stn_name||'')}">
+    return `<div class="ch-cell ch-cell--used" data-freq="${c.freq}">
       <span class="ch-cell__freq">${c.freq.toFixed(1)}</span>
-      <span class="ch-cell__name">${esc(label)}</span>
+      <span class="ch-cell__name">${esc(firstWord(c.station?.stn_name))}</span>
       ${co}
     </div>`;
   }
-  if (c.type==='adjacent_1') {
-    const sym = adjSymbol(c);
-    return `<div class="ch-cell ch-cell--adjacent ch-cell--adj1" data-freq="${c.freq}">
+  if (c.type === 'adjacent_1')
+    return `<div class="ch-cell ch-cell--adj1" data-freq="${c.freq}">
       <span class="ch-cell__freq">${c.freq.toFixed(1)}</span>
-      <span class="ch-cell__name">${sym}</span>
+      <span class="ch-cell__name">${adjSym(c)}</span>
     </div>`;
-  }
-  if (c.type==='adjacent_2') {
-    const sym = adjSymbol(c);
-    return `<div class="ch-cell ch-cell--adjacent ch-cell--adj2" data-freq="${c.freq}">
+  if (c.type === 'adjacent_2')
+    return `<div class="ch-cell ch-cell--adj2" data-freq="${c.freq}">
       <span class="ch-cell__freq">${c.freq.toFixed(1)}</span>
-      <span class="ch-cell__name">${sym}</span>
+      <span class="ch-cell__name">${adjSym(c)}</span>
     </div>`;
-  }
-  const allotClass = c.allotment_status === 'allotted_rri' ? ' ch-cell--allotted-rri'
-                   : c.allotment_status === 'allotted_lps' ? ' ch-cell--allotted-lps'
-                   : c.allotment_status === 'not_allotted'  ? ' ch-cell--not-allotted'
-                   : '';
-  const allotIcon  = c.allotment_status === 'allotted_rri' ? '▣'
-                   : c.allotment_status === 'allotted_lps' ? '★' : '·';
-  return `<div class="ch-cell ch-cell--free${allotClass}" data-freq="${c.freq}">
+  const cls  = c.allotment_status === 'allotted_rri' ? 'ch-cell--allotted-rri'
+             : c.allotment_status === 'allotted_lps' ? 'ch-cell--allotted-lps'
+             : 'ch-cell--free';
+  const icon = c.allotment_status === 'allotted_rri' ? '▣'
+             : c.allotment_status === 'allotted_lps' ? '★' : '·';
+  return `<div class="ch-cell ${cls}" data-freq="${c.freq}">
     <span class="ch-cell__freq">${c.freq.toFixed(1)}</span>
-    <span class="ch-cell__name">${allotIcon}</span>
+    <span class="ch-cell__name">${icon}</span>
   </div>`;
 }
 
-// ── Band view: SVG spectrum per kota ─────────────────────────────────
-const FM_MIN_B = FM_MIN, FM_MAX_B = FM_MAX;
-const SVG_W_PER_MHZ = 200;  // 200px per MHz = 20px per 100kHz step
-const SVG_H = 110;           // lebih tinggi untuk ruler di bawah
-const RULER_H = 20;          // tinggi area ruler
-const AMP_MIN = 12, AMP_MAX = 48;
-const SINE_STEPS = 40;
-const SLOT_PX = SVG_W_PER_MHZ * 0.1;  // 20px per 100kHz step
-
-function erpAmp(erp) {
-  const ratio = Math.max(0, Math.min(1, ((erp || 60) - 40) / (78 - 40)));
-  return AMP_MIN + ratio * (AMP_MAX - AMP_MIN);
+function renderCellGeo(c) {
+  // geo: sama seperti grid tapi tanpa nama stasiun, lebih kecil
+  if (c.type === 'used') {
+    const co = c.coStations?.length > 1 ? `<span class="ch-cell__co">${c.coStations.length}</span>` : '';
+    return `<div class="ch-cell ch-cell--used" data-freq="${c.freq}" style="width:36px;height:36px">
+      <span class="ch-cell__freq">${c.freq.toFixed(1)}</span>${co}
+    </div>`;
+  }
+  if (c.type === 'adjacent_1')
+    return `<div class="ch-cell ch-cell--adj1" data-freq="${c.freq}" style="width:36px;height:36px">
+      <span class="ch-cell__freq">${c.freq.toFixed(1)}</span>
+    </div>`;
+  if (c.type === 'adjacent_2')
+    return `<div class="ch-cell ch-cell--adj2" data-freq="${c.freq}" style="width:36px;height:36px">
+      <span class="ch-cell__freq">${c.freq.toFixed(1)}</span>
+    </div>`;
+  const cls  = c.allotment_status === 'allotted_rri' ? 'ch-cell--allotted-rri'
+             : c.allotment_status === 'allotted_lps' ? 'ch-cell--allotted-lps'
+             : 'ch-cell--free';
+  const icon = c.allotment_status === 'allotted_rri' ? '▣'
+             : c.allotment_status === 'allotted_lps' ? '★' : '·';
+  return `<div class="ch-cell ${cls}" data-freq="${c.freq}" style="width:36px;height:36px">
+    <span class="ch-cell__freq">${c.freq.toFixed(1)}</span>
+    <span class="ch-cell__name" style="font-size:8px">${icon}</span>
+  </div>`;
 }
 
-function freqToX(freq) {
-  return (freq - FM_MIN_B) * SVG_W_PER_MHZ;
-}
+// ── Band SVG ─────────────────────────────────────────────────────────
+const SVG_W_PER_MHZ = 200, SVG_H = 110, RULER_H = 20, SLOT_PX = 20;
+const AMP_MIN = 10, AMP_MAX = 46, SINE_STEPS = 36;
+function freqX(f) { return (f - FM_MIN) * SVG_W_PER_MHZ; }
+function erpAmp(e) { return AMP_MIN + Math.max(0, Math.min(1, ((e||60)-40)/(78-40))) * (AMP_MAX-AMP_MIN); }
 
 function renderBandSVG(row, city) {
-  const totalW = (FM_MAX_B - FM_MIN_B) * SVG_W_PER_MHZ + 40;
-  const cy = SVG_H - RULER_H - 6;  // baseline di atas ruler
-
-  const COLOR_USED  = '#ffd600';
-  const COLOR_ADJ1  = '#ff2d2d';
-  const COLOR_ADJ2  = 'rgba(255,45,45,0.5)';
-  const COLOR_FREE  = '#1e90ff';
-
-  let paths   = [];
-  let markers = [];
-  let hits    = [];
-  let labels  = [];
-
-  const slotHalfW = SLOT_PX;
+  const W = (FM_MAX - FM_MIN) * SVG_W_PER_MHZ + 40;
+  const cy = SVG_H - RULER_H - 4;
+  let paths = [], markers = [], labels = [], hits = [];
 
   for (const c of row) {
-    const x = freqToX(c.freq);
-
+    const x = freqX(c.freq);
     if (c.type === 'used') {
-      const coStations = c.coStations || [c.station];
-      const count = coStations.length;
-      const avgErp = coStations.reduce((s, st) => s + (st?.erp_dbm || 60), 0) / coStations.length;
+      const avgErp = (c.coStations||[c.station]).reduce((s,st) => s+(st?.erp_dbm||60),0) / (c.coStations||[c.station]).length;
       const amp = erpAmp(avgErp);
-      // Arch: puncak di center freq, kaki di ±100kHz (pas di posisi adj-1)
-      // Adj-1 = ±100kHz, Adj-2 = ±200kHz, step = 100kHz
-      const archW = SLOT_PX * 1; // ±100kHz = 1 step
-      const x0 = x - archW;
-      const x1 = x + archW;
-      const pts = [];
-      for (let i = 0; i <= SINE_STEPS; i++) {
-        const t = i / SINE_STEPS;
-        const px = x0 + t * (x1 - x0);
-        const py = cy - amp * Math.sin(Math.PI * t);
-        pts.push(`${i === 0 ? 'M' : 'L'}${px.toFixed(1)},${py.toFixed(1)}`);
-      }
-      const d = pts.join(' ');
-      const fillD = `${d} L${x1.toFixed(1)},${cy} L${x0.toFixed(1)},${cy} Z`;
-      paths.push(`<path d="${fillD}" fill="${COLOR_USED}" opacity="0.13"/>`);
-      paths.push(`<path d="${d}" stroke="${COLOR_USED}" stroke-width="1.8" fill="none" opacity="0.95"/>`);
-      const badge = count > 1 ? ` ×${count}` : '';
-      labels.push(`<text x="${x.toFixed(1)}" y="${(cy - amp - 4).toFixed(1)}" text-anchor="middle" font-size="7" fill="${COLOR_USED}" opacity="0.9" font-family="monospace">${c.freq.toFixed(1)}${badge}</text>`);
-      labels.push(`<text x="${x.toFixed(1)}" y="${(cy + RULER_H - 4).toFixed(1)}" text-anchor="middle" font-size="6.5" fill="${COLOR_USED}" font-family="monospace" opacity="0.7">${c.freq.toFixed(1)}</text>`);
-      hits.push(`<rect class="band-hit" data-freq="${c.freq}" x="${x0.toFixed(1)}" y="0" width="${(x1 - x0).toFixed(1)}" height="${cy}" fill="transparent" style="cursor:pointer"/>`);
-
+      const x0 = x - SLOT_PX, x1 = x + SLOT_PX;
+      const pts = Array.from({length: SINE_STEPS+1}, (_,i) => {
+        const t = i/SINE_STEPS, px = x0+t*(x1-x0), py = cy - amp*Math.sin(Math.PI*t);
+        return `${i?'L':'M'}${px.toFixed(1)},${py.toFixed(1)}`;
+      }).join(' ');
+      paths.push(`<path d="${pts} L${x1.toFixed(1)},${cy} L${x0.toFixed(1)},${cy} Z" fill="#FFB800" opacity=".1"/>`);
+      paths.push(`<path d="${pts}" stroke="#FFB800" stroke-width="1.6" fill="none"/>`);
+      const cnt = (c.coStations||[]).length > 1 ? ` ×${c.coStations.length}` : '';
+      labels.push(`<text x="${x.toFixed(1)}" y="${(cy-amp-5).toFixed(1)}" text-anchor="middle" font-size="7" fill="#FFB800" font-family="monospace">${c.freq.toFixed(1)}${cnt}</text>`);
+      hits.push(`<rect class="band-hit" data-freq="${c.freq}" x="${x0.toFixed(1)}" y="0" width="${(x1-x0).toFixed(1)}" height="${cy}" fill="transparent"/>`);
     } else if (c.type === 'adjacent_1' || c.type === 'adjacent_2') {
-      const is2   = c.type === 'adjacent_2';
-      const sym   = adjSymbol(c);
-      const color = is2 ? COLOR_ADJ2 : COLOR_ADJ1;
-      const tickH = is2 ? 8 : 14;
-      const arrowY = cy - tickH - 2;
-
-      // Garis vertikal dashed
-      markers.push(`<line x1="${x.toFixed(1)}" y1="${cy}" x2="${x.toFixed(1)}" y2="${(cy - tickH).toFixed(1)}" stroke="${color}" stroke-width="${is2?1:1.5}" stroke-dasharray="3,2"/>`);
-      // Simbol arah di atas garis
-      markers.push(`<text x="${x.toFixed(1)}" y="${arrowY.toFixed(1)}" text-anchor="middle" font-size="7" fill="${color}" font-family="monospace" font-weight="700">${sym}</text>`);
-      // Label frekuensi di bawah baseline
-      markers.push(`<text x="${x.toFixed(1)}" y="${(cy + RULER_H - 4).toFixed(1)}" text-anchor="middle" font-size="6.5" fill="${color}" font-family="monospace" opacity="0.8">${c.freq.toFixed(1)}</text>`);
-      hits.push(`<rect class="band-hit" data-freq="${c.freq}" x="${(x - SLOT_PX/2).toFixed(1)}" y="0" width="${SLOT_PX.toFixed(1)}" height="${cy}" fill="transparent" style="cursor:pointer"/>`);
-
+      const is2 = c.type==='adjacent_2';
+      const color = is2 ? 'rgba(255,59,59,.4)' : 'rgba(255,59,59,.8)';
+      const h = is2 ? 8 : 14;
+      markers.push(`<line x1="${x.toFixed(1)}" y1="${cy}" x2="${x.toFixed(1)}" y2="${(cy-h).toFixed(1)}" stroke="${color}" stroke-width="${is2?1:1.4}" stroke-dasharray="3,2"/>`);
+      hits.push(`<rect class="band-hit" data-freq="${c.freq}" x="${(x-SLOT_PX/2).toFixed(1)}" y="0" width="${SLOT_PX}" height="${cy}" fill="transparent"/>`);
     } else {
-      // Free — bedakan: allotted (bisa diisi) vs not_allotted (tidak dijatahkan)
-      const isAllotted = c.allotment_status === 'allotted_lps' || c.allotment_status === 'allotted_rri';
-      const isRRI      = c.allotment_status === 'allotted_rri';
-      const dotColor   = isRRI ? '#c084fc' : isAllotted ? COLOR_FREE : 'rgba(255,255,255,0.18)';
-      const dotR       = isAllotted ? 3.5 : 2;
-      const dotOp      = isAllotted ? 0.85 : 0.35;
-      const labelOp    = isAllotted ? 0.7 : 0.25;
-      markers.push(`<circle cx="${x.toFixed(1)}" cy="${cy}" r="${dotR}" fill="${dotColor}" opacity="${dotOp}"/>`);
-      markers.push(`<text x="${x.toFixed(1)}" y="${(cy + RULER_H - 4).toFixed(1)}" text-anchor="middle" font-size="6.5" fill="${dotColor}" font-family="monospace" opacity="${labelOp}">${c.freq.toFixed(1)}</text>`);
-      hits.push(`<rect class="band-hit" data-freq="${c.freq}" x="${(x - SLOT_PX/2).toFixed(1)}" y="0" width="${SLOT_PX.toFixed(1)}" height="${cy}" fill="transparent" style="cursor:pointer"/>`);
+      const isLPS = c.allotment_status==='allotted_lps';
+      const isRRI = c.allotment_status==='allotted_rri';
+      const color = isRRI ? '#A78BFA' : isLPS ? '#00C4FF' : 'rgba(255,255,255,.15)';
+      const r = isLPS||isRRI ? 3.5 : 2;
+      const op = isLPS||isRRI ? .8 : .3;
+      markers.push(`<circle cx="${x.toFixed(1)}" cy="${cy}" r="${r}" fill="${color}" opacity="${op}"/>`);
+      hits.push(`<rect class="band-hit" data-freq="${c.freq}" x="${(x-SLOT_PX/2).toFixed(1)}" y="0" width="${SLOT_PX}" height="${cy}" fill="transparent"/>`);
     }
   }
 
-  // Baseline
-  const baseline = `<line x1="0" y1="${cy}" x2="${totalW}" y2="${cy}" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>`;
-
-  // Ruler frekuensi di bawah baseline
-  let rulerParts = [];
-  const rulerY = cy + 4;
-  for (let f = FM_MIN_B; f <= FM_MAX_B + 0.01; f = Math.round((f + 0.1) * 10) / 10) {
-    const rx = freqToX(f);
-    const isMajor = Math.round(f * 10) % 10 === 0; // setiap 1 MHz
-    const isMid   = Math.round(f * 10) % 5 === 0 && !isMajor; // setiap 0.5 MHz
+  // baseline + ruler
+  let ruler = [`<line x1="0" y1="${cy}" x2="${W}" y2="${cy}" stroke="rgba(255,255,255,.06)" stroke-width="1"/>`];
+  for (let f=FM_MIN; f<=FM_MAX+.01; f=Math.round((f+.1)*10)/10) {
+    const rx = freqX(f), isMajor = Math.round(f*10)%10===0, isMid = Math.round(f*10)%5===0&&!isMajor;
     if (isMajor) {
-      rulerParts.push(`<line x1="${rx.toFixed(1)}" y1="${rulerY}" x2="${rx.toFixed(1)}" y2="${(rulerY + 6)}" stroke="rgba(255,255,255,0.25)" stroke-width="1"/>`);
-      rulerParts.push(`<text x="${rx.toFixed(1)}" y="${(rulerY + 16)}" text-anchor="middle" font-size="7.5" fill="rgba(255,255,255,0.35)" font-family="monospace">${f.toFixed(0)}</text>`);
+      ruler.push(`<line x1="${rx.toFixed(1)}" y1="${cy+2}" x2="${rx.toFixed(1)}" y2="${cy+7}" stroke="rgba(255,255,255,.2)" stroke-width="1"/>`);
+      ruler.push(`<text x="${rx.toFixed(1)}" y="${cy+17}" text-anchor="middle" font-size="7" fill="rgba(255,255,255,.3)" font-family="monospace">${f.toFixed(0)}</text>`);
     } else if (isMid) {
-      rulerParts.push(`<line x1="${rx.toFixed(1)}" y1="${rulerY}" x2="${rx.toFixed(1)}" y2="${(rulerY + 4)}" stroke="rgba(255,255,255,0.12)" stroke-width="1"/>`);
-    } else {
-      rulerParts.push(`<line x1="${rx.toFixed(1)}" y1="${rulerY}" x2="${rx.toFixed(1)}" y2="${(rulerY + 2)}" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>`);
+      ruler.push(`<line x1="${rx.toFixed(1)}" y1="${cy+2}" x2="${rx.toFixed(1)}" y2="${cy+5}" stroke="rgba(255,255,255,.1)" stroke-width="1"/>`);
     }
   }
 
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${totalW}" height="${SVG_H}" style="display:block">
-    ${baseline}
-    ${rulerParts.join('')}
-    ${markers.join('')}
-    ${paths.join('')}
-    ${labels.join('')}
-    ${hits.join('')}
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${SVG_H}" style="display:block">
+    ${ruler.join('')}${markers.join('')}${paths.join('')}${labels.join('')}${hits.join('')}
   </svg>`;
 }
 
-// ── Cell renderer: Geo Grid (warna solid per wilayah layanan) ────────
-function renderCellGeo(c, city, opts = {}) {
-  const showLabel = opts.showLabel !== false;
-  const freqSpan = showLabel ? `<span class="ch-cell__freq">${c.freq.toFixed(1)}</span>` : '';
-  if (c.type === 'used') {
-    const co = c.coStations?.length > 1 ? `<span class="ch-cell__co">${c.coStations.length}</span>` : '';
-    return `<div class="ch-cell ch-cell--used ch-cell--geo-used" data-freq="${c.freq}" title="${esc(c.station?.stn_name||'')}">
-      ${freqSpan}
-      ${co}
-    </div>`;
-  }
-  if (c.type === 'adjacent_1') {
-    return `<div class="ch-cell ch-cell--adjacent ch-cell--adj1" data-freq="${c.freq}">
-      ${freqSpan}
-    </div>`;
-  }
-  if (c.type === 'adjacent_2') {
-    return `<div class="ch-cell ch-cell--adjacent ch-cell--adj2" data-freq="${c.freq}">
-      ${freqSpan}
-    </div>`;
-  }
-  const allotClass = c.allotment_status === 'allotted_rri' ? ' ch-cell--allotted-rri'
-                   : c.allotment_status === 'allotted_lps' ? ' ch-cell--allotted-lps'
-                   : c.allotment_status === 'not_allotted'  ? ' ch-cell--not-allotted'
-                   : '';
-  const allotIcon  = c.allotment_status === 'allotted_rri' ? '▣'
-                   : c.allotment_status === 'allotted_lps' ? '★' : '·';
-  return `<div class="ch-cell ch-cell--free${allotClass}" data-freq="${c.freq}">
-    ${freqSpan}
-    <span class="ch-cell__name">${allotIcon}</span>
-  </div>`;
-}
-
 // ── Tooltip ───────────────────────────────────────────────────────────
-
-
-function attachCellTooltips(channelMap) {
-  document.querySelectorAll('.ch-cell[data-freq]').forEach(cell=>{
-    const info=channelMap.find(c=>c.freq===parseFloat(cell.dataset.freq));
-    if (!info) return;
-    cell.addEventListener('mouseenter',e=>showTooltip(e,info));
-    cell.addEventListener('mousemove',moveTooltip);
-    cell.addEventListener('mouseleave',hideTooltip);
+function attachCellTooltips() {
+  document.querySelectorAll('.ch-cell[data-freq]').forEach(cell => {
+    const ch = state.data?.channel_map.find(c => c.freq === parseFloat(cell.dataset.freq));
+    if (!ch) return;
+    cell.addEventListener('mouseenter', e => showTT(e, ch));
+    cell.addEventListener('mousemove',  moveTT);
+    cell.addEventListener('mouseleave', hideTT);
   });
 }
 
-
-function showTooltip(e,info) {
-  const tt=document.getElementById('tooltip');
-  let title='',rows=[];
-  if (info.type==='used') {
-    const s=info.station;
-    title=s?.stn_name||info.freq.toFixed(1)+' MHz';
-    rows=[
-      ['Frekuensi',info.freq.toFixed(3)+' MHz'],
-      ['ERP',(s?.erp_dbm||'—')+' dBm'],
-      ['Wilayah Layanan',s?.wilayah_layanan||s?.kota||s?.city||'—'],
-      ['','▸ Klik untuk detail'],
-    ];
-  } else if (info.type==='adjacent_1') {
-    title=info.freq.toFixed(1)+' MHz — 1st Adjacent (Guard)';
-    const a1l = info.adj1_left || info.adj_left;
-    const a1r = info.adj1_right || info.adj_right;
-    rows=[
-      ['Kiri', a1l?.stn_name||'—'],
-      ['Kanan',a1r?.stn_name||'—'],
-      ['Proteksi','20 dB (ITU-R BS.412)'],
-    ];
-  } else if (info.type==='adjacent_2') {
-    title=info.freq.toFixed(1)+' MHz — 2nd Adjacent';
-    const a2l = info.adj2_left || info.adj_left;
-    const a2r = info.adj2_right || info.adj_right;
-    rows=[
-      ['Kiri', a2l?.stn_name||'—'],
-      ['Kanan',a2r?.stn_name||'—'],
-      ['Proteksi','10 dB (ITU-R BS.412)'],
-    ];
+function showTT(e, c) {
+  const tt = document.getElementById('tooltip');
+  let title = '', rows = [];
+  if (c.type === 'used') {
+    const s = c.station;
+    title = s?.stn_name || c.freq.toFixed(1)+' MHz';
+    rows = [['Frekuensi', c.freq.toFixed(3)+' MHz'],['ERP',(s?.erp_dbm||'—')+' dBm'],
+            ['Wilayah', s?.wilayah_layanan||s?.kota||'—'],['','▸ Klik untuk detail']];
+  } else if (c.type === 'adjacent_1') {
+    title = c.freq.toFixed(1)+' MHz — Adjacent-1 (guard)';
+    rows = [['Kiri',(c.adj1_left||c.adj_left)?.stn_name||'—'],
+            ['Kanan',(c.adj1_right||c.adj_right)?.stn_name||'—'],['Proteksi','20 dB']];
+  } else if (c.type === 'adjacent_2') {
+    title = c.freq.toFixed(1)+' MHz — Adjacent-2';
+    rows = [['Kiri',(c.adj2_left||c.adj_left)?.stn_name||'—'],
+            ['Kanan',(c.adj2_right||c.adj_right)?.stn_name||'—'],['Proteksi','10 dB']];
   } else {
-    const aStatus = info.allotment_status;
-    const aLabel  = aStatus === 'allotted_rri' ? 'Allotted — LPP RRI (KM 570/2025)'
-                  : aStatus === 'allotted_lps' ? 'Allotted — LPS/LPP Lokal (KM 570/2025)'
-                  : aStatus === 'not_allotted'  ? 'Tidak dijatahkan di wilayah ini'
-                  : 'Tersedia (wilayah komunitas / tidak diketahui)';
-    const icon    = aStatus === 'allotted_rri' ? ' ▣' : aStatus === 'allotted_lps' ? ' ★' : '';
-    title=info.freq.toFixed(1)+' MHz — Kosong'+icon;
-    rows=[
-      ['Lower',(info.lower??info.freq-.1).toFixed(4)+' MHz'],
-      ['Upper',(info.upper??info.freq+.1).toFixed(4)+' MHz'],
-      ['Allotment', aLabel],
-    ];
+    const al = c.allotment_status;
+    title = c.freq.toFixed(1)+' MHz — Kosong'+(al==='allotted_lps'?' ★':al==='allotted_rri'?' ▣':'');
+    rows = [['Lower',(c.lower??c.freq-.1).toFixed(4)+' MHz'],['Upper',(c.upper??c.freq+.1).toFixed(4)+' MHz'],
+            ['Allotment', al==='allotted_rri'?'RRI (KM 570)':al==='allotted_lps'?'LPS (KM 570)':al==='not_allotted'?'Tidak dijatahkan':'—']];
   }
-  tt.innerHTML=`<div class="tooltip-float__title">${esc(title)}</div>`
-    +rows.map(([k,v])=>`<div class="tooltip-float__row"><span>${k}</span><span>${esc(String(v))}</span></div>`).join('');
-  tt.style.display='block'; moveTooltip(e);
+  tt.innerHTML = `<div class="tooltip-float__title">${esc(title)}</div>`
+    + rows.map(([k,v]) => `<div class="tooltip-float__row"><span>${esc(k)}</span><span>${esc(String(v))}</span></div>`).join('');
+  tt.style.display = 'block'; moveTT(e);
 }
-
-function moveTooltip(e){
-  const tt=document.getElementById('tooltip'); if(!tt)return;
-  let x=e.clientX+14,y=e.clientY-10;
-  if(x+270>window.innerWidth) x=e.clientX-280;
-  tt.style.left=x+'px'; tt.style.top=y+'px';
+function moveTT(e) {
+  const tt = document.getElementById('tooltip'); if (!tt) return;
+  let x = e.clientX+14, y = e.clientY-10;
+  if (x+270 > window.innerWidth) x = e.clientX-280;
+  tt.style.left = x+'px'; tt.style.top = y+'px';
 }
-function hideTooltip(){ const tt=document.getElementById('tooltip'); if(tt) tt.style.display='none'; }
+function hideTT() { const tt = document.getElementById('tooltip'); if (tt) tt.style.display='none'; }
 
-// ── Cell detail drawer (bottom-up) ───────────────────────────────────
+// ── Cell detail drawer ────────────────────────────────────────────────
 function openCellDrawer(html) {
   let el = document.getElementById('cellDrawer');
   if (!el) {
     el = document.createElement('div');
-    el.id = 'cellDrawer';
-    el.className = 'cell-drawer';
+    el.id = 'cellDrawer'; el.className = 'cell-drawer';
     el.innerHTML = `<div class="cell-drawer__backdrop"></div><div class="cell-drawer__panel" id="cellDrawerPanel"></div>`;
     document.body.appendChild(el);
     el.querySelector('.cell-drawer__backdrop').addEventListener('click', closeCellDrawer);
-    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeCellDrawer(); }, { passive: true });
+    document.addEventListener('keydown', ev => { if (ev.key==='Escape') closeCellDrawer(); }, {passive:true});
   }
-
-  const panel = document.getElementById('cellDrawerPanel');
-  panel.scrollTop = 0;
-  panel.innerHTML = html;
-
-  if (!el.classList.contains('is-open')) {
-    el.classList.add('is-open');
-    document.body.classList.add('drawer-open');
-  }
+  document.getElementById('cellDrawerPanel').innerHTML = html;
+  el.classList.add('is-open');
 }
-
-function closeCellDrawer() {
-  const el = document.getElementById('cellDrawer');
-  if (!el) return;
-  el.classList.remove('is-open');
-  document.body.classList.remove('drawer-open');
-}
+function closeCellDrawer() { document.getElementById('cellDrawer')?.classList.remove('is-open'); }
 
 function openInlineDetail(info) {
   const freq = info.freq;
-  const lower = (info.lower ?? info.lower_mhz ?? (freq - .1));
-  const upper = (info.upper ?? info.upper_mhz ?? (freq + .1));
+  const lower = info.lower ?? info.lower_mhz ?? (freq-.1);
+  const upper = info.upper ?? info.upper_mhz ?? (freq+.1);
 
-  const TYPE_META = {
-    used:       { badge: 'TERPAKAI',   badgeClass: 'cd-badge--used',  icon: '📻' },
-    adjacent_1: { badge: 'ADJ-1',      badgeClass: 'cd-badge--adj1',  icon: '⚡' },
-    adjacent_2: { badge: 'ADJ-2',      badgeClass: 'cd-badge--adj2',  icon: '〰' },
-    free:       { badge: 'KOSONG',     badgeClass: 'cd-badge--free',  icon: '★'  },
+  const BADGE = {
+    used:       ['TERISI',   'cd-badge--used'],
+    adjacent_1: ['ADJ-1',    'cd-badge--adj1'],
+    adjacent_2: ['ADJ-2',    'cd-badge--adj2'],
+    free:       ['KOSONG',   'cd-badge--free'],
   };
-  const meta = TYPE_META[info.type] || TYPE_META.free;
+  const [badge, badgeCls] = BADGE[info.type] || BADGE.free;
 
-  // Baris konten per type — format [label, value, mono?]
-  let rows = [];
-  let cta = '';
+  let rows = [], cta = '';
 
   if (info.type === 'used') {
     const stations = info.coStations || [info.station];
-    const isCoChannel = stations.length > 1;
-    rows = [
-      ['Frekuensi',  freq.toFixed(3) + ' MHz', true],
-      ['Lower edge', Number(lower).toFixed(4) + ' MHz', true],
-      ['Upper edge', Number(upper).toFixed(4) + ' MHz', true],
-    ];
-    if (isCoChannel) {
-      const cards = stations
-        .slice()
-        .sort((a, b) => (a.stn_name||'').localeCompare(b.stn_name||''))
-        .map((s, i) => `
-          <div class="cd-swipe-card">
-            <div class="cd-swipe-num">${i+1} / ${stations.length}</div>
-            <div class="cd-swipe-name">${esc(s.stn_name||'—')}</div>
-            <div class="cd-grid" style="margin-top:10px">
-              <div class="cd-item"><div class="cd-label">Wilayah</div><div class="cd-val">${esc(s.wilayah_layanan||s.kota||'—')}</div></div>
-              <div class="cd-item"><div class="cd-label">Kecamatan</div><div class="cd-val">${esc(s.kecamatan||'—')}</div></div>
-              <div class="cd-item"><div class="cd-label">ERP</div><div class="cd-val mono">${s.erp_dbm ? s.erp_dbm.toFixed(1)+' dBm' : '—'}</div></div>
-              <div class="cd-item"><div class="cd-label">Jenis</div><div class="cd-val">${esc(s.jenis||'—')}</div></div>
-              <div class="cd-item"><div class="cd-label">No. SIMF</div><div class="cd-val mono">${esc(s.no_simf||'—')}</div></div>
-            </div>
-            <button class="cd-cta" onclick="window.__openDetailFreq(${freq})">Lihat detail stasiun →</button>
-          </div>`).join('');
-
-      const html = `
+    if (stations.length > 1) {
+      const cards = stations.map((s,i) => `
+        <div class="cd-swipe-card">
+          <div class="cd-swipe-num">${i+1} / ${stations.length}</div>
+          <div class="cd-swipe-name">${esc(s.stn_name||'—')}</div>
+          <div class="cd-grid" style="margin-top:10px">
+            <div class="cd-item"><div class="cd-label">Wilayah</div><div class="cd-val">${esc(s.wilayah_layanan||s.kota||'—')}</div></div>
+            <div class="cd-item"><div class="cd-label">ERP</div><div class="cd-val mono">${s.erp_dbm ? s.erp_dbm.toFixed(1)+' dBm' : '—'}</div></div>
+            <div class="cd-item"><div class="cd-label">Jenis</div><div class="cd-val">${esc(s.jenis||'—')}</div></div>
+            <div class="cd-item"><div class="cd-label">No. SIMF</div><div class="cd-val mono">${esc(s.no_simf||'—')}</div></div>
+          </div>
+          <button class="cd-cta" onclick="window.__openDetailFreq(${freq})">Lihat detail stasiun →</button>
+        </div>`).join('');
+      openCellDrawer(`
         <div class="cd-head">
           <div class="cd-head-left">
-            <span class="cd-badge cd-badge--used">📻 CO-CHANNEL ×${stations.length}</span>
+            <span class="cd-badge cd-badge--used">CO-CHANNEL ×${stations.length}</span>
             <span class="cd-freq">${freq.toFixed(1)} MHz</span>
           </div>
           <button class="cd-close" id="cdClose">✕</button>
         </div>
         <div class="cd-swipe-hint">← geser →</div>
-        <div class="cd-swipe-wrap">${cards}</div>`;
-
-      openCellDrawer(html);
+        <div class="cd-swipe-wrap">${cards}</div>`);
       document.getElementById('cdClose')?.addEventListener('click', closeCellDrawer);
-      // Expose untuk CTA button di dalam card
-      window.__openDetailFreq = (f) => { closeCellDrawer(); openDetailPage({freq: f}); };
+      window.__openDetailFreq = (f) => { closeCellDrawer(); openDetailPage({freq:f}); };
       return;
     }
     const s = stations[0] || {};
-    rows.push(
-      ['Nama stasiun',    s.stn_name || '—',                           false],
-      ['Wilayah Layanan', s.wilayah_layanan || s.kota || '—',          false],
-      ['Kecamatan',       s.kecamatan || '—',                          false],
-      ['ERP',             s.erp_dbm ? s.erp_dbm + ' dBm' : '—',      true],
-      ['Jenis',           s.jenis || '—',                              false],
-      ['Masa laku',       s.validity || s.masa_laku || '—',            false],
-    );
-    cta = `<button class="cd-cta" id="cdCtaDetail">Lihat detail stasiun →</button>`;
-  } else if (info.type === 'adjacent_1') {
-    const a1l = info.adj1_left  || info.adj_left;
-    const a1r = info.adj1_right || info.adj_right;
-    const aStatus = info.allotment_status;
-    const aLabel  = aStatus === 'allotted_lps' ? 'Allotted LPS' : aStatus === 'allotted_rri' ? 'Allotted RRI' : aStatus === 'not_allotted' ? 'Tidak dijatahkan' : '—';
     rows = [
-      ['Frekuensi',  freq.toFixed(3) + ' MHz',           true],
-      ['Lower edge', Number(lower).toFixed(4) + ' MHz',  true],
-      ['Upper edge', Number(upper).toFixed(4) + ' MHz',  true],
-      ['Guard kiri', a1l?.stn_name || '—',               false],
-      ['Guard kanan',a1r?.stn_name || '—',               false],
-      ['Allotment',  aLabel,                             false],
-      ['Proteksi',   '20 dB (ITU-R BS.412)',             true],
+      ['Frekuensi', freq.toFixed(3)+' MHz', true],
+      ['Nama stasiun', s.stn_name||'—', false],
+      ['Wilayah Layanan', s.wilayah_layanan||s.kota||'—', false],
+      ['Kecamatan', s.kecamatan||'—', false],
+      ['ERP', s.erp_dbm ? s.erp_dbm+' dBm' : '—', true],
+      ['Jenis', s.jenis||'—', false],
     ];
-  } else if (info.type === 'adjacent_2') {
-    const a2l = info.adj2_left  || info.adj_left;
-    const a2r = info.adj2_right || info.adj_right;
-    const aStatus = info.allotment_status;
-    const aLabel  = aStatus === 'allotted_lps' ? 'Allotted LPS' : aStatus === 'allotted_rri' ? 'Allotted RRI' : aStatus === 'not_allotted' ? 'Tidak dijatahkan' : '—';
+    cta = `<button class="cd-cta" id="cdCtaDetail">Lihat detail stasiun →</button>`;
+  } else if (info.type === 'adjacent_1' || info.type === 'adjacent_2') {
+    const isAdj1 = info.type === 'adjacent_1';
+    const L = isAdj1 ? (info.adj1_left||info.adj_left) : (info.adj2_left||info.adj_left);
+    const R = isAdj1 ? (info.adj1_right||info.adj_right) : (info.adj2_right||info.adj_right);
     rows = [
-      ['Frekuensi',  freq.toFixed(3) + ' MHz',           true],
-      ['Lower edge', Number(lower).toFixed(4) + ' MHz',  true],
-      ['Upper edge', Number(upper).toFixed(4) + ' MHz',  true],
-      ['Guard kiri', a2l?.stn_name || '—',               false],
-      ['Guard kanan',a2r?.stn_name || '—',               false],
-      ['Allotment',  aLabel,                             false],
-      ['Proteksi',   '10 dB (ITU-R BS.412)',             true],
+      ['Frekuensi', freq.toFixed(3)+' MHz', true],
+      ['Guard kiri',  L?.stn_name||'—', false],
+      ['Guard kanan', R?.stn_name||'—', false],
+      ['Proteksi', isAdj1 ? '20 dB (ITU-R BS.412)' : '10 dB (ITU-R BS.412)', true],
     ];
   } else {
-    const aStatus = info.allotment_status;
-    const aLabel  = aStatus === 'allotted_rri' ? 'Allotted LPP RRI (KM 570/2025)'
-                  : aStatus === 'allotted_lps' ? 'Allotted LPS/LPP Lokal (KM 570/2025)'
-                  : aStatus === 'not_allotted'  ? 'Tidak dijatahkan di wilayah ini'
-                  : 'Tersedia (wilayah komunitas / tidak diketahui)';
+    const al = info.allotment_status;
     rows = [
-      ['Frekuensi',  freq.toFixed(3) + ' MHz',           true],
-      ['Lower edge', Number(lower).toFixed(4) + ' MHz',  true],
-      ['Upper edge', Number(upper).toFixed(4) + ' MHz',  true],
-      ['Lebar kanal','100 kHz',                          true],
-      ['Allotment',  aLabel,                             false],
+      ['Frekuensi', freq.toFixed(3)+' MHz', true],
+      ['Lower edge', Number(lower).toFixed(4)+' MHz', true],
+      ['Upper edge', Number(upper).toFixed(4)+' MHz', true],
+      ['Allotment', al==='allotted_rri'?'LPP RRI (KM 570/2025)':al==='allotted_lps'?'LPS/LPP Lokal (KM 570/2025)':al==='not_allotted'?'Tidak dijatahkan':'—', false],
     ];
   }
 
-  const html = `
+  openCellDrawer(`
     <div class="cd-head">
       <div class="cd-head-left">
-        <span class="cd-badge ${meta.badgeClass}">${meta.icon} ${meta.badge}</span>
+        <span class="cd-badge ${badgeCls}">${badge}</span>
         <span class="cd-freq">${freq.toFixed(1)} MHz</span>
       </div>
       <button class="cd-close" id="cdClose">✕</button>
     </div>
     <div class="cd-grid">
-      ${rows.map(([l, v, mono]) => `
-        <div class="cd-item">
-          <div class="cd-label">${esc(l)}</div>
-          <div class="cd-val${mono ? ' mono' : ''}">${esc(String(v))}</div>
-        </div>`).join('')}
+      ${rows.map(([l,v,mono]) => `<div class="cd-item"><div class="cd-label">${esc(l)}</div><div class="cd-val${mono?' mono':''}">${esc(String(v))}</div></div>`).join('')}
     </div>
-    ${cta}`;
-
-  openCellDrawer(html);
+    ${cta}`);
 
   document.getElementById('cdClose')?.addEventListener('click', closeCellDrawer);
   document.getElementById('cdCtaDetail')?.addEventListener('click', () => {
-    closeCellDrawer();
-    openDetailPage(info.station);
+    closeCellDrawer(); openDetailPage(info.station);
   });
 }
 
-function esc(str){const d=document.createElement('div');d.textContent=String(str);return d.innerHTML;}
+// ── Station detail drawer ─────────────────────────────────────────────
+async function openDetailPage(stationOrFreq) {
+  const freq = stationOrFreq?.freq ?? stationOrFreq;
+  let el = document.getElementById('stationDrawer');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'stationDrawer'; el.className = 'station-drawer';
+    el.innerHTML = `<div class="station-drawer__backdrop"></div><div class="station-drawer__panel" id="stationDrawerPanel"></div>`;
+    document.body.appendChild(el);
+    el.querySelector('.station-drawer__backdrop').addEventListener('click', closeStationDrawer);
+    document.addEventListener('keydown', ev => { if (ev.key==='Escape') closeStationDrawer(); }, {passive:true});
+  }
+  document.getElementById('stationDrawerPanel').innerHTML =
+    `<div class="state-loading"><span class="live-dot"></span> Memuat detail…</div>`;
+  el.classList.add('is-open');
+  try {
+    const detail = await fetchStationDetail(parseFloat(freq));
+    renderDetailPage(detail, closeStationDrawer, state.data, document.getElementById('stationDrawerPanel'));
+  } catch(e) {
+    const p = document.getElementById('stationDrawerPanel');
+    if (p) p.innerHTML = `<div class="state-error"><div>⚠</div><div>Gagal memuat detail: ${esc(e.message)}</div></div>`;
+  }
+}
+function closeStationDrawer() { document.getElementById('stationDrawer')?.classList.remove('is-open'); }
+
+// ── Wilayah short labels ──────────────────────────────────────────────
+const WILAYAH_SHORT = {
+  'KOTA YOGYAKARTA': 'Kota Yogyakarta',
+  'BANTUL, BANGUNTAPAN': 'Bantul – Banguntapan',
+  'SLEMAN, NGAGLIK, KALASAN, NGEMPLAK, PAKEM': 'Sleman – Ngaglik – Pakem',
+  'WATES, SENTOLO': 'Wates – Sentolo',
+  'WONOSARI': 'Wonosari',
+  'GAMPING': 'Gamping',
+  'DEPOK': 'Depok',
+  'PATUK': 'Patuk',
+  'WANGON, JATILAWANG, PURWOJATI': 'Wangon – Jatilawang',
+  'SOKARAJA, KALIBAGOR': 'Sokaraja – Kalibagor',
+  'PURWOKERTO, PATIK, RAJA, KARANG LEWAS': 'Purwokerto',
+  'BANJARNEGARA, BANJARMANGU, MADUKARA': 'Banjarnegara',
+  'KALIBENING, PUNGGELAN': 'Kalibening – Punggelan',
+  'WANAYASA, PEJAWARAN, PAGETAN, KARANG KOBAR': 'Wanayasa – Pejawaran',
+  'KARANGANYAR, GOMBONG, SEMPOR': 'Gombong – Sempor',
+  'KEBUMEN, ALIAN, KALIBONG': 'Kebumen',
+  'AMBAL, KUTOWINANGUN, MIRIT': 'Ambal – Kutowinangun',
+  'KARANGANYAR, SADANG': 'Karanganyar – Sadang',
+  'KUTOARDJO, BAYAN': 'Kutoarjo – Bayan',
+  'PURWOREJO, BANYUURIP': 'Purworejo',
+  'BRUNO, KEMIRI, PITURUH': 'Bruno – Kemiri',
+  'KALIWIRO, WADASLINTANG': 'Kaliwiro – Wadaslintang',
+  'MUNGKID, MUNTILAN, SALAM': 'Muntilan',
+  'SUKOHARJO, GROGOL': 'Sukoharjo – Grogol',
+  'EROMOKO, PRACIMANTORO': 'Eromoko – Pracimantoro',
+  'GIRIWOYO, BATURETNO': 'Giriwoyo – Baturetno',
+  'TIRTOMOYO, BATUWARNO, KARANG TENGAH': 'Tirtomoyo',
+  'NGADIROJO, NGUNTORONADI': 'Ngadirojo',
+  'JATISRONO, JATIPURNO, GIRIMARTO': 'Jatisrono',
+  'JUMANTONO, JUMAPOLO': 'Jumantono – Jumapolo',
+  'KRAGAN, SEDAN, SARANG': 'Kragan – Sarang',
+  'PANCUR, LASEM, PAMOTAN': 'Lasem – Pamotan',
+  'BATANGAN, JUWANA, JAKENAN': 'Juwana – Jakenan',
+  'GUNUNGWUNGKAL, CLUWAK, TAYU': 'Tayu – Cluwak',
+  'BANGKRI, KELING': 'Bangkri – Keling',
+  'DORO, LEBAKBARANG, TALUN, PETUNGKRIYONO, KARANGDADAP': 'Doro – Lebakbarang',
+  'KAJEN, KEDUNGWUNI': 'Kajen – Kedungwuni',
+  'RANDUDONGKAL, BELIK': 'Randudongkal – Belik',
+  'BUMIJAWA, BOJONG': 'Bumijawa – Bojong',
+  'SURADADAI, TARUB': 'Suradadi – Tarub',
+  'BANTARKAWUNG': 'Bantarkawung',
+  'BANJARHARDJO, KETANGGUNGAN': 'Banjarharejo – Ketanggungan',
+  'BANJARHAREJO, KETANGGUNGAN': 'Banjarharejo – Ketanggungan',
+  'KOTA MAGELANG': 'Kota Magelang',
+  'KOTA SURAKARTA': 'Kota Surakarta',
+  'KOTA SALATIGA': 'Kota Salatiga',
+  'KOTA SEMARANG': 'Kota Semarang',
+  'KOTA PEKALONGAN': 'Kota Pekalongan',
+  'KOTA TEGAL': 'Kota Tegal',
+};
+function shortWilayah(w) { return WILAYAH_SHORT[w] || w; }
+
+function esc(s) { const d=document.createElement('div'); d.textContent=String(s); return d.innerHTML; }
 
 boot();
-
