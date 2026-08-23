@@ -1,11 +1,11 @@
-/* ═══════════════════════════════════════════════════════════════════════
-   KASPER — app.css  (satu file, bongkar total)
-   Spektrum FM monitoring · Balmon Yogyakarta
-   ═══════════════════════════════════════════════════════════════════════ */
+/* -----------------------------------------------------------------------
+   KASPER - app.css  (satu file, bongkar total)
+   Spektrum FM monitoring - Balmon Yogyakarta
+   ----------------------------------------------------------------------- */
 
 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap');
 
-/* ── Tokens ─────────────────────────────────────────────────────────── */
+/* -- Tokens ----------------------------------------------------------- */
 :root {
   --bg:           #03070D;
   --bg-panel:     #080F18;
@@ -44,9 +44,40 @@
   --sidebar-w: 210px;
 }
 
-/* ── Reset ──────────────────────────────────────────────────────────── */
+/* -- Light theme ------------------------------------------------------ */
+[data-theme="light"] {
+  --bg:           #F0F4F8;
+  --bg-panel:     #FFFFFF;
+  --bg-raised:    #E8EEF5;
+  --bg-hover:     #DDE5EF;
+  --bg-input:     #F5F8FB;
+
+  --border:       rgba(0,0,0,.08);
+  --border-mid:   rgba(0,0,0,.13);
+  --border-hi:    rgba(0,0,0,.22);
+
+  --txt:          #0D1B2A;
+  --txt-2:        #3D5A78;
+  --txt-3:        #8BA5BF;
+
+  --cyan:         #006FA8;
+  --cyan-dim:     rgba(0,111,168,.10);
+  --amber:        #B07700;
+  --amber-dim:    rgba(176,119,0,.10);
+  --phosphor:     #00834A;
+  --phosphor-dim: rgba(0,131,74,.08);
+  --red:          #C42B2B;
+  --red-dim:      rgba(196,43,43,.08);
+  --purple:       #6B4FBF;
+  --purple-dim:   rgba(107,79,191,.08);
+  --orange:       #B05200;
+}
+
+
+/* -- Reset ------------------------------------------------------------ */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html { color-scheme: dark; }
+[data-theme="light"] { color-scheme: light; }
 body {
   background: var(--bg);
   color: var(--txt);
@@ -67,7 +98,7 @@ input, select { font-family: inherit; color: inherit; }
 :focus-visible { outline: 1px solid var(--cyan); outline-offset: 2px; }
 .mono { font-family: var(--mono); }
 
-/* ── Live dot ───────────────────────────────────────────────────────── */
+/* -- Live dot --------------------------------------------------------- */
 .live-dot {
   display: inline-block; width: 5px; height: 5px; border-radius: 50%;
   background: var(--phosphor); flex-shrink: 0;
@@ -77,7 +108,7 @@ input, select { font-family: inherit; color: inherit; }
   0%,100% { opacity: 1; } 50% { opacity: .3; }
 }
 
-/* ── Header ─────────────────────────────────────────────────────────── */
+/* -- Header ----------------------------------------------------------- */
 .app-header {
   height: var(--header-h);
   background: var(--bg-panel);
@@ -147,7 +178,7 @@ input, select { font-family: inherit; color: inherit; }
   color: var(--txt-3);
 }
 
-/* ── Body layout ────────────────────────────────────────────────────── */
+/* -- Body layout ------------------------------------------------------ */
 .app-body {
   display: flex;
   flex: 1;
@@ -155,7 +186,7 @@ input, select { font-family: inherit; color: inherit; }
   position: relative;
 }
 
-/* ── Sidebar ────────────────────────────────────────────────────────── */
+/* -- Sidebar ---------------------------------------------------------- */
 .sidebar {
   width: var(--sidebar-w);
   flex-shrink: 0;
@@ -277,7 +308,7 @@ input, select { font-family: inherit; color: inherit; }
 }
 .sidebar.is-collapsed ~ .sidebar-toggle { opacity: 1; pointer-events: all; }
 
-/* ── Main area ──────────────────────────────────────────────────────── */
+/* -- Main area -------------------------------------------------------- */
 .app-main {
   flex: 1;
   display: flex;
@@ -286,7 +317,7 @@ input, select { font-family: inherit; color: inherit; }
   min-width: 0;
 }
 
-/* ── Toolbar ────────────────────────────────────────────────────────── */
+/* -- Toolbar ---------------------------------------------------------- */
 .toolbar {
   height: var(--toolbar-h);
   background: var(--bg-panel);
@@ -345,7 +376,7 @@ input, select { font-family: inherit; color: inherit; }
 }
 .toolbar-right { margin-left: auto; display: flex; align-items: center; gap: 6px; }
 
-/* ── Stats bar ──────────────────────────────────────────────────────── */
+/* -- Stats bar -------------------------------------------------------- */
 .statsbar {
   display: flex;
   align-items: stretch;
@@ -403,7 +434,7 @@ input, select { font-family: inherit; color: inherit; }
   pointer-events: none;
 }
 
-/* ── Legend strip ───────────────────────────────────────────────────── */
+/* -- Legend strip ----------------------------------------------------- */
 .legend-strip {
   display: flex;
   align-items: center;
@@ -428,14 +459,14 @@ input, select { font-family: inherit; color: inherit; }
   flex-shrink: 0;
 }
 
-/* ── Content area ───────────────────────────────────────────────────── */
+/* -- Content area ----------------------------------------------------- */
 .content-area {
   flex: 1;
   overflow-y: auto;
   padding: 12px;
 }
 
-/* ── City row block ─────────────────────────────────────────────────── */
+/* -- City row block --------------------------------------------------- */
 .city-block {
   margin-bottom: 10px;
 }
@@ -468,7 +499,7 @@ input, select { font-family: inherit; color: inherit; }
   margin-left: auto;
 }
 
-/* ── Channel grid ───────────────────────────────────────────────────── */
+/* -- Channel grid ----------------------------------------------------- */
 .ch-row {
   display: flex;
   flex-wrap: wrap;
@@ -550,7 +581,7 @@ input, select { font-family: inherit; color: inherit; }
 .ch-cell--adj2 .ch-cell__freq { color: rgba(255,59,59,.3); }
 .ch-cell--adj2 .ch-cell__name { color: rgba(255,59,59,.4); }
 
-/* Free — allotted LPS */
+/* Free - allotted LPS */
 .ch-cell--allotted-lps {
   background: rgba(0,196,255,.06);
   border-color: rgba(0,196,255,.2);
@@ -559,7 +590,7 @@ input, select { font-family: inherit; color: inherit; }
 .ch-cell--allotted-lps .ch-cell__name { color: var(--cyan); }
 .ch-cell--allotted-lps:hover { background: rgba(0,196,255,.12); border-color: var(--cyan); }
 
-/* Free — allotted RRI */
+/* Free - allotted RRI */
 .ch-cell--allotted-rri {
   background: var(--purple-dim);
   border-color: rgba(167,139,250,.25);
@@ -568,7 +599,7 @@ input, select { font-family: inherit; color: inherit; }
 .ch-cell--allotted-rri .ch-cell__freq { color: rgba(167,139,250,.5); }
 .ch-cell--allotted-rri .ch-cell__name { color: var(--purple); }
 
-/* Free — not allotted */
+/* Free - not allotted */
 .ch-cell--free {
   background: transparent;
   border-color: var(--border);
@@ -577,7 +608,7 @@ input, select { font-family: inherit; color: inherit; }
 .ch-cell--free .ch-cell__name { color: var(--txt-3); }
 .ch-cell--free:hover { background: var(--bg-hover); }
 
-/* ── Band SVG view ──────────────────────────────────────────────────── */
+/* -- Band SVG view ---------------------------------------------------- */
 .band-scroll {
   overflow-x: auto;
   padding-bottom: 4px;
@@ -586,7 +617,7 @@ input, select { font-family: inherit; color: inherit; }
 .band-hit { cursor: pointer; }
 .band-hit:hover ~ rect { fill: rgba(255,255,255,.03); }
 
-/* ── Interference view ──────────────────────────────────────────────── */
+/* -- Interference view ------------------------------------------------ */
 .interf-wrap { padding: 12px; }
 .interf-summary {
   display: flex;
@@ -647,7 +678,7 @@ input, select { font-family: inherit; color: inherit; }
 .badge-adj1 { color: var(--amber);  background: var(--amber-dim);  padding: 2px 6px; border-radius: 3px; font-size: 9px; }
 .badge-adj2 { color: var(--purple); background: var(--purple-dim); padding: 2px 6px; border-radius: 3px; font-size: 9px; }
 
-/* ── Tooltip ────────────────────────────────────────────────────────── */
+/* -- Tooltip ---------------------------------------------------------- */
 .tooltip-float {
   position: fixed;
   z-index: 9000;
@@ -680,7 +711,7 @@ input, select { font-family: inherit; color: inherit; }
 .tooltip-float__row span:first-child { color: var(--txt-3); }
 .tooltip-float__row span:last-child  { color: var(--txt-2); font-family: var(--mono); text-align: right; }
 
-/* ── Cell detail drawer (slide up from bottom) ───────────────────────── */
+/* -- Cell detail drawer (slide up from bottom) ------------------------- */
 .cell-drawer {
   position: fixed;
   inset: 0;
@@ -815,7 +846,7 @@ input, select { font-family: inherit; color: inherit; }
 .cd-swipe-num { font-family: var(--mono); font-size: 9px; color: var(--txt-3); margin-bottom: 4px; }
 .cd-swipe-name { font-family: var(--mono); font-size: 14px; font-weight: 700; color: var(--amber); }
 
-/* ── Station drawer (full detail, slide from right) ─────────────────── */
+/* -- Station drawer (full detail, slide from right) ------------------- */
 .station-drawer {
   position: fixed;
   inset: 0;
@@ -905,7 +936,7 @@ input, select { font-family: inherit; color: inherit; }
 .neighbor-name { font-size: 11.5px; color: var(--txt-2); flex: 1; }
 .neighbor-dist { font-family: var(--mono); font-size: 10px; color: var(--txt-3); }
 
-/* ── Empty & error states ───────────────────────────────────────────── */
+/* -- Empty & error states --------------------------------------------- */
 .state-empty, .state-error, .state-loading {
   display: flex;
   flex-direction: column;
@@ -932,7 +963,7 @@ input, select { font-family: inherit; color: inherit; }
 }
 .state-retry:hover { color: var(--txt); }
 
-/* ── Mobile FAB ─────────────────────────────────────────────────────── */
+/* -- Mobile FAB ------------------------------------------------------- */
 .kasper-fab {
   position: fixed;
   bottom: 20px; left: 16px;
@@ -957,7 +988,7 @@ input, select { font-family: inherit; color: inherit; }
   display: none;
 }
 
-/* ── Mobile drawer ──────────────────────────────────────────────────── */
+/* -- Mobile drawer ---------------------------------------------------- */
 .kasper-drawer {
   position: fixed; inset: 0; z-index: 800; pointer-events: none;
 }
@@ -1018,22 +1049,39 @@ input, select { font-family: inherit; color: inherit; }
 }
 .kd-wilayah-item.is-active { background: var(--cyan-dim); color: var(--cyan); border-color: rgba(0,196,255,.2); }
 
-/* ════════════════════════════════════════════════════════════════════
+/* --------------------------------------------------------------------
+
+/* -- Theme toggle button -------------------------------------------- */
+.theme-toggle {
+  width: 26px; height: 26px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: var(--r);
+  background: var(--bg-raised);
+  border: 1px solid var(--border-mid);
+  color: var(--txt-2);
+  font-size: 13px;
+  margin-left: 8px;
+  flex-shrink: 0;
+  transition: background .15s, color .15s;
+  cursor: pointer;
+}
+.theme-toggle:hover { background: var(--bg-hover); color: var(--txt); }
+
    RESPONSIVE
-   Desktop landscape  : ≥ 1024px  — layout penuh, sidebar fixed
+   Desktop landscape  : >=1024px  — layout penuh, sidebar fixed
    Tablet landscape   : 768–1023px — sidebar collapsible, toolbar compact
-   Mobile portrait    : ≤ 767px   — sidebar hilang, FAB, scroll normal
-   Mobile landscape   : ≤ 767px + orientation landscape — hybrid mode
+   Mobile portrait    : <=767px   — sidebar hilang, FAB, scroll normal
+   Mobile landscape   : <=767px + orientation landscape — hybrid mode
    ════════════════════════════════════════════════════════════════════ */
 
-/* ── Desktop landscape (default sudah benar, tambahan fine-tune) ──── */
+/* -- Desktop landscape (default sudah benar, tambahan fine-tune) ---- */
 @media (min-width: 1280px) {
   :root { --sidebar-w: 220px; }
   .toolbar-search { width: 240px; }
   .ch-cell { width: 56px; height: 48px; }
 }
 
-/* ── Tablet landscape / small desktop ───────────────────────────────── */
+/* -- Tablet landscape / small desktop --------------------------------- */
 @media (max-width: 1023px) and (min-width: 768px) {
   :root {
     --sidebar-w: 180px;
@@ -1047,32 +1095,32 @@ input, select { font-family: inherit; color: inherit; }
   .stat-cell__val { font-size: 16px; }
 }
 
-/* ── Mobile (portrait + landscape) : ≤ 767px ────────────────────────── */
+/* -- Mobile (portrait + landscape) : <=767px -------------------------- */
 @media (max-width: 767px) {
   :root {
     --header-h: 44px;
     --toolbar-h: 40px;
   }
 
-  /* Layout reset — scroll bebas seperti halaman biasa */
+  /* Layout reset - scroll bebas seperti halaman biasa */
   body { overflow-x: hidden; overflow-y: auto; height: auto; }
   #app { height: auto; min-height: 100vh; flex-direction: column; }
   .app-body { flex-direction: column; overflow: visible; height: auto; }
   .app-main { overflow: visible; height: auto; }
   .content-area { overflow: visible; padding: 8px; }
 
-  /* Sidebar hilang — navigasi via FAB drawer */
+  /* Sidebar hilang - navigasi via FAB drawer */
   .sidebar { display: none !important; }
   .sidebar-toggle { display: none !important; }
 
-  /* Header — ringkas */
+  /* Header - ringkas */
   .app-header { padding: 0 12px; gap: 10px; }
   .app-header__title { display: none; }
   .app-header__divider { display: none; }
   .app-header__meta { display: none; }
   .app-header__status { font-size: 9px; }
 
-  /* Toolbar — wrap ke dua baris */
+  /* Toolbar - wrap ke dua baris */
   .toolbar {
     flex-wrap: wrap;
     height: auto;
@@ -1090,16 +1138,16 @@ input, select { font-family: inherit; color: inherit; }
   .toolbar-select { font-size: 11px; }
   .toolbar-tab { font-size: 9.5px; padding: 0 8px; height: 26px; }
 
-  /* Stats bar — scroll horizontal, cell lebih kecil */
+  /* Stats bar - scroll horizontal, cell lebih kecil */
   .statsbar { flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; }
   .stat-cell { min-width: 100px; padding: 6px 10px; flex-shrink: 0; }
   .stat-cell__val { font-size: 16px; }
   .stat-cell__label { font-size: 9px; }
 
-  /* Legend — scroll horizontal */
+  /* Legend - scroll horizontal */
   .legend-strip { flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; gap: 12px; padding: 4px 10px; }
 
-  /* Channel cells — sedikit lebih kecil di mobile */
+  /* Channel cells - sedikit lebih kecil di mobile */
   .ch-cell { width: 46px; height: 40px; }
   .ch-cell__freq { font-size: 8.5px; }
   .ch-cell__name { font-size: 8.5px; }
@@ -1108,16 +1156,16 @@ input, select { font-family: inherit; color: inherit; }
   .city-block { margin-bottom: 16px; }
   .city-block__name { font-size: 9.5px; }
 
-  /* Cell drawer — full width, max height lebih tinggi */
+  /* Cell drawer - full width, max height lebih tinggi */
   .cell-drawer__panel { max-height: 80vh; padding: 14px; }
   .cd-freq { font-size: 18px; }
   .cd-grid { grid-template-columns: 1fr; gap: 5px; }
 
-  /* Station drawer — full screen di mobile */
+  /* Station drawer - full screen di mobile */
   .station-drawer__panel { width: 100vw; }
   .dp-grid { grid-template-columns: 1fr; }
 
-  /* Interference table — scroll horizontal */
+  /* Interference table - scroll horizontal */
   .interf-wrap { padding: 8px; }
   .interf-summary { gap: 6px; }
   .interf-card { min-width: 100px; padding: 10px 12px; }
@@ -1126,11 +1174,11 @@ input, select { font-family: inherit; color: inherit; }
   /* FAB */
   .kasper-fab { display: flex; }
 
-  /* Band SVG — scroll horizontal */
+  /* Band SVG - scroll horizontal */
   .band-scroll { -webkit-overflow-scrolling: touch; }
 }
 
-/* ── Mobile landscape khusus — layar pendek tapi lebar ──────────────── */
+/* -- Mobile landscape khusus - layar pendek tapi lebar ---------------- */
 @media (max-width: 767px) and (orientation: landscape) {
   :root { --header-h: 36px; }
 
@@ -1138,19 +1186,19 @@ input, select { font-family: inherit; color: inherit; }
   .app-header { padding: 0 10px; }
   .app-header__logo { font-size: 10px; padding: 2px 6px; }
 
-  /* Toolbar jangan wrap — satu baris, compact */
+  /* Toolbar jangan wrap - satu baris, compact */
   .toolbar { flex-wrap: nowrap; height: var(--toolbar-h); padding: 0 8px; }
   .toolbar-right { width: auto; margin-left: auto; }
   .toolbar-search { width: 130px; }
 
-  /* Layout body — pakai sisa tinggi layar */
+  /* Layout body - pakai sisa tinggi layar */
   body { overflow: hidden; height: 100vh; }
   #app { height: 100vh; }
   .app-body { height: calc(100vh - var(--header-h) - var(--toolbar-h)); overflow: hidden; }
   .app-main { overflow: hidden; }
   .content-area { overflow-y: auto; padding: 6px; }
 
-  /* Statsbar — satu baris horizontal */
+  /* Statsbar - satu baris horizontal */
   .statsbar { flex-wrap: nowrap; overflow-x: auto; }
   .stat-cell { min-width: 80px; padding: 4px 8px; }
   .stat-cell__val { font-size: 14px; }
@@ -1162,7 +1210,7 @@ input, select { font-family: inherit; color: inherit; }
   .kasper-fab { bottom: 12px; left: auto; right: 12px; }
 }
 
-/* ── Reduced motion ──────────────────────────────────────────────────── */
+/* -- Reduced motion ---------------------------------------------------- */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }

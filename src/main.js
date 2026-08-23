@@ -1,3 +1,23 @@
+// ── Theme ────────────────────────────────────────────────────────────
+function initTheme() {
+  const saved = localStorage.getItem('kasper-theme') || 'dark';
+  document.documentElement.setAttribute('data-theme', saved);
+  updateThemeBtn(saved);
+}
+
+function toggleTheme() {
+  const current = document.documentElement.getAttribute('data-theme') || 'dark';
+  const next = current === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  localStorage.setItem('kasper-theme', next);
+  updateThemeBtn(next);
+}
+
+function updateThemeBtn(theme) {
+  const btn = document.getElementById('themeToggle');
+  if (btn) btn.textContent = theme === 'dark' ? '☀' : '☽';
+}
+
 import './app.css';
 import { fetchSpectrum, fetchStationDetail, fetchInterference } from './apiClient.js';
 import { renderDetailPage } from './detailPage.js';
@@ -50,6 +70,7 @@ async function boot() {
   document.getElementById('app').innerHTML =
     `<div class="state-loading"><span class="live-dot"></span>Memuat data spektrum…</div>`;
   restoreURL();
+  initTheme();
   renderShell();
   attachEvents();
   await loadData();
@@ -150,6 +171,7 @@ function renderHeader() {
     <div class="app-header__status">
       <span class="live-dot"></span>
       <span id="headerStatus">—</span>
+      <button id="themeToggle" class="theme-toggle" title="Toggle dark/light mode">◑</button>
     </div>
   </header>`;
 }
@@ -302,6 +324,7 @@ function attachEvents() {
     }
   });
   document.addEventListener('click', handleClick);
+  document.addEventListener('click', e => { if (e.target.id === 'themeToggle') toggleTheme(); });
   document.addEventListener('kasper:search', (e) => {
     state.searchTerm = e.detail.searchTerm || ''; syncURL(); renderContent();
   });
