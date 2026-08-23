@@ -1018,21 +1018,151 @@ input, select { font-family: inherit; color: inherit; }
 }
 .kd-wilayah-item.is-active { background: var(--cyan-dim); color: var(--cyan); border-color: rgba(0,196,255,.2); }
 
-/* ── Responsive ─────────────────────────────────────────────────────── */
-@media (max-width: 768px) {
-  :root { --sidebar-w: 0px; }
-  .sidebar { display: none; }
-  .sidebar-toggle { display: none; }
-  .toolbar-search { width: 140px; }
-  .kasper-fab { display: flex; }
-  .app-header__meta { display: none; }
-  body { overflow: auto; }
-  #app { height: auto; min-height: 100vh; }
-  .app-body { flex-direction: column; overflow: visible; }
-  .app-main { overflow: visible; }
-  .content-area { overflow: visible; }
+/* ════════════════════════════════════════════════════════════════════
+   RESPONSIVE
+   Desktop landscape  : ≥ 1024px  — layout penuh, sidebar fixed
+   Tablet landscape   : 768–1023px — sidebar collapsible, toolbar compact
+   Mobile portrait    : ≤ 767px   — sidebar hilang, FAB, scroll normal
+   Mobile landscape   : ≤ 767px + orientation landscape — hybrid mode
+   ════════════════════════════════════════════════════════════════════ */
+
+/* ── Desktop landscape (default sudah benar, tambahan fine-tune) ──── */
+@media (min-width: 1280px) {
+  :root { --sidebar-w: 220px; }
+  .toolbar-search { width: 240px; }
+  .ch-cell { width: 56px; height: 48px; }
 }
 
+/* ── Tablet landscape / small desktop ───────────────────────────────── */
+@media (max-width: 1023px) and (min-width: 768px) {
+  :root {
+    --sidebar-w: 180px;
+    --header-h: 44px;
+  }
+  .app-header__meta { gap: 10px; }
+  .app-header__chip { font-size: 9px; }
+  .toolbar-search { width: 160px; }
+  .ch-cell { width: 48px; height: 42px; }
+  .stat-cell { min-width: 90px; padding: 6px 10px; }
+  .stat-cell__val { font-size: 16px; }
+}
+
+/* ── Mobile (portrait + landscape) : ≤ 767px ────────────────────────── */
+@media (max-width: 767px) {
+  :root {
+    --header-h: 44px;
+    --toolbar-h: 40px;
+  }
+
+  /* Layout reset — scroll bebas seperti halaman biasa */
+  body { overflow-x: hidden; overflow-y: auto; height: auto; }
+  #app { height: auto; min-height: 100vh; flex-direction: column; }
+  .app-body { flex-direction: column; overflow: visible; height: auto; }
+  .app-main { overflow: visible; height: auto; }
+  .content-area { overflow: visible; padding: 8px; }
+
+  /* Sidebar hilang — navigasi via FAB drawer */
+  .sidebar { display: none !important; }
+  .sidebar-toggle { display: none !important; }
+
+  /* Header — ringkas */
+  .app-header { padding: 0 12px; gap: 10px; }
+  .app-header__title { display: none; }
+  .app-header__divider { display: none; }
+  .app-header__meta { display: none; }
+  .app-header__status { font-size: 9px; }
+
+  /* Toolbar — wrap ke dua baris */
+  .toolbar {
+    flex-wrap: wrap;
+    height: auto;
+    padding: 6px 8px;
+    gap: 4px;
+    row-gap: 6px;
+  }
+  .toolbar-sep { display: none; }
+  .toolbar-right {
+    width: 100%;
+    margin-left: 0;
+    gap: 4px;
+  }
+  .toolbar-search { flex: 1; width: auto; font-size: 12px; }
+  .toolbar-select { font-size: 11px; }
+  .toolbar-tab { font-size: 9.5px; padding: 0 8px; height: 26px; }
+
+  /* Stats bar — scroll horizontal, cell lebih kecil */
+  .statsbar { flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .stat-cell { min-width: 100px; padding: 6px 10px; flex-shrink: 0; }
+  .stat-cell__val { font-size: 16px; }
+  .stat-cell__label { font-size: 9px; }
+
+  /* Legend — scroll horizontal */
+  .legend-strip { flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; gap: 12px; padding: 4px 10px; }
+
+  /* Channel cells — sedikit lebih kecil di mobile */
+  .ch-cell { width: 46px; height: 40px; }
+  .ch-cell__freq { font-size: 8.5px; }
+  .ch-cell__name { font-size: 8.5px; }
+
+  /* City block */
+  .city-block { margin-bottom: 16px; }
+  .city-block__name { font-size: 9.5px; }
+
+  /* Cell drawer — full width, max height lebih tinggi */
+  .cell-drawer__panel { max-height: 80vh; padding: 14px; }
+  .cd-freq { font-size: 18px; }
+  .cd-grid { grid-template-columns: 1fr; gap: 5px; }
+
+  /* Station drawer — full screen di mobile */
+  .station-drawer__panel { width: 100vw; }
+  .dp-grid { grid-template-columns: 1fr; }
+
+  /* Interference table — scroll horizontal */
+  .interf-wrap { padding: 8px; }
+  .interf-summary { gap: 6px; }
+  .interf-card { min-width: 100px; padding: 10px 12px; }
+  .interf-card__val { font-size: 22px; }
+
+  /* FAB */
+  .kasper-fab { display: flex; }
+
+  /* Band SVG — scroll horizontal */
+  .band-scroll { -webkit-overflow-scrolling: touch; }
+}
+
+/* ── Mobile landscape khusus — layar pendek tapi lebar ──────────────── */
+@media (max-width: 767px) and (orientation: landscape) {
+  :root { --header-h: 36px; }
+
+  /* Header lebih tipis */
+  .app-header { padding: 0 10px; }
+  .app-header__logo { font-size: 10px; padding: 2px 6px; }
+
+  /* Toolbar jangan wrap — satu baris, compact */
+  .toolbar { flex-wrap: nowrap; height: var(--toolbar-h); padding: 0 8px; }
+  .toolbar-right { width: auto; margin-left: auto; }
+  .toolbar-search { width: 130px; }
+
+  /* Layout body — pakai sisa tinggi layar */
+  body { overflow: hidden; height: 100vh; }
+  #app { height: 100vh; }
+  .app-body { height: calc(100vh - var(--header-h) - var(--toolbar-h)); overflow: hidden; }
+  .app-main { overflow: hidden; }
+  .content-area { overflow-y: auto; padding: 6px; }
+
+  /* Statsbar — satu baris horizontal */
+  .statsbar { flex-wrap: nowrap; overflow-x: auto; }
+  .stat-cell { min-width: 80px; padding: 4px 8px; }
+  .stat-cell__val { font-size: 14px; }
+
+  /* Cells lebih kecil biar muat */
+  .ch-cell { width: 42px; height: 36px; }
+
+  /* FAB geser ke pojok bawah kanan supaya tidak nutup konten */
+  .kasper-fab { bottom: 12px; left: auto; right: 12px; }
+}
+
+/* ── Reduced motion ──────────────────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
