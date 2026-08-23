@@ -1,4 +1,11 @@
-// ── Theme ────────────────────────────────────────────────────────────
+import './app.css';
+import { fetchSpectrum, fetchStationDetail, fetchInterference } from './apiClient.js';
+import { renderDetailPage } from './detailPage.js';
+import { renderInterferencePanel } from './interferenceView.js';
+import { initMobileUI, openFilterDrawer } from './mobile.js';
+import { computeChannelMapForWilayah, FM_MIN, FM_MAX } from './channelEngine.js';
+
+// -- Theme ------------------------------------------------------------
 function initTheme() {
   const saved = localStorage.getItem('kasper-theme') || 'dark';
   document.documentElement.setAttribute('data-theme', saved);
@@ -15,15 +22,8 @@ function toggleTheme() {
 
 function updateThemeBtn(theme) {
   const btn = document.getElementById('themeToggle');
-  if (btn) btn.textContent = theme === 'dark' ? '☀' : '☽';
+  if (btn) btn.textContent = theme === 'dark' ? '\u2600' : '\u263d';
 }
-
-import './app.css';
-import { fetchSpectrum, fetchStationDetail, fetchInterference } from './apiClient.js';
-import { renderDetailPage } from './detailPage.js';
-import { renderInterferencePanel } from './interferenceView.js';
-import { initMobileUI, openFilterDrawer } from './mobile.js';
-import { computeChannelMapForWilayah, FM_MIN, FM_MAX } from './channelEngine.js';
 
 // ── State ────────────────────────────────────────────────────────────
 let state = {
@@ -346,8 +346,8 @@ async function handleClick(e) {
   const cell = e.target.closest('.ch-cell[data-freq]');
   if (cell && state.data) {
     const freq = parseFloat(cell.dataset.freq);
-    const ch = state.data.channel_map.find(c => c.freq === freq);
-    if (!ch) return;
+    const chGlobal = state.data.channel_map.find(c => c.freq === freq);
+    if (!chGlobal) return;
     const city = cell.closest('.city-block')?.querySelector('.city-block__name')?.dataset?.city;
     const coStations = city
       ? state.data.stations.filter(s => {
@@ -355,9 +355,15 @@ async function handleClick(e) {
           return (s.wilayah_layanan || s.kota) === city;
         }).sort((a,b) => (a.stn_name||'').localeCompare(b.stn_name||''))
       : null;
-    openInlineDetail(coStations?.length
-      ? { ...ch, coStations }
-      : ch);
+    // Gunakan allotment_status per-wilayah (dari cache), bukan dari channel_map global
+    const allotmentStatus = city && state._allotmentCache?.[city]
+      ? (state._allotmentCache[city][freq] ?? null)
+      : chGlobal.allotment_status;
+    // Hitung type per-wilayah: kalau coStations ada → used, kalau tidak → pakai chGlobal
+    const chPerWilayah = coStations?.length
+      ? { ...chGlobal, type: 'used', allotment_status: allotmentStatus, coStations }
+      : { ...chGlobal, allotment_status: allotmentStatus };
+    openInlineDetail(chPerWilayah);
     return;
   }
   const nRow = e.target.closest('.neighbor-row[data-freq]');
@@ -578,28 +584,29 @@ function renderCell(c) {
 }
 
 function renderCellGeo(c) {
-  // geo: sama seperti grid tapi tanpa nama stasiun, lebih kecil
+  const showLabel = state.geoSettings?.showLabel !== false;
+  const label = showLabel ? `<span class="ch-cell__freq">${c.freq.toFixed(1)}</span>` : '';
   if (c.type === 'used') {
     const co = c.coStations?.length > 1 ? `<span class="ch-cell__co">${c.coStations.length}</span>` : '';
     return `<div class="ch-cell ch-cell--used" data-freq="${c.freq}" style="width:36px;height:36px">
-      <span class="ch-cell__freq">${c.freq.toFixed(1)}</span>${co}
+      ${label}${co}
     </div>`;
   }
   if (c.type === 'adjacent_1')
     return `<div class="ch-cell ch-cell--adj1" data-freq="${c.freq}" style="width:36px;height:36px">
-      <span class="ch-cell__freq">${c.freq.toFixed(1)}</span>
+      ${label}
     </div>`;
   if (c.type === 'adjacent_2')
     return `<div class="ch-cell ch-cell--adj2" data-freq="${c.freq}" style="width:36px;height:36px">
-      <span class="ch-cell__freq">${c.freq.toFixed(1)}</span>
+      ${label}
     </div>`;
   const cls  = c.allotment_status === 'allotted_rri' ? 'ch-cell--allotted-rri'
              : c.allotment_status === 'allotted_lps' ? 'ch-cell--allotted-lps'
              : 'ch-cell--free';
-  const icon = c.allotment_status === 'allotted_rri' ? '▣'
-             : c.allotment_status === 'allotted_lps' ? '★' : '·';
+  const icon = c.allotment_status === 'allotted_rri' ? '\u25a3'
+             : c.allotment_status === 'allotted_lps' ? '\u2605' : '\u00b7';
   return `<div class="ch-cell ${cls}" data-freq="${c.freq}" style="width:36px;height:36px">
-    <span class="ch-cell__freq">${c.freq.toFixed(1)}</span>
+    ${label}
     <span class="ch-cell__name" style="font-size:8px">${icon}</span>
   </div>`;
 }
@@ -639,7 +646,7 @@ function renderBandSVG(row, city) {
     } else {
       const isLPS = c.allotment_status==='allotted_lps';
       const isRRI = c.allotment_status==='allotted_rri';
-      const color = isRRI ? '#A78BFA' : isLPS ? '#00C4FF' : 'rgba(255,255,255,.15)';
+      const color = isRRI ? '#A78BFA' : isLPS ? '#00C4FF' : (isLight ? 'rgba(0,0,0,.15)' : 'rgba(255,255,255,.15)');
       const r = isLPS||isRRI ? 3.5 : 2;
       const op = isLPS||isRRI ? .8 : .3;
       markers.push(`<circle cx="${x.toFixed(1)}" cy="${cy}" r="${r}" fill="${color}" opacity="${op}"/>`);
@@ -647,15 +654,20 @@ function renderBandSVG(row, city) {
     }
   }
 
-  // baseline + ruler
-  let ruler = [`<line x1="0" y1="${cy}" x2="${W}" y2="${cy}" stroke="rgba(255,255,255,.06)" stroke-width="1"/>`];
+  // baseline + ruler — theme-aware via CSS custom properties
+  const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+  const rulerColor  = isLight ? 'rgba(0,0,0,.10)' : 'rgba(255,255,255,.06)';
+  const tickMajor   = isLight ? 'rgba(0,0,0,.30)' : 'rgba(255,255,255,.20)';
+  const tickMid     = isLight ? 'rgba(0,0,0,.15)' : 'rgba(255,255,255,.10)';
+  const labelColor  = isLight ? 'rgba(0,0,0,.35)' : 'rgba(255,255,255,.30)';
+  let ruler = [`<line x1="0" y1="${cy}" x2="${W}" y2="${cy}" stroke="${rulerColor}" stroke-width="1"/>`];
   for (let f=FM_MIN; f<=FM_MAX+.01; f=Math.round((f+.1)*10)/10) {
     const rx = freqX(f), isMajor = Math.round(f*10)%10===0, isMid = Math.round(f*10)%5===0&&!isMajor;
     if (isMajor) {
-      ruler.push(`<line x1="${rx.toFixed(1)}" y1="${cy+2}" x2="${rx.toFixed(1)}" y2="${cy+7}" stroke="rgba(255,255,255,.2)" stroke-width="1"/>`);
-      ruler.push(`<text x="${rx.toFixed(1)}" y="${cy+17}" text-anchor="middle" font-size="7" fill="rgba(255,255,255,.3)" font-family="monospace">${f.toFixed(0)}</text>`);
+      ruler.push(`<line x1="${rx.toFixed(1)}" y1="${cy+2}" x2="${rx.toFixed(1)}" y2="${cy+7}" stroke="${tickMajor}" stroke-width="1"/>`);
+      ruler.push(`<text x="${rx.toFixed(1)}" y="${cy+17}" text-anchor="middle" font-size="7" fill="${labelColor}" font-family="monospace">${f.toFixed(0)}</text>`);
     } else if (isMid) {
-      ruler.push(`<line x1="${rx.toFixed(1)}" y1="${cy+2}" x2="${rx.toFixed(1)}" y2="${cy+5}" stroke="rgba(255,255,255,.1)" stroke-width="1"/>`);
+      ruler.push(`<line x1="${rx.toFixed(1)}" y1="${cy+2}" x2="${rx.toFixed(1)}" y2="${cy+5}" stroke="${tickMid}" stroke-width="1"/>`);
     }
   }
 
@@ -814,7 +826,9 @@ function openInlineDetail(info) {
 
   document.getElementById('cdClose')?.addEventListener('click', closeCellDrawer);
   document.getElementById('cdCtaDetail')?.addEventListener('click', () => {
-    closeCellDrawer(); openDetailPage(info.station);
+    closeCellDrawer();
+    if (info.station?.freq) openDetailPage(info.station);
+    else if (info.freq) openDetailPage({ freq: info.freq });
   });
 }
 
