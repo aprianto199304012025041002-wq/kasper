@@ -1,158 +1,81 @@
-# KASPER — Cue Card
+# KASPER — Cue Card Handoff
 
-## Repo
-`github.com/aprianto199304012025041002-wq/kasper.git`
-- Token: `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`
-- Live: `kasper.balmonjogja.info`
+## Stack
+- **Frontend**: Vite + Vanilla JS ESM, satu file `src/app.css`
+- **Backend**: satu file `api/data.php` → PDO → MySQL tabel `isr`
+- **Deploy**: GitHub Actions → FTP → Hostinger (`kasper.balmonjogja.info`)
+- **DB credentials**: di-inject via `sed` di CI/CD dari GitHub Secrets (`DB_HOST`, `DB_NAME`, `DB_USER`, `DB_PASS`)
 
----
+## Data
+- **106 stasiun FM**: 56 DIY + 50 Jateng dari tabel `isr`
+- **84 wilayah layanan** terdefinisi di `src/data/allotment.js` (KM Komdigi 570/2025)
+- `api/data/allotment_nasional.json` → **kosong, tidak dipakai**, artifact lama
 
-## Clone & lanjut kerja
-
-```bash
-git clone https://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@github.com/aprianto199304012025041002-wq/kasper.git /home/claude/kasper && cat /home/claude/kasper/CUECARD.md
+## Arsitektur frontend
+```
+main.js           — boot, state, render shell/sidebar/toolbar/content
+channelEngine.js  — channel grid 87.5–108.0 MHz, allotment status per wilayah
+interferenceEngine.js — hitung interferensi di client (ITU-R BS.412)
+apiClient.js      — fetch ke /api/stations, /api/interference (NO fallback)
+detailPage.js     — drawer detail stasiun (slide kanan)
+interferenceView.js — render tabel interferensi
+mobile.js         — FAB + drawer kontrol mobile
+app.css           — satu file CSS, dark/light theme via [data-theme]
 ```
 
----
+## API endpoints (`/api/data.php` via `.htaccess` rewrite)
+| Endpoint | Return |
+|---|---|
+| `GET /api/stations` | `{ stations[], total }` |
+| `GET /api/stations/:freq` | `{ data, neighbors[] }` |
+| `GET /api/interference` | `{ stations[] }` — raw, interference dihitung di client |
+| `GET /api/cities` | `{ cities[] }` |
+| `GET /api/stats` | `{ per_wilayah[], per_jenis[] }` |
+| `GET /api/health` | `{ status, total_fm, time }` |
 
-## Arsitektur
-
-```
-DB (MySQL tabel: isr) → PHP API → Frontend (Vite + Vanilla JS)
-Deploy: GitHub Actions → FTP → Hostinger public_html/
-
-Key DB fields: freq, area_of_service, city, district, stn_name, clnt_name,
-               erp_pwr_dbm, status_simf, sid_lat, sid_long, validity_date,
-               service='Broadcast', subservice='FM'
-
-PHP API endpoints:
-  /stations         → semua stasiun FM, filter ?city= ?province= ?search=
-  /stations/:freq   → detail satu stasiun
-  /cities           → DISTINCT area_of_service
-  /stats            → COUNT GROUP BY area_of_service + jenis
-  /interference     → analisis interferensi ITU-R BS.412
-  /allotment        → serve api/data/allotment_nasional.json
-  /health           → cek koneksi DB
-  cache prefix      → v5 (bump untuk bust cache)
-  filter ?city=     → match ke area_of_service (BUKAN kolom city)
-
-Frontend src/:
-  main.js             → state, renderShell (sidebar+toolbar), renderSidebar,
-                        renderContent, semua view (grid/band/geo), detail drawer
-  channelEngine.js    → computeChannelMapForWilayah() + allotment merge
-  apiClient.js        → fetch API langsung (tanpa health check), fallback lokal
-  detailPage.js       → detail stasiun + Leaflet map
-  interferenceView.js → panel interferensi
-  mobile.js           → FAB + drawer mobile (filter/view/wilayah)
-  data/allotment.js   → KM 570/2025 hardcode (8 DIY + 76 Jateng = 84 wilayah)
-  data/stations.json  → fallback offline (57 stasiun DIY only)
-  api/data/allotment_nasional.json → placeholder kosong (belum diisi)
-```
-
----
-
-## Layout (desktop)
-
-```
-┌─ header (compact) ──────────────────────────────────────┐
-├─ sidebar (220px) ──┬─ app-main ──────────────────────────┤
-│ [search wilayah]   │ [toolbar: Grid | Pita | Geo + filter]│
-│ Semua Wilayah  [N] │ [stats bar: 6-col]                  │
-│ ── D.I. YOGYAKARTA │ [legend]                            │
-│   Bantul-Bangunta  │ [dynamicContent — scrollable]       │
-│   Depok …          │                                     │
-│ ── JAWA TENGAH ──  │                                     │
-│   Gandrungmangu…   │                                     │
-│ ── ANALISIS ──     │                                     │
-│   ⚡ Interferensi  │                                     │
-└────────────────────┴─────────────────────────────────────┘
-Mobile: sidebar collapse, FAB kiri bawah buka drawer
-```
-
----
-
-## State
-
+## State utama (src/main.js)
 ```js
 state = {
-  page:             'main' | 'interference',
-  view:             'grid' | 'band' | 'geo',
-  filterCities:     [],          // sync dari selectedWilayah
-  filterChanView:   'all' | 'free' | 'used',
-  searchTerm:       '',
-  geoSettings:      { showAdj, showLabel, onlyFree },
-  data:             null,        // hasil fetchSpectrum
-  interfData:       null,
-  loading:          false,
-  error:            null,
-  selectedWilayah:  null,        // wilayah aktif sidebar
-  sidebarCollapsed: false,
+  page, view,           // 'main'|'interference', 'grid'|'band'|'geo'
+  filterCities[],       // [] = semua wilayah
+  filterChanView,       // 'all'|'free'|'used'
+  searchTerm,
+  geoSettings: { showAdj, showLabel, onlyFree },
+  data,                 // dari fetchSpectrum → { stations[], channel_map[], summary }
+  interfData,           // dari computeInterference(stations)
+  selectedWilayah,
+  _allotmentCache,      // { [wilayah]: { [freq]: allotment_status } }
 }
-
-URL params: ?view= &page= &chan= &city= &q= &w=
 ```
 
----
+## Status fitur (per sesi ini)
+- ✅ Dark/light theme toggle, simpan ke localStorage
+- ✅ Sidebar DIY/Jateng, collapse, search
+- ✅ Grid view: scroll horizontal per wilayah, cell click → drawer
+- ✅ Band view: SVG per wilayah, theme-aware ruler
+- ✅ Geo view: cell kecil, showAdj/showLabel/onlyFree dari drawer
+- ✅ Interference view: hitung di client via interferenceEngine.js (ITU-R BS.412)
+- ✅ Mobile: FAB + drawer kontrol, swipe to close, responsive 4 breakpoint
+- ✅ Detail drawer stasiun: Leaflet map, neighbor table
+- ✅ URL state sync (view, page, city, search, wilayah)
+- ✅ allotment_status per-wilayah di-cache di `state._allotmentCache`
+- 🔲 `allotment_nasional.json` kosong — tidak mempengaruhi fungsi (tidak dipakai)
 
-## Rules wajib
+## Bug yang sudah difix sesi ini (ringkasan)
+1. Semua fallback data lokal dihapus — error = tampil error, bukan data palsu
+2. API berlapis → satu `data.php`
+3. Import order ESM (theme fn sebelum import)
+4. `isKom` sisa di handleClick
+5. ch-cell type pakai channel_map global → sekarang per-wilayah dari cache
+6. Band SVG hardcode warna putih → theme-aware
+7. geoSettings.showLabel tidak efek di renderCellGeo
+8. openDetailPage bisa terima null station
+9. Interference view selalu kosong → sekarang dihitung di client
+10. 4 typo nama wilayah + 39 wilayah Jateng missing di WILAYAH_SHORT
+11. CSS classes mobile drawer missing (kd-city-chip dll)
+12. Export duplikat di mobile.js
 
-1. `npm run build` wajib sebelum push — CI/CD rebuild di GitHub Actions
-2. `area_of_service` = sumber kebenaran wilayah, bukan kolom `city`
-3. Komunitas AOS `"2,5 KILOMETER DARI LOKASI ANTENA PEMANCAR"` → row khusus
-4. DB/live blocked dari sandbox — tidak bisa test langsung
-5. `summary.adjacent` tidak ada → pakai `adjacent_1 + adjacent_2`
-6. CSS warning "Unexpected /" → harmless, dari esbuild
-7. `renderControls()` = no-op, controls ada di toolbar `renderShell`
-8. `renderSidebar()` dipanggil setelah `loadData()` selesai
-9. `apiClient.js` langsung fetch tanpa health check — eliminasi false fallback
-10. Cache PHP prefix sekarang `v5`
-
----
-
-## DB: isi data saat ini
-
-```sql
-SELECT province, COUNT(*) total FROM isr
-WHERE service='Broadcast' AND subservice='FM'
-GROUP BY province;
--- DAERAH ISTIMEWA YOGYAKARTA: 56
--- JAWA TENGAH: 50
--- Total: 106 stasiun
-```
-
----
-
-## Status checklist
-
-- ✅ Layout rombak total: sidebar wilayah + toolbar + main area scrollable
-- ✅ Stats bar 6-col desktop / 3-col mobile
-- ✅ WILAYAH_SHORT labels semua 84 wilayah
-- ✅ URL state sync (?view= &w= &chan= &q= &city=)
-- ✅ allotment.js 84 wilayah (8 DIY + 76 Jateng) KM 570/2025
-- ✅ Overlay allotment: ★ LPS / ▣ RRI / · tidak dijatahkan
-- ✅ Komunitas row terpisah (107.4–107.9)
-- ✅ Filter/search client-side
-- ✅ apiClient tanpa health check (fix fallback false DIY-only)
-- ✅ Cache bust v5
-- ✅ Security headers .htaccess
-- ✅ CI: GitHub Actions → FTP Hostinger
-- 🔲 `api/data/allotment_nasional.json` masih kosong
-
----
-
-## OUTSTANDING: allotment_nasional.json
-
-Tool ada di laptop user: `extract_allotment.html` (di Downloads)
-- Butuh: PDF `2025kepmen570_1_.pdf` + Gemini API key (gratis: aistudio.google.com/apikey)
-- Output: `allotment_nasional.json` → taruh di `api/data/` → push
-
-Setelah ada: endpoint `GET /allotment?provinsi=&kode=` langsung aktif.
-
----
-
-## PERHATIAN: putih saat deploy terakhir
-
-Sesi terakhir ada laporan layar putih setelah deploy UI baru.
-**Kemungkinan besar: CI/CD belum selesai saat dicek.**
-Kalau masih putih di sesi baru: buka DevTools → Console → cari error merah.
-Paling mungkin ada element ID yang dicari tapi tidak ada di DOM baru.
+## Yang perlu diperhatikan berikutnya
+- Data koordinat (lat/lon) stasiun mungkin banyak yang kosong → interference engine hanya evaluasi stasiun berkoordinat
+- `computeChannelMap` fallback di apiClient tidak punya allotment_status — tapi ini hanya terjadi kalau API tidak return `channel_map` (normal return dari DB)
+- Wilayah dengan 0 stasiun tidak tampil di grid (intentional filter)
