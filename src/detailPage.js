@@ -25,11 +25,12 @@ export function renderDetailPage(data, onBack, allData, targetEl) {
   root.innerHTML = `
     <div class="dp-header">
       <button class="dp-back" id="dpBack">←</button>
-      <div>
+      <div style="flex:1;min-width:0">
         <div class="dp-freq">${freq.toFixed(1)} <span style="font-size:13px;color:var(--txt-2)">MHz</span></div>
         <div class="dp-title">${esc(s.stn_name||'—')}</div>
         <div class="dp-meta">${esc(s.clnt_name||'—')} · ${esc(kota)}</div>
       </div>
+      <button class="dp-share" id="dpShare" title="Salin link stasiun ini">⎘</button>
     </div>
 
     <div class="dp-section">
@@ -61,19 +62,28 @@ export function renderDetailPage(data, onBack, allData, targetEl) {
 
     ${nbr.length ? `<div class="dp-section">
       <div class="dp-section__label">Tetangga band (±2 MHz) — ${nbr.length} stasiun</div>
-      ${nbr.map(n => {
-        const nf = parseFloat(n.freq);
-        const diff = (nf - freq).toFixed(1);
-        return `<div class="neighbor-row" data-freq="${nf}">
-          <span class="neighbor-freq">${nf.toFixed(1)}</span>
-          <span class="neighbor-name">${esc(n.stn_name||'—')}</span>
-          <span class="neighbor-dist">${parseFloat(diff)>0?'+':''}${diff} MHz</span>
-        </div>`;
-      }).join('')}
+      <div style="max-height:240px;overflow-y:auto">
+        ${nbr.map(n => {
+          const nf = parseFloat(n.freq);
+          const diff = (nf - freq).toFixed(1);
+          return `<div class="neighbor-row" data-freq="${nf}">
+            <span class="neighbor-freq">${nf.toFixed(1)}</span>
+            <span class="neighbor-name">${esc(n.stn_name||'—')}</span>
+            <span class="neighbor-dist">${parseFloat(diff)>0?'+':''}${diff} MHz</span>
+          </div>`;
+        }).join('')}
+      </div>
     </div>` : ''}
   `;
 
   root.querySelector('#dpBack')?.addEventListener('click', onBack);
+  root.querySelector('#dpShare')?.addEventListener('click', () => {
+    const url = location.origin + location.pathname + '?freq=' + freq.toFixed(1);
+    navigator.clipboard?.writeText(url).then(() => {
+      const btn = root.querySelector('#dpShare');
+      if (btn) { btn.textContent = '✓'; setTimeout(() => { btn.textContent = '⎘'; }, 1200); }
+    });
+  });
   root.querySelectorAll('.neighbor-row[data-freq]').forEach(r => {
     r.addEventListener('click', () => {
       if (window.__openDetailFreq) window.__openDetailFreq(parseFloat(r.dataset.freq));

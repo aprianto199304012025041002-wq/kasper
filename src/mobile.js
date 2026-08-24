@@ -322,7 +322,11 @@ export function initMobileUI(getState, onViewChange, onPageChange, onFilterChang
       setTimeout(() => { applyBtn.textContent = orig; applyBtn.style.opacity = ''; }, 600);
     }
 
-    setTimeout(() => closeDrawer(), 180);
+    setTimeout(() => {
+      closeDrawer();
+      document.getElementById('dynamicContent')?.scrollTo(0, 0);
+      window.scrollTo(0, 0);
+    }, 180);
 
     onFilterChange(filterPayload);
 

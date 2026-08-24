@@ -118,7 +118,10 @@ function renderShell() {
           <div class="toolbar-sep"></div>
           <button class="toolbar-tab${state.page==='interference'?' is-active':''}" data-page="interference">⚡ RF</button>
           <div class="toolbar-right">
-            <input type="search" class="toolbar-search" id="fSearch" placeholder="Cari stasiun / frekuensi…" value="${esc(state.searchTerm)}"/>
+            <div class="toolbar-search-wrap">
+              <input type="search" class="toolbar-search" id="fSearch" placeholder="Cari stasiun / frekuensi…" value="${esc(state.searchTerm)}"/>
+              ${state.searchTerm ? `<button class="toolbar-search-clear" id="fSearchClear" title="Hapus pencarian">✕</button>` : ''}
+            </div>
             <select class="toolbar-select" id="fChanView">
               <option value="all"  ${state.filterChanView==='all' ?'selected':''}>Semua kanal</option>
               <option value="free" ${state.filterChanView==='free'?'selected':''}>Kosong saja</option>
@@ -238,6 +241,7 @@ function renderSidebar() {
       state.filterCities    = w ? [w] : [];
       state.page = 'main';
       syncURL(); renderSidebar(); renderContent();
+      document.getElementById('dynamicContent')?.scrollTo(0, 0);
     });
   });
   nav.querySelector('[data-page="interference"]')?.addEventListener('click', () => {
@@ -320,6 +324,13 @@ function renderControls() {
 function attachEvents() {
   document.addEventListener('change', e => {
     if (e.target.id === 'fChanView') { state.filterChanView = e.target.value; syncURL(); renderContent(); }
+  });
+  document.addEventListener('click', e => {
+    if (e.target.id === 'fSearchClear') {
+      state.searchTerm = '';
+      syncURL(); renderControls(); renderContent();
+      document.getElementById('fSearch')?.focus();
+    }
   });
   let _debounce;
   document.addEventListener('input', e => {
@@ -408,7 +419,8 @@ async function loadData() {
     });
     const total = state.data.stations?.length ?? 0;
     const statusEl = document.getElementById('headerStatus');
-    if (statusEl) statusEl.textContent = `${total} stasiun`;
+    const now = new Date().toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'});
+    if (statusEl) statusEl.textContent = `${total} stasiun · ${now}`;
   } catch(e) {
     state.error = e.message; state.loading = false;
   }

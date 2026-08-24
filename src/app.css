@@ -1073,10 +1073,10 @@ input, select { font-family: inherit; color: inherit; }
 .theme-toggle:hover { background: var(--bg-hover); color: var(--txt); }
 
    RESPONSIVE
-   Desktop landscape  : >=1024px  — layout penuh, sidebar fixed
+   Desktop landscape  : 1024px+  — layout penuh, sidebar fixed
    Tablet landscape   : 768–1023px — sidebar collapsible, toolbar compact
-   Mobile portrait    : <=767px   — sidebar hilang, FAB, scroll normal
-   Mobile landscape   : <=767px + orientation landscape — hybrid mode
+   Mobile portrait    : max 767px   — sidebar hilang, FAB, scroll normal
+   Mobile landscape   : max 767px + orientation landscape — hybrid mode
    ════════════════════════════════════════════════════════════════════ */
 
 /* -- Desktop landscape (default sudah benar, tambahan fine-tune) ---- */
@@ -1100,7 +1100,7 @@ input, select { font-family: inherit; color: inherit; }
   .stat-cell__val { font-size: 16px; }
 }
 
-/* -- Mobile (portrait + landscape) : <=767px -------------------------- */
+/* -- Mobile (portrait + landscape) : max 767px -------------------------- */
 @media (max-width: 767px) {
   :root {
     --header-h: 44px;
@@ -1388,3 +1388,42 @@ input, select { font-family: inherit; color: inherit; }
   padding: 0 2px;
 }
 .kasper-fab__badge.has-filter { display: flex; }
+
+/* -- Toolbar search wrap + clear button ----------------------------- */
+.toolbar-search-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.toolbar-search-wrap .toolbar-search {
+  padding-right: 26px;
+}
+.toolbar-search-clear {
+  position: absolute;
+  right: 6px;
+  width: 16px; height: 16px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 50%;
+  background: var(--bg-hover);
+  color: var(--txt-3);
+  font-size: 9px;
+  line-height: 1;
+  cursor: pointer;
+  transition: background .12s, color .12s;
+}
+.toolbar-search-clear:hover { background: var(--border-mid); color: var(--txt); }
+
+/* -- Detail page share button --------------------------------------- */
+.dp-share {
+  width: 28px; height: 28px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: var(--r);
+  background: var(--bg-raised);
+  border: 1px solid var(--border);
+  color: var(--txt-2);
+  font-size: 14px;
+  flex-shrink: 0;
+  cursor: pointer;
+  transition: background .15s, color .15s;
+}
+.dp-share:hover { background: var(--bg-hover); color: var(--txt); }
