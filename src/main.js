@@ -4,6 +4,7 @@ import { renderDetailPage } from './detailPage.js';
 import { renderInterferencePanel } from './interferenceView.js';
 import { initMobileUI, openFilterDrawer } from './mobile.js';
 import { computeChannelMapForWilayah, FM_MIN, FM_MAX } from './channelEngine.js';
+import { computeInterference } from './interferenceEngine.js';
 
 // -- Theme ------------------------------------------------------------
 function initTheme() {
@@ -407,9 +408,17 @@ async function loadData() {
 async function loadInterference() {
   state.loading = true; renderContent();
   try {
-    state.interfData = await fetchInterference({});
+    const raw = await fetchInterference({});
+    // API return { stations } — hitung interference di client
+    const stations = raw.stations || state.data?.stations || [];
+    state.interfData = computeInterference(stations);
   } catch(e) {
-    state.interfData = { pairs:[], summary:{}, stations_evaluated:0, model:'error:'+e.message };
+    // Fallback: pakai state.data.stations kalau sudah ada
+    if (state.data?.stations) {
+      state.interfData = computeInterference(state.data.stations);
+    } else {
+      state.interfData = { pairs:[], summary:{}, stations_evaluated:0, model:'error:'+e.message };
+    }
   }
   state.loading = false; renderContent();
 }
