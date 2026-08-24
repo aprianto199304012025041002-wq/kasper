@@ -22,8 +22,11 @@ function toggleTheme() {
 }
 
 function updateThemeBtn(theme) {
+  // Button mungkin belum ada saat initTheme() dipanggil — update lagi setelah renderShell
   const btn = document.getElementById('themeToggle');
   if (btn) btn.textContent = theme === 'dark' ? '\u2600' : '\u263d';
+  // Simpan agar renderShell bisa apply saat mount
+  window._kasperTheme = theme;
 }
 
 // ── State ────────────────────────────────────────────────────────────
@@ -73,6 +76,7 @@ async function boot() {
   restoreURL();
   initTheme();
   renderShell();
+  updateThemeBtn(localStorage.getItem('kasper-theme') || 'dark');
   attachEvents();
   await loadData();
   initMobileUI(
@@ -189,7 +193,7 @@ function renderSidebar() {
       .filter(w => w && w !== KOMUNITAS_AOS)
   )].sort();
 
-  const cnt = (w) => state.data.stations.filter(s => (s.wilayah_layanan || s.kota) === w).length;
+  const cnt = (w) => state._stationCountMap?.[w] ?? 0;
 
   const DIY = new Set(['KOTA YOGYAKARTA','BANTUL, BANGUNTAPAN',
     'SLEMAN, NGAGLIK, KALASAN, NGEMPLAK, PAKEM','WATES, SENTOLO',
@@ -396,6 +400,12 @@ async function loadData() {
     state.loading = false;
     state._allotmentCache = null;
     state._allotmentCacheData = null;
+    // Pre-compute station count per wilayah
+    state._stationCountMap = {};
+    (state.data.stations || []).forEach(s => {
+      const w = s.wilayah_layanan || s.kota || '';
+      if (w) state._stationCountMap[w] = (state._stationCountMap[w] || 0) + 1;
+    });
     const total = state.data.stations?.length ?? 0;
     const statusEl = document.getElementById('headerStatus');
     if (statusEl) statusEl.textContent = `${total} stasiun`;
@@ -409,18 +419,28 @@ async function loadInterference() {
   state.loading = true; renderContent();
   try {
     const raw = await fetchInterference({});
-    // API return { stations } — hitung interference di client
     const stations = raw.stations || state.data?.stations || [];
-    state.interfData = computeInterference(stations);
+    // Hitung di background agar tidak freeze UI
+    await new Promise(resolve => {
+      const compute = () => {
+        state.interfData = computeInterference(stations);
+        state.loading = false;
+        renderContent();
+        resolve();
+      };
+      if (typeof requestIdleCallback !== 'undefined') {
+        requestIdleCallback(compute, { timeout: 2000 });
+      } else {
+        setTimeout(compute, 0);
+      }
+    });
   } catch(e) {
-    // Fallback: pakai state.data.stations kalau sudah ada
-    if (state.data?.stations) {
-      state.interfData = computeInterference(state.data.stations);
-    } else {
-      state.interfData = { pairs:[], summary:{}, stations_evaluated:0, model:'error:'+e.message };
-    }
+    const stations = state.data?.stations || [];
+    state.interfData = stations.length
+      ? computeInterference(stations)
+      : { pairs:[], summary:{}, stations_evaluated:0, model:'error:'+e.message };
+    state.loading = false; renderContent();
   }
-  state.loading = false; renderContent();
 }
 
 // ── Dynamic content ───────────────────────────────────────────────────
@@ -496,7 +516,7 @@ function renderContent() {
       return { ...c, allotment_status };
     }).filter(matchSearch);
     return { city, row };
-  }).filter(({ row }) => row.some(c => c.type === 'used' || (searchLower && matchSearch(c))));
+  }); // semua wilayah tetap tampil — yang 0 stasiun tampil empty state
 
   // hitung allotment stats
   cityRows.forEach(({ row }) => {
@@ -523,14 +543,15 @@ function renderContent() {
   };
 
   // ── Band view ─────────────────────────────────────────────────────
+  const _isLight = document.documentElement.getAttribute('data-theme') === 'light';
   if (state.view === 'band') {
     el.innerHTML = cityRows.map(({ city, row }) =>
       `<div class="city-block">
         <div class="city-block__head">
           <span class="city-block__name" data-city="${esc(city)}">${esc(shortWilayah(city))}</span>
-          <span class="city-block__count">${state.data.stations.filter(s=>(s.wilayah_layanan||s.kota)===city).length} stasiun</span>
+          <span class="city-block__count">${state._stationCountMap?.[city] ?? cityStations.length} stasiun</span>
         </div>
-        <div class="band-scroll">${renderBandSVG(row, city)}</div>
+        <div class="band-scroll">${renderBandSVG(row, city, _isLight)}</div>
       </div>`
     ).join('');
     return;
@@ -542,9 +563,11 @@ function renderContent() {
     `<div class="city-block">
       <div class="city-block__head">
         <span class="city-block__name" data-city="${esc(city)}">${esc(shortWilayah(city))}</span>
-        <span class="city-block__count">${state.data.stations.filter(s=>(s.wilayah_layanan||s.kota)===city).length} stasiun</span>
+        <span class="city-block__count">${state._stationCountMap?.[city] ?? cityStations.length} stasiun</span>
       </div>
-      <div class="ch-row">${applyFilter(row).map(c => cellFn(c)).join('')}</div>
+      <div class="ch-row">${applyFilter(row).map(c => cellFn(c)).join('') ||
+        '<div class="state-empty" style="min-height:60px;font-size:11px;padding:16px">Tidak ada stasiun aktif di wilayah ini</div>'
+      }</div>
     </div>`
   ).join('');
 
@@ -626,7 +649,7 @@ const AMP_MIN = 10, AMP_MAX = 46, SINE_STEPS = 36;
 function freqX(f) { return (f - FM_MIN) * SVG_W_PER_MHZ; }
 function erpAmp(e) { return AMP_MIN + Math.max(0, Math.min(1, ((e||60)-40)/(78-40))) * (AMP_MAX-AMP_MIN); }
 
-function renderBandSVG(row, city) {
+function renderBandSVG(row, city, isLight = false) {
   const W = (FM_MAX - FM_MIN) * SVG_W_PER_MHZ + 40;
   const cy = SVG_H - RULER_H - 4;
   let paths = [], markers = [], labels = [], hits = [];
@@ -664,7 +687,7 @@ function renderBandSVG(row, city) {
   }
 
   // baseline + ruler — theme-aware via CSS custom properties
-  const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+  // isLight passed as parameter from renderContent
   const rulerColor  = isLight ? 'rgba(0,0,0,.10)' : 'rgba(255,255,255,.06)';
   const tickMajor   = isLight ? 'rgba(0,0,0,.30)' : 'rgba(255,255,255,.20)';
   const tickMid     = isLight ? 'rgba(0,0,0,.15)' : 'rgba(255,255,255,.10)';
@@ -687,12 +710,35 @@ function renderBandSVG(row, city) {
 
 // ── Tooltip ───────────────────────────────────────────────────────────
 function attachCellTooltips() {
-  document.querySelectorAll('.ch-cell[data-freq]').forEach(cell => {
-    const ch = state.data?.channel_map.find(c => c.freq === parseFloat(cell.dataset.freq));
-    if (!ch) return;
-    cell.addEventListener('mouseenter', e => showTT(e, ch));
-    cell.addEventListener('mousemove',  moveTT);
-    cell.addEventListener('mouseleave', hideTT);
+  // Touch devices: skip tooltip — tidak ada hover
+  if (window.matchMedia('(hover: none)').matches) return;
+  const content = document.getElementById('dynamicContent');
+  if (!content || content._ttAttached) return;
+  content._ttAttached = true;
+  content.addEventListener('mouseover', e => {
+    const cell = e.target.closest('.ch-cell[data-freq]');
+    if (!cell) return;
+    const freq = parseFloat(cell.dataset.freq);
+    const city = cell.closest('.city-block')?.querySelector('.city-block__name')?.dataset?.city;
+    // Cari channel dari allotmentCache per-wilayah jika ada
+    const chGlobal = state.data?.channel_map.find(c => c.freq === freq);
+    if (!chGlobal) return;
+    const allotmentStatus = city && state._allotmentCache?.[city]
+      ? (state._allotmentCache[city][freq] ?? null) : chGlobal.allotment_status;
+    const cityStations = city
+      ? state.data.stations.filter(s => Math.abs(parseFloat(s.freq)-freq)<0.01 && (s.wilayah_layanan||s.kota)===city)
+      : [];
+    const ch = cityStations.length
+      ? { ...chGlobal, type: 'used', allotment_status: allotmentStatus, station: cityStations[0] }
+      : { ...chGlobal, allotment_status: allotmentStatus };
+    showTT(e, ch);
+  });
+  content.addEventListener('mousemove', e => {
+    if (e.target.closest('.ch-cell[data-freq]')) moveTT(e);
+  });
+  content.addEventListener('mouseleave', hideTT);
+  content.addEventListener('mouseout', e => {
+    if (!e.target.closest('.ch-cell[data-freq]')) hideTT();
   });
 }
 
