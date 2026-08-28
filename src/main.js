@@ -662,8 +662,6 @@ function renderContent() {
     const total = used + adj1 + adj2 + free;
     return { total, used, adjacent_1: adj1, adjacent_2: adj2, free };
   })();
-  renderStatsBar(activeSummary);
-
   // hitung allotment stats
   cityRows.forEach(({ row }) => {
     row.forEach(c => {
@@ -673,7 +671,7 @@ function renderContent() {
       }
     });
   });
-  if (allotTotal > 0) renderStatsBar(activeSummary, { total: allotTotal, used: allotUsed, free: allotFree });
+  renderStatsBar(activeSummary, allotTotal > 0 ? { total: allotTotal, used: allotUsed, free: allotFree } : null);
 
   const geo = state.geoSettings || {};
   const applyFilter = (row) => {
@@ -695,7 +693,7 @@ function renderContent() {
       `<div class="city-block">
         <div class="city-block__head">
           <span class="city-block__name" data-city="${esc(city)}">${esc(shortWilayah(city))}</span>
-          <span class="city-block__count">${state._stationCountMap?.[city] ?? cityStations.length} stasiun</span>
+          <span class="city-block__count">${state._stationCountMap?.[city] ?? 0} stasiun</span>
           <span class="band-scroll-hint-mobile">geser →</span>
         </div>
         <div class="band-scroll">${renderBandSVG(row, city, _isLight)}</div>
@@ -710,7 +708,7 @@ function renderContent() {
     `<div class="city-block">
       <div class="city-block__head">
         <span class="city-block__name" data-city="${esc(city)}">${esc(shortWilayah(city))}</span>
-        <span class="city-block__count">${state._stationCountMap?.[city] ?? cityStations.length} stasiun</span>
+        <span class="city-block__count">${state._stationCountMap?.[city] ?? 0} stasiun</span>
       </div>
       <div class="ch-row">${applyFilter(row).map(c => cellFn(c)).join('') ||
         '<div class="state-empty" style="min-height:60px;font-size:11px;padding:16px">Tidak ada stasiun aktif di wilayah ini</div>'
@@ -1105,14 +1103,12 @@ const WILAYAH_SHORT = {
   'PANCUR, LASEM, PAMOTAN': 'Lasem – Pamotan',
   'BATANGAN, JUWANA, JAKENAN': 'Juwana – Jakenan',
   'GUNUNGWUNGKAL, CLUWAK, TAYU': 'Tayu – Cluwak',
-  'BANGSRI, KELING': 'Bangkri – Keling',
   'DORO, LEBAKBARANG, TALUN, PETUNGKRIYONO, KARANGDADAP': 'Doro – Lebakbarang',
   'KAJEN, KEDUNGWUNI': 'Kajen – Kedungwuni',
   'RANDUDONGKAL, BELIK': 'Randudongkal – Belik',
   'BUMIJAWA, BOJONG': 'Bumijawa – Bojong',
   'SURADADI, TARUB': 'Suradadi – Tarub',
   'BANTARKAWUNG': 'Bantarkawung',
-  'BANJARHAREJO, KETANGGUNGAN': 'Banjarharejo – Ketanggungan',
   'BANJARHAREJO, KETANGGUNGAN': 'Banjarharejo – Ketanggungan',
   'KOTA MAGELANG': 'Kota Magelang',
   'KOTA SURAKARTA': 'Kota Surakarta',
@@ -1142,7 +1138,6 @@ const WILAYAH_SHORT = {
   'KENDAL, WELERI': 'Kendal – Weleri',
   'KLATEN': 'Klaten',
   'KUDUS': 'Kudus',
-  'KUTOARJO, BAYAN': 'Kutoarjo – Bayan',
   'MAJENANG': 'Majenang',
   'PATI': 'Pati',
   'PEMALANG': 'Pemalang',
@@ -1152,7 +1147,6 @@ const WILAYAH_SHORT = {
   'SAPURAN': 'Sapuran',
   'SLAWI': 'Slawi',
   'SRAGEN': 'Sragen',
-  'SURADADI, TARUB': 'Suradadi – Tarub',
   'TEMANGGUNG': 'Temanggung',
   'UNGARAN': 'Ungaran',
   'WIRADESA': 'Wiradesa',

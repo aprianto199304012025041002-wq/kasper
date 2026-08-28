@@ -7,14 +7,28 @@
 //   Adjacent ±1  (|Δf| ≈ 0.1 MHz)  : 20 dB
 //   Adjacent ±2  (|Δf| ≈ 0.2 MHz)  : 10 dB
 //
-// Propagasi sederhana: path loss = 20*log10(d_km) + 20*log10(f_mhz) + 32.45 dB
-// D/U = ERP_tx - PathLoss_tx_rx + (ERP_rx tidak diketahui → gunakan ERP_tx sebagai proxy)
+// Propagasi: free-space path loss = 20·log10(d_km) + 20·log10(f_mhz) + 32.45 dB
+//
+// D/U dihitung dua arah (simetris):
+//   Arah A→B: desired = ERP_A − PL(d,f), undesired = ERP_B − PL(d,f)
+//             D/U = ERP_A − ERP_B  (path loss cancel karena sama)
+//   Arah B→A: D/U = ERP_B − ERP_A
+//   Worst-case (yang menentukan apakah ada interferensi) = min(D/U_AB, D/U_BA)
+//   = −|ERP_A − ERP_B|  ... selalu ≤ 0 untuk stasiun berdaya berbeda
+//
+// Lebih berguna: evaluasi dari sisi stasiun yang lebih lemah sebagai "korban"
+//   Korban = stasiun dengan ERP lebih kecil
+//   D/U_korban = ERP_korban − ERP_interferor   (negatif jika interferor lebih kuat)
+//   margin    = D/U_korban − threshold
+//
+// ERP fallback: 40 dBm (10 W) — representatif untuk FM komunitas/lokal kecil
 
-const CO_THRESHOLD  = 30; // dB
+const CO_THRESHOLD   = 30; // dB
 const ADJ1_THRESHOLD = 20;
 const ADJ2_THRESHOLD = 10;
-const CO_FREQ_MAX   = 0.095; // |Δf| < ini → co-channel
-const ADJ1_FREQ_MAX = 0.195; // |Δf| < ini → adjacent-1
+const CO_FREQ_MAX    = 0.095; // |Δf| < ini → co-channel
+const ADJ1_FREQ_MAX  = 0.195; // |Δf| < ini → adjacent-1
+const ERP_FALLBACK   = 40;    // dBm — ~10 W, representatif FM komunitas/lokal
 
 function pathLoss(distKm, freqMhz) {
   if (distKm <= 0) return 0;
@@ -40,7 +54,7 @@ export function computeInterference(stations) {
     freq:    parseFloat(s.freq),
     lat:     parseFloat(s.latitude),
     lon:     parseFloat(s.longitude),
-    erp_dbm: parseFloat(s.erp_dbm) || 60,
+    erp_dbm: parseFloat(s.erp_dbm) || ERP_FALLBACK,
   }));
 
   const pairs = [];
@@ -48,34 +62,28 @@ export function computeInterference(stations) {
 
   for (let i = 0; i < valid.length; i++) {
     for (let j = i + 1; j < valid.length; j++) {
-      const tx = valid[i], rx = valid[j];
-      const df = Math.abs(tx.freq - rx.freq);
+      const a = valid[i], b = valid[j];
+      const df = Math.abs(a.freq - b.freq);
 
       let type, threshold;
-      if      (df < CO_FREQ_MAX)   { type = 'co_channel';  threshold = CO_THRESHOLD; }
-      else if (df < ADJ1_FREQ_MAX) { type = 'adjacent_1';  threshold = ADJ1_THRESHOLD; }
-      else if (df < 0.295)         { type = 'adjacent_2';  threshold = ADJ2_THRESHOLD; }
+      if      (df < CO_FREQ_MAX)   { type = 'co_channel'; threshold = CO_THRESHOLD; }
+      else if (df < ADJ1_FREQ_MAX) { type = 'adjacent_1'; threshold = ADJ1_THRESHOLD; }
+      else if (df < 0.295)         { type = 'adjacent_2'; threshold = ADJ2_THRESHOLD; }
       else continue; // tidak relevan
 
-      const distKm = haversineKm(tx.lat, tx.lon, rx.lat, rx.lon);
+      const distKm = haversineKm(a.lat, a.lon, b.lat, b.lon);
       if (distKm > 300) continue; // terlalu jauh, tidak signifikan
 
-      const pl    = pathLoss(distKm, (tx.freq + rx.freq) / 2);
-      // D/U = ERP_tx - pathloss (sinyal desired = ERP_rx jika posisi dibalik)
-      // Gunakan rata-rata ERP sebagai proxy receiver
-      const erpD  = tx.erp_dbm;
-      const erpU  = rx.erp_dbm;
-      // D/U aktual di titik rx: ERP_tx - PL vs ERP_rx (received)
-      // Simplified: pr_actual = ERP_tx - ERP_rx - PL (selisih diterima)
-      const pr_actual = Math.round(erpD - pl - (erpU - pl));
-      // Lebih tepat: margin = (ERP_tx - PL) - (ERP_rx - PL) + threshold = erpD - erpU + threshold
-      // Tapi untuk evaluasi interferensi: pr = erpD - PL (sinyal dari tx ke rx)
-      // undesired = erpU - PL (sinyal dari rx ke tx, asumsi sama)
-      // ratio = pr_tx - pr_rx
-      const pr_tx = erpD - pl;
-      const pr_rx = erpU - pl;
-      const du_actual = Math.round((pr_tx - pr_rx) * 10) / 10;
-      const margin_db = Math.round((du_actual - threshold) * 10) / 10;
+      // Evaluasi dari sisi stasiun yang lebih lemah sebagai "korban"
+      // Path loss sama untuk kedua arah (jarak & frekuensi identik), sehingga cancel.
+      // D/U = ERP_korban − ERP_interferor  (dB)
+      const freqMid = (a.freq + b.freq) / 2;
+      const pl      = pathLoss(distKm, freqMid); // sama dua arah → hanya untuk future use
+
+      // Korban = yang ERP-nya lebih kecil (paling rentan terinterferensi)
+      const [victim, interferer] = a.erp_dbm <= b.erp_dbm ? [a, b] : [b, a];
+      const du_actual  = Math.round((victim.erp_dbm - interferer.erp_dbm) * 10) / 10;
+      const margin_db  = Math.round((du_actual - threshold) * 10) / 10;
 
       const level = margin_db < -10 ? 'critical'
                   : margin_db < 0   ? 'warning'
@@ -83,13 +91,24 @@ export function computeInterference(stations) {
 
       if (level === 'critical' || level === 'warning' || distKm < 50) {
         pairs.push({
-          tx: { stn_name: tx.stn_name, freq: tx.freq, wilayah_layanan: tx.wilayah_layanan || tx.kota, erp_dbm: tx.erp_dbm },
-          rx: { stn_name: rx.stn_name, freq: rx.freq, wilayah_layanan: rx.wilayah_layanan || rx.kota, erp_dbm: rx.erp_dbm },
+          tx: {
+            stn_name: interferer.stn_name,
+            freq: interferer.freq,
+            wilayah_layanan: interferer.wilayah_layanan || interferer.kota,
+            erp_dbm: interferer.erp_dbm,
+          },
+          rx: {
+            stn_name: victim.stn_name,
+            freq: victim.freq,
+            wilayah_layanan: victim.wilayah_layanan || victim.kota,
+            erp_dbm: victim.erp_dbm,
+          },
           type,
-          dist_km: Math.round(distKm * 10) / 10,
-          pr_actual: du_actual,
+          dist_km:   Math.round(distKm * 10) / 10,
+          pr_actual: du_actual,  // D/U aktual di sisi korban (dB)
           margin_db,
           level,
+          pl_db: Math.round(pl * 10) / 10, // tersedia untuk debug
         });
         if (level !== 'ok') summary[type] = (summary[type] || 0) + 1;
         else summary.ok++;
@@ -107,6 +126,6 @@ export function computeInterference(stations) {
     pairs,
     summary,
     stations_evaluated: valid.length,
-    model: 'ITU-R BS.412 (simplified free-space path loss)',
+    model: 'ITU-R BS.412 (free-space PL, worst-case D/U sisi korban)',
   };
 }
