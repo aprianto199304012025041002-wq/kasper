@@ -153,6 +153,12 @@ function renderShell() {
           <button class="toolbar-tab${state.view==='grid'?' is-active':''}" data-view="grid" title="Grid view [1]">GRID</button>
           <button class="toolbar-tab${state.view==='band'?' is-active':''}" data-view="band" title="Pita frekuensi [2]">PITA</button>
           <button class="toolbar-tab${state.view==='geo'?' is-active':''}" data-view="geo" title="Geo density [3]">GEO</button>
+          ${state.view==='geo' && state.page==='main' ? `
+          <div class="toolbar-sep"></div>
+          <label class="toolbar-geo-opt"><input type="checkbox" id="dGeoAdj" ${state.geoSettings?.showAdj!==false?'checked':''}> Guard</label>
+          <label class="toolbar-geo-opt"><input type="checkbox" id="dGeoLabel" ${state.geoSettings?.showLabel!==false?'checked':''}> Label</label>
+          <label class="toolbar-geo-opt"><input type="checkbox" id="dGeoFree" ${state.geoSettings?.onlyFree?'checked':''}> Kosong saja</label>
+          ` : ''}
           <div class="toolbar-sep"></div>
           <button class="toolbar-tab${state.page==='interference'?' is-active':''}" data-page="interference" title="Analisis interferensi RF [4]">⚡ RF</button>
           <div class="toolbar-right">
@@ -165,6 +171,8 @@ function renderShell() {
               <option value="free" ${state.filterChanView==='free'?'selected':''}>Kosong saja</option>
               <option value="used" ${state.filterChanView==='used'?'selected':''}>Terisi saja</option>
             </select>
+            ${(state.filterCities?.length || state.searchTerm || state.filterChanView !== 'all') ?
+              `<button class="toolbar-reset" id="fReset" title="Reset semua filter [Esc]">↺ Reset</button>` : ''}
           </div>
         </div>
         <div id="statsBar"></div>
@@ -408,12 +416,25 @@ function renderFreeBlocksPanel() {
 function attachEvents() {
   document.addEventListener('change', e => {
     if (e.target.id === 'fChanView') { state.filterChanView = e.target.value; syncURL(); renderContent(); }
+    if (['dGeoAdj','dGeoLabel','dGeoFree'].includes(e.target.id)) {
+      state.geoSettings = {
+        showAdj:   document.getElementById('dGeoAdj')?.checked ?? true,
+        showLabel: document.getElementById('dGeoLabel')?.checked ?? true,
+        onlyFree:  document.getElementById('dGeoFree')?.checked ?? false,
+      };
+      renderContent();
+    }
   });
   document.addEventListener('click', e => {
     if (e.target.id === 'fSearchClear') {
       state.searchTerm = '';
       syncURL(); renderControls(); renderContent();
       document.getElementById('fSearch')?.focus();
+    }
+    if (e.target.id === 'fReset') {
+      state.filterCities = []; state.selectedWilayah = null;
+      state.filterChanView = 'all'; state.searchTerm = '';
+      syncURL(); renderSidebar(); renderControls(); renderContent();
     }
   });
   let _debounce;
@@ -675,6 +696,7 @@ function renderContent() {
         <div class="city-block__head">
           <span class="city-block__name" data-city="${esc(city)}">${esc(shortWilayah(city))}</span>
           <span class="city-block__count">${state._stationCountMap?.[city] ?? cityStations.length} stasiun</span>
+          <span class="band-scroll-hint-mobile">geser →</span>
         </div>
         <div class="band-scroll">${renderBandSVG(row, city, _isLight)}</div>
       </div>`
@@ -956,7 +978,17 @@ function openInlineDetail(info) {
           <button class="cd-close" id="cdClose">✕</button>
         </div>
         <div class="cd-swipe-hint">← geser →</div>
-        <div class="cd-swipe-wrap">${cards}</div>`);
+        <div class="cd-swipe-wrap" id="cdSwipeWrap">${cards}</div>
+        <div class="cd-swipe-dots" id="cdSwipeDots">${stations.map((_,i) =>
+          `<span class="cd-swipe-dot${i===0?' is-active':''}"></span>`).join('')}</div>`);
+      setTimeout(() => {
+        const wrap = document.getElementById('cdSwipeWrap');
+        const dots = document.querySelectorAll('.cd-swipe-dot');
+        if (wrap && dots.length) wrap.addEventListener('scroll', () => {
+          const idx = Math.round(wrap.scrollLeft / wrap.offsetWidth);
+          dots.forEach((d,i) => d.classList.toggle('is-active', i === idx));
+        }, {passive:true});
+      }, 50);
       document.getElementById('cdClose')?.addEventListener('click', closeCellDrawer);
       window.__openDetailFreq = (f) => { closeCellDrawer(); openDetailPage({freq:f}); };
       return;

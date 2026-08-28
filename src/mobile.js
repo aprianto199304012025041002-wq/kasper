@@ -44,7 +44,7 @@ function injectDrawer() {
         <!-- ── FILTER WILAYAH LAYANAN ── -->
         <section class="kd-section" id="drawerSectionCity">
           <div class="kd-section__label">WILAYAH LAYANAN</div>
-          <div class="kd-city-chips" id="drawerCityChips"></div>
+          <div class="kd-city-chips-scroll"><div class="kd-city-chips" id="drawerCityChips"></div></div>
         </section>
 
         <!-- ── PENGATURAN GEO (hanya muncul di mode GEO) ── -->
@@ -105,7 +105,10 @@ function injectDrawer() {
     </div>`;
   document.body.appendChild(el);
 
-  el.querySelector('.kasper-drawer__backdrop').addEventListener('click', closeDrawer);
+  el.querySelector('.kasper-drawer__backdrop').addEventListener('click', () => {
+    closeDrawer();
+    if (_getStateFn) updateFabBadge(_getStateFn());
+  });
   document.getElementById('drawerClose').addEventListener('click', closeDrawer);
 
   // Swipe down to close
@@ -116,9 +119,12 @@ function injectDrawer() {
     if (e.touches[0].clientY - _sy > 60) closeDrawer();
   }, { passive: true });
 
-  // Escape key
+  // Escape key — hanya tutup drawer kalau sedang terbuka
   document.addEventListener('keydown', e => {
-    if (e.key === 'Escape') closeDrawer();
+    if (e.key === 'Escape' && document.getElementById('kasperDrawer')?.classList.contains('is-open')) {
+      e.stopPropagation();
+      closeDrawer();
+    }
   });
 
   // View mode buttons — toggle is-active eksklusif
@@ -182,15 +188,10 @@ function syncDrawer(state) {
   const cityChipsEl = document.getElementById('drawerCityChips');
   if (cityChipsEl) {
     const KOMUNITAS_AOS = '2,5 KILOMETER DARI LOKASI ANTENA PEMANCAR';
-    const SHORT = {
-      'KOTA YOGYAKARTA':                            'KOTA YK',
-      'BANTUL, BANGUNTAPAN':                        'BANTUL',
-      'SLEMAN, NGAGLIK, KALASAN, NGEMPLAK, PAKEM':  'SLEMAN',
-      'WATES, SENTOLO':                             'WATES',
-      'WONOSARI':                                   'WONOSARI',
-      'GAMPING':                                    'GAMPING',
-      'DEPOK':                                      'DEPOK',
-      'PATUK':                                      'PATUK',
+    // Ambil 2 kata pertama sebagai chip label — cukup untuk identifikasi
+    const chipLabel = (w) => {
+      const words = w.split(/[,\s]+/).filter(Boolean);
+      return words.slice(0, 2).join(' ');
     };
     const cities = state.data
       ? [...new Set(state.data.stations
@@ -203,7 +204,7 @@ function syncDrawer(state) {
     cityChipsEl.innerHTML =
       `<button class="kd-city-chip ${sel.length === 0 ? 'is-active' : ''}" data-city="">SEMUA</button>` +
       cities.map(c =>
-        `<button class="kd-city-chip ${sel.includes(c) ? 'is-active' : ''}" data-city="${c}">${SHORT[c] || c}</button>`
+        `<button class="kd-city-chip ${sel.includes(c) ? 'is-active' : ''}" data-city="${c}">${chipLabel(c)}</button>`
       ).join('');
 
     // Handler: chip "SEMUA" exclusive, chip lain multi-toggle
