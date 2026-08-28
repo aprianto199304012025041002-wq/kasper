@@ -67,6 +67,7 @@ function restoreURL() {
   if (p.has('city')) state.filterCities     = p.get('city').split('|').filter(Boolean);
   if (p.has('q'))    state.searchTerm       = p.get('q');
   if (p.has('w'))    state.selectedWilayah  = p.get('w');
+  if (p.has('freq')) state._openFreqOnLoad  = parseFloat(p.get('freq'));
 }
 
 // ── Boot ─────────────────────────────────────────────────────────────
@@ -276,27 +277,36 @@ function renderStatsBar(summary, allotmentStats = null) {
   }
 
   el.innerHTML = `<div class="statsbar">
-    <div class="stat-cell">
+    <div class="stat-cell stat-cell--btn" data-filter-chan="all" title="Tampilkan semua kanal">
       <div class="stat-cell__label">Total kanal FM</div>
       <div class="stat-cell__val">${summary.total}</div>
     </div>
-    <div class="stat-cell">
-      <div class="stat-cell__label">Terisi</div>
+    <div class="stat-cell stat-cell--btn" data-filter-chan="used" title="Filter: terisi saja">
+      <div class="stat-cell__label">Terisi ↗</div>
       <div class="stat-cell__val --amber">${summary.used}<span class="unit">${pctU}%</span></div>
       <div class="stat-cell__meter" style="width:${pctU}%;background:var(--amber)"></div>
     </div>
-    <div class="stat-cell">
+    <div class="stat-cell" title="Kanal terlindungi adjacent">
       <div class="stat-cell__label">Adjacent guard</div>
       <div class="stat-cell__val --red">${adj}<span class="unit">${pctA}%</span></div>
       <div class="stat-cell__meter" style="width:${pctA}%;background:var(--red)"></div>
     </div>
-    <div class="stat-cell">
-      <div class="stat-cell__label">Kosong / potensial</div>
+    <div class="stat-cell stat-cell--btn" data-filter-chan="free" title="Filter: kosong saja">
+      <div class="stat-cell__label">Kosong / potensial ↗</div>
       <div class="stat-cell__val --green">${summary.free}<span class="unit">${pctF}%</span></div>
       <div class="stat-cell__meter" style="width:${pctF}%;background:var(--phosphor)"></div>
     </div>
     ${extra}
   </div>`;
+  // Stats cell click → filter
+  el.querySelectorAll('.stat-cell--btn[data-filter-chan]').forEach(cell => {
+    cell.addEventListener('click', () => {
+      state.filterChanView = cell.dataset.filterChan;
+      const sel = document.getElementById('fChanView');
+      if (sel) sel.value = state.filterChanView;
+      syncURL(); renderContent();
+    });
+  });
 }
 
 // ── Legend ───────────────────────────────────────────────────────────
@@ -425,6 +435,12 @@ async function loadData() {
     state.error = e.message; state.loading = false;
   }
   renderControls(); renderSidebar(); renderContent();
+  // Buka detail stasiun dari URL ?freq=
+  if (state._openFreqOnLoad) {
+    const freq = state._openFreqOnLoad;
+    state._openFreqOnLoad = null;
+    setTimeout(() => openDetailPage({ freq }), 300);
+  }
 }
 
 async function loadInterference() {
@@ -461,6 +477,12 @@ function renderContent() {
   if (!el) return;
 
   if (state.loading) {
+    // Skeleton stats bar saat loading agar layout tidak loncat
+    document.getElementById('statsBar').innerHTML = `<div class="statsbar">
+      ${['Total kanal FM','Terisi','Adjacent guard','Kosong'].map(l =>
+        `<div class="stat-cell"><div class="stat-cell__label">${l}</div><div class="stat-cell__val" style="color:var(--txt-3)">—</div></div>`
+      ).join('')}
+    </div>`;
     el.innerHTML = `<div class="state-loading"><span class="live-dot"></span> Memuat…</div>`;
     return;
   }

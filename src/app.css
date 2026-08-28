@@ -1427,3 +1427,12 @@ input, select { font-family: inherit; color: inherit; }
   transition: background .15s, color .15s;
 }
 .dp-share:hover { background: var(--bg-hover); color: var(--txt); }
+
+/* -- Clickable stat cells ------------------------------------------- */
+.stat-cell--btn {
+  cursor: pointer;
+  transition: background .12s;
+}
+.stat-cell--btn:hover { background: var(--bg-hover); }
+.stat-cell--btn .stat-cell__label { text-decoration-line: none; }
+.stat-cell--btn:hover .stat-cell__label { color: var(--txt-2); }
