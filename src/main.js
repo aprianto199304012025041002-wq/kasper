@@ -505,7 +505,8 @@ function renderContent() {
   if (state.selectedWilayah && !state.filterCities.includes(state.selectedWilayah))
     state.filterCities = [state.selectedWilayah];
 
-  renderStatsBar(state.data.summary);
+  // Hitung summary dari cityRows yang aktif (bukan global)
+  // Dihitung setelah cityRows tersedia — placeholder dulu
   renderLegend();
 
   const KOMUNITAS_AOS = '2,5 KILOMETER DARI LOKASI ANTENA PEMANCAR';
@@ -552,6 +553,22 @@ function renderContent() {
     return { city, row };
   }); // semua wilayah tetap tampil — yang 0 stasiun tampil empty state
 
+  // Hitung summary dari cityRows aktif (akurat untuk filter wilayah)
+  const activeSummary = (() => {
+    let used = 0, adj1 = 0, adj2 = 0, free = 0;
+    cityRows.forEach(({ row }) => {
+      row.forEach(c => {
+        if      (c.type === 'used')       used++;
+        else if (c.type === 'adjacent_1') adj1++;
+        else if (c.type === 'adjacent_2') adj2++;
+        else if (c.type === 'free')       free++;
+      });
+    });
+    const total = used + adj1 + adj2 + free;
+    return { total, used, adjacent_1: adj1, adjacent_2: adj2, free };
+  })();
+  renderStatsBar(activeSummary);
+
   // hitung allotment stats
   cityRows.forEach(({ row }) => {
     row.forEach(c => {
@@ -561,7 +578,7 @@ function renderContent() {
       }
     });
   });
-  if (allotTotal > 0) renderStatsBar(state.data.summary, { total: allotTotal, used: allotUsed, free: allotFree });
+  if (allotTotal > 0) renderStatsBar(activeSummary, { total: allotTotal, used: allotUsed, free: allotFree });
 
   const geo = state.geoSettings || {};
   const applyFilter = (row) => {

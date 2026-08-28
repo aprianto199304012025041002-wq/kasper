@@ -128,7 +128,32 @@ switch ($route) {
         $stmt->execute($p);
         $stations = $stmt->fetchAll();
         foreach ($stations as &$s) $s['freq'] = (float)$s['freq'];
-        out(['stations' => $stations, 'total' => count($stations)]);
+
+        // Hitung summary di server untuk efisiensi
+        $freqIndex = [];
+        foreach ($stations as $s) {
+            $f = round($s['freq'] * 10) / 10;
+            if (!isset($freqIndex[$f])) $freqIndex[$f] = [];
+            $freqIndex[$f][] = $s;
+        }
+        $used = 0; $free = 0; $adj1 = 0; $adj2 = 0;
+        $spacing = 0.1; $guard = 0.055;
+        for ($f = 87.5; $f <= 108.001; $f = round(($f + $spacing) * 10) / 10) {
+            $fk = round($f * 10) / 10;
+            if (isset($freqIndex[$fk])) { $used++; continue; }
+            $has1 = isset($freqIndex[round(($fk - $spacing) * 10)/10]) || isset($freqIndex[round(($fk + $spacing) * 10)/10]);
+            $has2 = isset($freqIndex[round(($fk - 2*$spacing) * 10)/10]) || isset($freqIndex[round(($fk + 2*$spacing) * 10)/10]);
+            if ($has1) { $adj1++; } elseif ($has2) { $adj2++; } else { $free++; }
+        }
+        $total = $used + $adj1 + $adj2 + $free;
+        $summary = [
+            'total' => $total, 'used' => $used,
+            'adjacent_1' => $adj1, 'adjacent_2' => $adj2, 'free' => $free,
+            'pct_used' => $total ? round($used/$total*100, 1) : 0,
+            'pct_free' => $total ? round($free/$total*100, 1) : 0,
+        ];
+
+        out(['stations' => $stations, 'total' => count($stations), 'summary' => $summary]);
 
     // GET /api/cities
     case 'cities':
