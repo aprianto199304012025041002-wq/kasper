@@ -70,7 +70,44 @@ function restoreURL() {
   if (p.has('freq')) state._openFreqOnLoad  = parseFloat(p.get('freq'));
 }
 
-// ── Boot ─────────────────────────────────────────────────────────────
+// -- Keyboard shortcuts -----------------------------------------------
+function initKeyboard() {
+  document.addEventListener('keydown', e => {
+    // Jangan intercept kalau sedang di input
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.isContentEditable) return;
+    switch (e.key) {
+      case '1': state.view='grid'; state.page='main'; syncURL(); renderControls(); renderContent(); break;
+      case '2': state.view='band'; state.page='main'; syncURL(); renderControls(); renderContent(); break;
+      case '3': state.view='geo';  state.page='main'; syncURL(); renderControls(); renderContent(); break;
+      case '4': state.page='interference'; syncURL(); renderControls();
+        if (!state.interfData) loadInterference(); else renderContent(); break;
+      case 'f': case '/':
+        e.preventDefault();
+        document.getElementById('fSearch')?.focus();
+        break;
+      case 'Escape':
+        if (state.searchTerm) {
+          state.searchTerm = '';
+          const el = document.getElementById('fSearch');
+          if (el) el.value = '';
+          syncURL(); renderControls(); renderContent();
+        } else if (state.selectedWilayah) {
+          state.selectedWilayah = null; state.filterCities = [];
+          syncURL(); renderSidebar(); renderContent();
+        }
+        break;
+      case 'd': toggleTheme(); break;
+      case 'b':
+        state.sidebarCollapsed = !state.sidebarCollapsed;
+        document.getElementById('sidebar')?.classList.toggle('is-collapsed', state.sidebarCollapsed);
+        const btn = document.getElementById('sidebarCollapseBtn');
+        if (btn) btn.textContent = state.sidebarCollapsed ? '\u203a' : '\u2039';
+        break;
+    }
+  });
+}
+
+// -- Boot -------------------------------------------------------------
 async function boot() {
   document.getElementById('app').innerHTML =
     `<div class="state-loading"><span class="live-dot"></span>Memuat data spektrum…</div>`;
@@ -113,11 +150,11 @@ function renderShell() {
       <button class="sidebar-toggle" id="sidebarToggle">›</button>
       <div class="app-main" id="appMain">
         <div class="toolbar" id="toolbar">
-          <button class="toolbar-tab${state.view==='grid'?' is-active':''}" data-view="grid">GRID</button>
-          <button class="toolbar-tab${state.view==='band'?' is-active':''}" data-view="band">PITA</button>
-          <button class="toolbar-tab${state.view==='geo'?' is-active':''}" data-view="geo">GEO</button>
+          <button class="toolbar-tab${state.view==='grid'?' is-active':''}" data-view="grid" title="Grid view [1]">GRID</button>
+          <button class="toolbar-tab${state.view==='band'?' is-active':''}" data-view="band" title="Pita frekuensi [2]">PITA</button>
+          <button class="toolbar-tab${state.view==='geo'?' is-active':''}" data-view="geo" title="Geo density [3]">GEO</button>
           <div class="toolbar-sep"></div>
-          <button class="toolbar-tab${state.page==='interference'?' is-active':''}" data-page="interference">⚡ RF</button>
+          <button class="toolbar-tab${state.page==='interference'?' is-active':''}" data-page="interference" title="Analisis interferensi RF [4]">⚡ RF</button>
           <div class="toolbar-right">
             <div class="toolbar-search-wrap">
               <input type="search" class="toolbar-search" id="fSearch" placeholder="Cari stasiun / frekuensi…" value="${esc(state.searchTerm)}"/>
@@ -132,6 +169,7 @@ function renderShell() {
         </div>
         <div id="statsBar"></div>
         <div id="legendBar"></div>
+        <div id="freeBlocksPanel"></div>
         <div id="dynamicContent" class="content-area"></div>
       </div>
     </div>
@@ -328,6 +366,42 @@ function renderControls() {
     b.classList.toggle('is-active', b.dataset.view === state.view));
   document.querySelectorAll('.toolbar-tab[data-page]').forEach(b =>
     b.classList.toggle('is-active', b.dataset.page === state.page));
+}
+
+
+// -- Free block panel -------------------------------------------------
+function renderFreeBlocksPanel() {
+  const el = document.getElementById('freeBlocksPanel');
+  if (!el) return;
+  const activeCities = state.filterCities?.length === 1 ? state.filterCities : null;
+  if (!activeCities) { el.innerHTML = ''; return; }
+  const city = activeCities[0];
+  const cityStations = state.data?.stations.filter(s => (s.wilayah_layanan || s.kota) === city) || [];
+  const channelMap = computeChannelMapForWilayah(cityStations, city);
+  const allotFree = channelMap.filter(c =>
+    c.type === 'free' &&
+    (c.allotment_status === 'allotted_lps' || c.allotment_status === 'allotted_rri')
+  );
+  if (allotFree.length === 0) { el.innerHTML = ''; return; }
+  const rows = allotFree.map(c => {
+    const isRRI = c.allotment_status === 'allotted_rri';
+    const badge = isRRI
+      ? `<span style="color:var(--purple);font-size:9px;background:var(--purple-dim);padding:1px 5px;border-radius:3px">RRI</span>`
+      : `<span style="color:var(--cyan);font-size:9px;background:var(--cyan-dim);padding:1px 5px;border-radius:3px">LPS</span>`;
+    return `<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--border)">
+      <span style="font-family:var(--mono);font-size:12px;font-weight:600;color:var(--txt);min-width:52px">${c.freq.toFixed(1)} MHz</span>
+      ${badge}
+      <span style="font-size:10px;color:var(--txt-3);font-family:var(--mono)">${Number(c.lower).toFixed(3)}–${Number(c.upper).toFixed(3)} MHz</span>
+    </div>`;
+  }).join('');
+  el.innerHTML = `<div style="margin-bottom:10px;padding:10px 12px;background:var(--bg-panel);border:1px solid rgba(29,255,154,.2);border-radius:var(--r2)">
+    <div style="font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:.1em;color:var(--txt-3);text-transform:uppercase;margin-bottom:8px">
+      Slot kosong terjatah — ${esc(shortWilayah(city))}
+      <span style="color:var(--phosphor);margin-left:6px">${allotFree.length} kanal</span>
+    </div>
+    ${rows}
+    <div style="font-size:9px;color:var(--txt-3);margin-top:6px">KM Komdigi 570/2025</div>
+  </div>`;
 }
 
 // ── Attach events ─────────────────────────────────────────────────────
