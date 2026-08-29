@@ -19,6 +19,7 @@ src/interferenceView.js  — render tabel interferensi RF
 src/mobile.js            — FAB + drawer kontrol mobile
 api/data.php             — satu file PHP, semua endpoint
 api/.htaccess            — rewrite semua ke data.php
+tools/extract_allotment.py — ekstrak allotment PDF → JSON via Claude Vision
 ```
 
 ## API endpoints
@@ -45,6 +46,7 @@ state = {
   selectedWilayah,
   sidebarCollapsed,
   _allotmentCache, // { [wilayah]: { [freq]: allotment_status } }
+  _stationCountMap,// { [wilayah]: count } — pre-computed di loadData
   _openFreqOnLoad, // dari ?freq= URL param
 }
 ```
@@ -55,10 +57,10 @@ state = {
 - ✅ Grid view: scroll horizontal per wilayah, cell click → drawer bawah
 - ✅ Band view: SVG per wilayah, theme-aware, hint "geser →"
 - ✅ Geo view: cell kecil, geo opts (Guard/Label/Kosong) di toolbar desktop + mobile drawer
-- ✅ ⚡ RF: interference dihitung client-side, tabel D/U + margin
+- ✅ ⚡ RF: interference dihitung client-side, tabel D/U + margin, filter level, breakdown adj±1/±2
 - ✅ Stats bar: akurat per wilayah aktif, cell Terisi/Kosong klik untuk filter
 - ✅ Free slot panel: muncul saat satu wilayah aktif, list kanal KM 570 yang belum terisi
-- ✅ Detail drawer: slide kanan, Leaflet map, neighbor 30 stasiun (max-height scroll)
+- ✅ Detail drawer: slide kanan, Leaflet map (theme-aware), ERP dalam dBm + Watt, neighbor scroll
 - ✅ Share URL: tombol ⎘ di detail → salin ?freq=xxx ke clipboard
 - ✅ ?freq= URL: buka detail drawer otomatis saat load
 - ✅ URL state sync: view, page, city, search, wilayah
@@ -88,3 +90,17 @@ state = {
 - `computeChannelMap` fallback di apiClient (jika API tidak return channel_map) tidak punya allotment_status
 - Wilayah dengan 0 stasiun tidak tampil di grid (filter di cityRows)
 - CSS warning vite (angka di comment) → false positive, tidak mempengaruhi output
+- `window.__openDetailFreq` di-expose global di boot() — dipakai oleh neighbor rows di detail drawer
+
+## Perbaikan sesi terakhir (semua sudah di-push)
+| File | Apa |
+|---|---|
+| `interferenceEngine.js` | Formula D/U dikoreksi: evaluasi dari sisi korban (ERP lebih kecil), fallback ERP 60→40 dBm, hapus dead code |
+| `interferenceView.js` | Label TX/RX → Interferor/Korban, breakdown adj±1/±2, filter level dropdown, ERP per baris |
+| `detailPage.js` | ERP → Watt konversi, Leaflet tile ikut tema, neighbor click selalu bekerja |
+| `main.js` | Fix cityStations.length out-of-scope, hapus double renderStatsBar, hapus 4 duplikat WILAYAH_SHORT, expose window.__openDetailFreq di boot() |
+| `api/data.php` | CORS allow localhost dev, fix PDO named param duplikat neighbors, COALESCE erp NULL→40, filter sid_long != 0 |
+| `channelEngine.js` | getChannelStatus single-pass (5x find → 1x for), guard `<` → `<=` |
+| `app.css` | Hapus `truncate: ellipsis` invalid, FAB display:none di tablet breakpoint, hapus @import Google Fonts duplikat |
+| `index.html` | Hapus Space Mono+DM Sans (tidak dipakai), load JetBrains Mono+Inter non-blocking, robots noindex, preconnect |
+| `.github/workflows/deploy.yml` | Urutan API dulu→frontend, hapus dangerous-clean-slate, guard inject credentials, tambah health check step |
