@@ -14,6 +14,29 @@ function dbmToWatt(dbm) {
   return w.toExponential(2) + ' W';
 }
 
+// Format tanggal ISO → "31 Des 2027"
+const BULAN = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agt','Sep','Okt','Nov','Des'];
+function fmtDate(raw) {
+  if (!raw) return '—';
+  const d = new Date(raw);
+  if (isNaN(d)) return raw;
+  return `${d.getUTCDate()} ${BULAN[d.getUTCMonth()]} ${d.getUTCFullYear()}`;
+}
+
+// Apakah tanggal sudah lewat hari ini?
+function isExpired(raw) {
+  if (!raw) return false;
+  return new Date(raw) < new Date();
+}
+
+// Haversine distance (km)
+function haversineKm(lat1, lon1, lat2, lon2) {
+  const R = 6371, toRad = d => d * Math.PI / 180;
+  const dLat = toRad(lat2 - lat1), dLon = toRad(lon2 - lon1);
+  const a = Math.sin(dLat/2)**2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon/2)**2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
 export function renderDetailPage(data, onBack, allData, targetEl) {
   const s   = data.data;
   const nbr = data.neighbors || [];
@@ -61,7 +84,8 @@ export function renderDetailPage(data, onBack, allData, targetEl) {
       <div class="dp-grid">
         <div class="dp-item"><div class="dp-item__label">No. SIMF</div><div class="dp-item__val mono" style="font-size:11px">${esc(s.no_simf||'—')}</div></div>
         <div class="dp-item"><div class="dp-item__label">Status</div><div class="dp-item__val" style="color:${status.toLowerCase()==='granted'?'var(--phosphor)':'var(--txt-3)'}">${esc(status)}</div></div>
-        <div class="dp-item"><div class="dp-item__label">Berlaku s.d.</div><div class="dp-item__val">${esc(validity)}</div></div>
+        <div class="dp-item"><div class="dp-item__label">Tgl. Izin</div><div class="dp-item__val">${fmtDate(s.licence_date)}</div></div>
+        <div class="dp-item"><div class="dp-item__label">Berlaku s.d.</div><div class="dp-item__val" style="${isExpired(s.validity)?'color:var(--red)':''}" title="${isExpired(s.validity)?'Izin telah berakhir':''}">${fmtDate(s.validity)}${isExpired(s.validity)?' ⚠':''}</div></div>
         <div class="dp-item"><div class="dp-item__label">Kecamatan</div><div class="dp-item__val">${esc(s.kecamatan||'—')}</div></div>
       </div>
     </div>
@@ -77,10 +101,14 @@ export function renderDetailPage(data, onBack, allData, targetEl) {
         ${nbr.map(n => {
           const nf = parseFloat(n.freq);
           const diff = (nf - freq).toFixed(1);
+          const nLat = parseFloat(n.latitude), nLon = parseFloat(n.longitude);
+          const distKm = (lat && lon && nLat && nLon)
+            ? ` · ${haversineKm(lat, lon, nLat, nLon).toFixed(1)} km`
+            : '';
           return `<div class="neighbor-row" data-freq="${nf}">
             <span class="neighbor-freq">${nf.toFixed(1)}</span>
             <span class="neighbor-name">${esc(n.stn_name||'—')}</span>
-            <span class="neighbor-dist">${parseFloat(diff)>0?'+':''}${diff} MHz</span>
+            <span class="neighbor-dist">${parseFloat(diff)>0?'+':''}${diff} MHz${distKm}</span>
           </div>`;
         }).join('')}
       </div>
