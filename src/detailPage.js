@@ -49,7 +49,6 @@ export function renderDetailPage(data, onBack, allData, targetEl) {
   const erpStr   = erpDbm !== null ? `${erpDbm.toFixed(1)} dBm` : '—';
   const erpWatt  = erpDbm !== null ? ` (${dbmToWatt(erpDbm)})` : '';
   const status   = s.status || '—';
-  const validity = s.validity || '—';
   const kota     = s.wilayah_layanan || s.kota || '—';
   const lat      = parseFloat(s.latitude)  || null;
   const lon      = parseFloat(s.longitude) || null;

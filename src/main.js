@@ -168,9 +168,10 @@ function renderShell() {
               ${state.searchTerm ? `<button class="toolbar-search-clear" id="fSearchClear" title="Hapus pencarian">✕</button>` : ''}
             </div>
             <select class="toolbar-select" id="fChanView">
-              <option value="all"  ${state.filterChanView==='all' ?'selected':''}>Semua kanal</option>
-              <option value="free" ${state.filterChanView==='free'?'selected':''}>Kosong saja</option>
-              <option value="used" ${state.filterChanView==='used'?'selected':''}>Terisi saja</option>
+              <option value="all"     ${state.filterChanView==='all'     ?'selected':''}>Semua kanal</option>
+              <option value="free"    ${state.filterChanView==='free'    ?'selected':''}>Kosong saja</option>
+              <option value="used"    ${state.filterChanView==='used'    ?'selected':''}>Terisi saja</option>
+              <option value="expired" ${state.filterChanView==='expired' ?'selected':''}>⚠ Izin habis</option>
             </select>
             ${(state.filterCities?.length || state.searchTerm || state.filterChanView !== 'all') ?
               `<button class="toolbar-reset" id="fReset" title="Reset semua filter [Esc]">↺ Reset</button>` : ''}
@@ -362,6 +363,7 @@ function renderLegend() {
   if (!el) return;
   el.innerHTML = `<div class="legend-strip">
     <div class="legend-chip"><span class="legend-chip__dot" style="background:rgba(255,184,0,.35);border:1px solid var(--amber)"></span>Terisi</div>
+    <div class="legend-chip"><span class="legend-chip__dot" style="background:rgba(255,59,59,.08);border:1px dashed var(--red)"></span>Izin habis</div>
     <div class="legend-chip"><span class="legend-chip__dot" style="background:var(--red-dim);border:1px dashed var(--red)"></span>Adjacent guard</div>
     <div class="legend-chip"><span class="legend-chip__dot" style="background:var(--cyan-dim);border:1px solid var(--cyan)"></span>Allotted ★ (kosong)</div>
     <div class="legend-chip"><span class="legend-chip__dot" style="background:var(--purple-dim);border:1px dashed var(--purple)"></span>Allotted RRI ▣</div>
@@ -684,6 +686,13 @@ function renderContent() {
     }
     if (state.filterChanView === 'free') return row.filter(c => c.type === 'free');
     if (state.filterChanView === 'used') return row.filter(c => c.type === 'used' || c.type === 'adjacent_1' || c.type === 'adjacent_2');
+    if (state.filterChanView === 'expired') {
+      const now = Date.now();
+      return row.filter(c => {
+        const v = c.station?.validity || c.coStations?.[0]?.validity;
+        return c.type === 'used' && v && new Date(v).getTime() < now;
+      });
+    }
     return row;
   };
 
@@ -731,10 +740,16 @@ function adjSym(c) {
   return ((a1L?'<':a2L?'«':'') + (a1R?'>':a2R?'»':'')).trim() || '—';
 }
 
+function isStationExpired(c) {
+  const v = c.station?.validity || c.coStations?.[0]?.validity;
+  return v && new Date(v).getTime() < Date.now();
+}
+
 function renderCell(c) {
   if (c.type === 'used') {
     const co = c.coStations?.length > 1 ? `<span class="ch-cell__co">${c.coStations.length}</span>` : '';
-    return `<div class="ch-cell ch-cell--used" data-freq="${c.freq}">
+    const exp = isStationExpired(c) ? ' ch-cell--expired' : '';
+    return `<div class="ch-cell ch-cell--used${exp}" data-freq="${c.freq}">
       <span class="ch-cell__freq">${c.freq.toFixed(1)}</span>
       <span class="ch-cell__name">${esc(firstWord(c.station?.stn_name))}</span>
       ${co}
