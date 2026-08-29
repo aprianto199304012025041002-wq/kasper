@@ -76,6 +76,7 @@ function injectDrawer() {
             <button class="kd-seg-btn is-active" data-chanview="all">SEMUA</button>
             <button class="kd-seg-btn" data-chanview="free">KOSONG ★</button>
             <button class="kd-seg-btn" data-chanview="used">TERPAKAI</button>
+            <button class="kd-seg-btn" data-chanview="expired">⚠ HABIS</button>
           </div>
         </section>
 

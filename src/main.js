@@ -731,6 +731,8 @@ function renderContent() {
 
 // ── Cell renderers ────────────────────────────────────────────────────
 function firstWord(n) { return (n || '').trim().split(/\s+/)[0]; }
+const _BULAN = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agt','Sep','Okt','Nov','Des'];
+function fmtDateTT(raw) { if (!raw) return '—'; const d = new Date(raw); return isNaN(d) ? raw : `${d.getUTCDate()} ${_BULAN[d.getUTCMonth()]} ${d.getUTCFullYear()}`; }
 
 function adjSym(c) {
   const a1L = c.adj1_left  || (c.type==='adjacent_1' && c.adj_left);
@@ -908,9 +910,13 @@ function showTT(e, c) {
   let title = '', rows = [];
   if (c.type === 'used') {
     const s = c.station;
-    title = s?.stn_name || c.freq.toFixed(1)+' MHz';
+    const expired = isStationExpired(c);
+    title = (expired ? '⚠ ' : '') + (s?.stn_name || c.freq.toFixed(1)+' MHz');
+    const validStr = s?.validity ? (expired ? '⚠ ' : '') + fmtDateTT(s.validity) : '—';
     rows = [['Frekuensi', c.freq.toFixed(3)+' MHz'],['ERP',(s?.erp_dbm||'—')+' dBm'],
-            ['Wilayah', s?.wilayah_layanan||s?.kota||'—'],['','▸ Klik untuk detail']];
+            ['Wilayah', s?.wilayah_layanan||s?.kota||'—'],
+            ['Berlaku s.d.', validStr],
+            ['','▸ Klik untuk detail']];
   } else if (c.type === 'adjacent_1') {
     title = c.freq.toFixed(1)+' MHz — Adjacent-1 (guard)';
     rows = [['Kiri',(c.adj1_left||c.adj_left)?.stn_name||'—'],
