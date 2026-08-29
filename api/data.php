@@ -3,7 +3,10 @@
 declare(strict_types=1);
 
 header('Content-Type: application/json; charset=utf-8');
-header('Access-Control-Allow-Origin: https://kasper.balmonjogja.info');
+$allowed = ['https://kasper.balmonjogja.info', 'http://localhost:5173', 'http://localhost:4173', 'http://127.0.0.1:5173'];
+$origin  = $_SERVER['HTTP_ORIGIN'] ?? '';
+header('Access-Control-Allow-Origin: ' . (in_array($origin, $allowed, true) ? $origin : $allowed[0]));
+header('Vary: Origin');
 header('Access-Control-Allow-Methods: GET, OPTIONS');
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') { http_response_code(204); exit; }
 if ($_SERVER['REQUEST_METHOD'] !== 'GET')     { http_response_code(405); echo json_encode(['error'=>'Method not allowed']); exit; }
@@ -90,18 +93,19 @@ switch ($route) {
             $station = $stmt->fetch();
             if (!$station) { http_response_code(404); out(['error'=>"Stasiun {$freq} tidak ditemukan"]); }
 
+            // PDO MySQL tidak bisa bind named param yang sama dua kali — pakai ? positional
             $stmt2 = $pdo->prepare("
                 SELECT id, freq, stn_name, clnt_name,
                     city AS kota, area_of_service AS wilayah_layanan, province,
                     erp_pwr_dbm AS erp_dbm, status_simf AS status,
                     sid_lat AS latitude, sid_long AS longitude,
-                    ABS(freq - :cf) AS freq_distance
+                    ABS(freq - ?) AS freq_distance
                 FROM isr
                 WHERE service='Broadcast' AND subservice='FM'
-                  AND ABS(freq - :cf2) BETWEEN 0.05 AND 2.0
+                  AND ABS(freq - ?) BETWEEN 0.05 AND 2.0
                 ORDER BY freq_distance ASC LIMIT 30
             ");
-            $stmt2->execute([':cf' => $freq, ':cf2' => $freq]);
+            $stmt2->execute([$freq, $freq]);
             out(['data' => $station, 'neighbors' => $stmt2->fetchAll()]);
         }
 
@@ -115,7 +119,7 @@ switch ($route) {
                 stn_name, clnt_name,
                 city AS kota, district AS kecamatan,
                 area_of_service AS wilayah_layanan, province,
-                erp_pwr_dbm AS erp_dbm, status_simf AS status,
+                COALESCE(erp_pwr_dbm, 40) AS erp_dbm, status_simf AS status,
                 validity_date AS validity,
                 sid_lat AS latitude, sid_long AS longitude,
                 " . jenis_sql() . " AS jenis
@@ -185,13 +189,14 @@ switch ($route) {
         $stmt = $pdo->prepare("
             SELECT id, freq, stn_name, clnt_name,
                 city AS kota, area_of_service AS wilayah_layanan, province,
-                erp_pwr_dbm AS erp_dbm, status_simf AS status,
+                COALESCE(erp_pwr_dbm, 40) AS erp_dbm,
+                status_simf AS status,
                 sid_lat AS latitude, sid_long AS longitude
             FROM isr
             WHERE service='Broadcast' AND subservice='FM'
               AND freq BETWEEN 87.5 AND 108.0
-              AND sid_lat IS NOT NULL AND sid_long IS NOT NULL
-              AND sid_lat != 0 AND sid_long != 0
+              AND sid_lat IS NOT NULL  AND sid_long IS NOT NULL
+              AND sid_lat != 0        AND sid_long != 0
               $where
             ORDER BY freq ASC
         ");
