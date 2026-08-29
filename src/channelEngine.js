@@ -4,9 +4,9 @@
 // berbeda dari standar Eropa yang hanya 200 kHz.
 //
 // Aturan proteksi kanal (ITU-R BS.412):
-//   Co-channel     : |Δf| < 0.055 MHz → used        (30 dB)
-//   1st adjacent   : |Δf| ≈ 0.1 MHz   → adjacent_1  (20 dB)
-//   2nd adjacent   : |Δf| ≈ 0.2 MHz   → adjacent_2  (10 dB)
+//   Co-channel     : |Δf| <= 0.055 MHz → used        (30 dB)
+//   1st adjacent   : |Δf| ≈ 0.1 MHz    → adjacent_1  (20 dB)
+//   2nd adjacent   : |Δf| ≈ 0.2 MHz    → adjacent_2  (10 dB)
 //   > 0.2 MHz      : free
 //
 // allotment_status (per wilayah layanan, KM Komdigi 570/2025):
@@ -27,15 +27,23 @@ export function buildChannelGrid() {
 }
 
 export function getChannelStatus(ch, stations) {
-  // Co-channel
-  const used = stations.find((s) => Math.abs(s.freq - ch) < ADJACENT_GUARD);
-  if (used) return { type: 'used', station: used };
+  // Single-pass: klasifikasikan tiap stasiun sekali berdasarkan jarak frekuensi ke ch.
+  // Gunakan <= agar exact edge (diff === ADJACENT_GUARD) tetap tertangkap,
+  // mencegah false-free pada data frekuensi yang tidak di-round sempurna.
+  let used = null, adj1L = null, adj1R = null, adj2L = null, adj2R = null;
 
-  // Cek semua kemungkinan adj dari kiri dan kanan
-  const adj1L = stations.find((s) => Math.abs(s.freq - (ch - CHANNEL_SPACING)) < ADJACENT_GUARD);
-  const adj1R = stations.find((s) => Math.abs(s.freq - (ch + CHANNEL_SPACING)) < ADJACENT_GUARD);
-  const adj2L = stations.find((s) => Math.abs(s.freq - (ch - 2 * CHANNEL_SPACING)) < ADJACENT_GUARD);
-  const adj2R = stations.find((s) => Math.abs(s.freq - (ch + 2 * CHANNEL_SPACING)) < ADJACENT_GUARD);
+  for (const s of stations) {
+    const diff = Math.abs(s.freq - ch);
+    if (diff <= ADJACENT_GUARD) { used = s; break; } // co-channel — selesai
+    const side = s.freq < ch ? 'L' : 'R';
+    if (diff <= CHANNEL_SPACING + ADJACENT_GUARD) {
+      if (side === 'L') adj1L = adj1L || s; else adj1R = adj1R || s;
+    } else if (diff <= 2 * CHANNEL_SPACING + ADJACENT_GUARD) {
+      if (side === 'L') adj2L = adj2L || s; else adj2R = adj2R || s;
+    }
+  }
+
+  if (used) return { type: 'used', station: used };
 
   const hasAdj1 = adj1L || adj1R;
   const hasAdj2 = adj2L || adj2R;
@@ -48,8 +56,8 @@ export function getChannelStatus(ch, stations) {
       adj1_right: adj1R || null,
       adj2_left:  adj2L || null,
       adj2_right: adj2R || null,
-      adj_left:  adj1L || adj2L || null,
-      adj_right: adj1R || adj2R || null,
+      adj_left:   adj1L || adj2L || null,
+      adj_right:  adj1R || adj2R || null,
     };
   }
 
@@ -129,5 +137,3 @@ export function summarize(channelMap) {
     pct_used: total ? +(used/total*100).toFixed(1) : 0,
     pct_free: total ? +(free/total*100).toFixed(1) : 0 };
 }
-
-
