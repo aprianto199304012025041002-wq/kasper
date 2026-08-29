@@ -2,9 +2,6 @@
    KASPER - app.css  (satu file, bongkar total)
    Spektrum FM monitoring - Balmon Yogyakarta
    ----------------------------------------------------------------------- */
-
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap');
-
 /* -- Tokens ----------------------------------------------------------- */
 :root {
   --bg:           #03070D;
@@ -72,8 +69,6 @@
   --purple-dim:   rgba(107,79,191,.08);
   --orange:       #B05200;
 }
-
-
 /* -- Reset ------------------------------------------------------------ */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html { color-scheme: dark; }
