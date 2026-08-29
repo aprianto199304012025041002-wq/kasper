@@ -275,7 +275,7 @@ input, select { font-family: inherit; color: inherit; }
 }
 .sidebar__item.is-active .sidebar__badge { color: var(--cyan); }
 
-.sidebar__label { flex: 1; min-width: 0; truncate: ellipsis; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sidebar__label { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .sidebar__badge {
   font-family: var(--mono);
   font-size: 10px;
@@ -1098,6 +1098,8 @@ input, select { font-family: inherit; color: inherit; }
   .ch-cell { width: 48px; height: 42px; }
   .stat-cell { min-width: 90px; padding: 6px 10px; }
   .stat-cell__val { font-size: 16px; }
+  /* FAB tidak muncul di tablet — navigasi via sidebar */
+  .kasper-fab { display: none !important; }
 }
 
 /* -- Mobile (portrait + landscape) : max 767px -------------------------- */
