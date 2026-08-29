@@ -53,7 +53,7 @@ function base_where(array $q): array {
     $w = []; $p = [];
     if (!empty($q['province'])) { $w[] = 'province = :province'; $p[':province'] = $q['province']; }
     if (!empty($q['city']))     { $w[] = 'area_of_service = :city'; $p[':city'] = $q['city']; }
-    if (!empty($q['search']))   { $w[] = '(stn_name LIKE :s OR clnt_name LIKE :s)'; $p[':s'] = '%'.$q['search'].'%'; }
+    if (!empty($q['search']))   { $w[] = '(stn_name LIKE :s1 OR clnt_name LIKE :s2)'; $p[':s1'] = $p[':s2'] = '%'.$q['search'].'%'; }
     return [$w, $p];
 }
 

@@ -1067,7 +1067,7 @@ input, select { font-family: inherit; color: inherit; }
 }
 .theme-toggle:hover { background: var(--bg-hover); color: var(--txt); }
 
-   RESPONSIVE
+/* RESPONSIVE
    Desktop landscape  : 1024px+  — layout penuh, sidebar fixed
    Tablet landscape   : 768–1023px — sidebar collapsible, toolbar compact
    Mobile portrait    : max 767px   — sidebar hilang, FAB, scroll normal
