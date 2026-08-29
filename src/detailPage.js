@@ -5,6 +5,15 @@ const JENIS_LABELS = {
   publik_lokal: 'Publik Lokal (LPPL)', komunitas: 'Komunitas',
 };
 
+// Konversi dBm → Watt dengan unit yang tepat
+function dbmToWatt(dbm) {
+  const w = Math.pow(10, (parseFloat(dbm) - 30) / 10);
+  if (w >= 1000) return (w / 1000).toFixed(2) + ' kW';
+  if (w >= 1)    return w.toFixed(2) + ' W';
+  if (w >= 0.001) return (w * 1000).toFixed(1) + ' mW';
+  return w.toExponential(2) + ' W';
+}
+
 export function renderDetailPage(data, onBack, allData, targetEl) {
   const s   = data.data;
   const nbr = data.neighbors || [];
@@ -13,7 +22,9 @@ export function renderDetailPage(data, onBack, allData, targetEl) {
   const lower    = s.lower_mhz ?? (freq - (parseFloat(s.bw_khz||200)/2/1000));
   const upper    = s.upper_mhz ?? (freq + (parseFloat(s.bw_khz||200)/2/1000));
   const bwKhz    = s.bw_khz || 200;
-  const erp      = s.erp_dbm ? parseFloat(s.erp_dbm).toFixed(1) : '—';
+  const erpDbm   = s.erp_dbm ? parseFloat(s.erp_dbm) : null;
+  const erpStr   = erpDbm !== null ? `${erpDbm.toFixed(1)} dBm` : '—';
+  const erpWatt  = erpDbm !== null ? ` (${dbmToWatt(erpDbm)})` : '';
   const status   = s.status || '—';
   const validity = s.validity || '—';
   const kota     = s.wilayah_layanan || s.kota || '—';
@@ -37,7 +48,7 @@ export function renderDetailPage(data, onBack, allData, targetEl) {
       <div class="dp-section__label">Teknis</div>
       <div class="dp-grid">
         <div class="dp-item"><div class="dp-item__label">Frekuensi</div><div class="dp-item__val mono">${freq.toFixed(3)} MHz</div></div>
-        <div class="dp-item"><div class="dp-item__label">ERP</div><div class="dp-item__val mono">${erp} dBm</div></div>
+        <div class="dp-item"><div class="dp-item__label">ERP</div><div class="dp-item__val mono">${erpStr}<span style="color:var(--txt-3);font-size:10px">${erpWatt}</span></div></div>
         <div class="dp-item"><div class="dp-item__label">Lower edge</div><div class="dp-item__val mono">${Number(lower).toFixed(4)} MHz</div></div>
         <div class="dp-item"><div class="dp-item__label">Upper edge</div><div class="dp-item__val mono">${Number(upper).toFixed(4)} MHz</div></div>
         <div class="dp-item"><div class="dp-item__label">Bandwidth</div><div class="dp-item__val mono">${bwKhz} kHz</div></div>
@@ -84,16 +95,22 @@ export function renderDetailPage(data, onBack, allData, targetEl) {
       if (btn) { btn.textContent = '✓'; setTimeout(() => { btn.textContent = '⎘'; }, 1200); }
     });
   });
+  // Neighbor click — window.__openDetailFreq di-set di boot() di main.js
   root.querySelectorAll('.neighbor-row[data-freq]').forEach(r => {
     r.addEventListener('click', () => {
-      if (window.__openDetailFreq) window.__openDetailFreq(parseFloat(r.dataset.freq));
+      const f = parseFloat(r.dataset.freq);
+      if (typeof window.__openDetailFreq === 'function') window.__openDetailFreq(f);
     });
   });
 
-  initMap(lat, lon, s.stn_name||'', freq, nbr, parseFloat(s.erp_dbm||0));
+  initMap(lat, lon, s.stn_name||'', freq, nbr, erpDbm);
 }
 
-function initMap(lat, lon, name, freq, neighbors, erp) {
+function isDarkTheme() {
+  return document.documentElement.getAttribute('data-theme') !== 'light';
+}
+
+function initMap(lat, lon, name, freq, neighbors, erpDbm) {
   const el = document.getElementById('stationMap');
   if (!el) return;
   if (!lat || !lon) {
@@ -106,31 +123,39 @@ function initMap(lat, lon, name, freq, neighbors, erp) {
     document.head.appendChild(lnk);
     const sc = document.createElement('script');
     sc.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
-    sc.onload = () => initLeaflet(lat, lon, name, freq, neighbors, el, erp);
+    sc.onload = () => initLeaflet(lat, lon, name, freq, neighbors, el, erpDbm);
     document.head.appendChild(sc);
   } else {
-    initLeaflet(lat, lon, name, freq, neighbors, el, erp);
+    initLeaflet(lat, lon, name, freq, neighbors, el, erpDbm);
   }
 }
 
-function initLeaflet(lat, lon, name, freq, neighbors, el, erp) {
+function initLeaflet(lat, lon, name, freq, neighbors, el, erpDbm) {
+  const dark = isDarkTheme();
+  const tileUrl = dark
+    ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
+    : 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png';
+
   const map = L.map(el).setView([lat, lon], 11);
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+  L.tileLayer(tileUrl, {
     attribution: '© OpenStreetMap © CARTO', subdomains: 'abcd', maxZoom: 19,
   }).addTo(map);
+
+  const erpLabel = erpDbm !== null ? `ERP: ${erpDbm.toFixed(1)} dBm (${dbmToWatt(erpDbm)})` : 'ERP: —';
   const icon = L.divIcon({
     className: '',
     html: `<div style="width:12px;height:12px;border-radius:50%;background:#1DFF9A;border:2px solid #03070D;box-shadow:0 0 8px rgba(29,255,154,.5)"></div>`,
     iconSize: [12,12], iconAnchor: [6,6],
   });
   L.marker([lat,lon],{icon}).addTo(map)
-    .bindPopup(`<b>${name}</b><br>${freq.toFixed(1)} MHz · ERP: ${erp?erp.toFixed(1)+' dBm':'—'}`).openPopup();
+    .bindPopup(`<b>${name}</b><br>${freq.toFixed(1)} MHz · ${erpLabel}`).openPopup();
+
   neighbors.forEach(n => {
     const nLat = parseFloat(n.latitude), nLon = parseFloat(n.longitude);
     if (!nLat || !nLon) return;
     const ni = L.divIcon({
       className:'',
-      html:`<div style="width:8px;height:8px;border-radius:50%;background:#2E4560;border:1.5px solid #03070D"></div>`,
+      html:`<div style="width:8px;height:8px;border-radius:50%;background:${dark?'#2E4560':'#9BB8D4'};border:1.5px solid ${dark?'#03070D':'#fff'}"></div>`,
       iconSize:[8,8], iconAnchor:[4,4],
     });
     L.marker([nLat,nLon],{icon:ni}).addTo(map)

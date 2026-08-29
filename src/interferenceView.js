@@ -4,6 +4,8 @@ export function renderInterferencePanel(container, data) {
   if (!container) return;
   const { pairs = [], summary = {}, stations_evaluated = 0, model = '' } = data;
 
+  const adjTotal = (summary.adjacent_1||0) + (summary.adjacent_2||0);
+
   container.innerHTML = `
     <div class="interf-summary">
       <div class="interf-card">
@@ -16,7 +18,9 @@ export function renderInterferencePanel(container, data) {
       </div>
       <div class="interf-card">
         <div class="interf-card__label">Adjacent kritis</div>
-        <div class="interf-card__val ${ (summary.adjacent_1||0)+(summary.adjacent_2||0) > 0 ? 'is-warn' : 'is-ok' }">${(summary.adjacent_1||0)+(summary.adjacent_2||0)}</div>
+        <div class="interf-card__val ${adjTotal > 0 ? 'is-warn' : 'is-ok'}">${adjTotal}
+          ${adjTotal > 0 ? `<span style="font-size:9px;color:var(--txt-3);font-weight:400;display:block">±1: ${summary.adjacent_1||0} · ±2: ${summary.adjacent_2||0}</span>` : ''}
+        </div>
       </div>
       <div class="interf-card">
         <div class="interf-card__label">Pasangan aman</div>
@@ -28,55 +32,85 @@ export function renderInterferencePanel(container, data) {
       ? `<div class="state-empty">Tidak ada stasiun dengan koordinat GPS.<br><span style="font-size:10px;margin-top:4px;display:block">Isi kolom latitude / longitude di tabel isr.</span></div>`
       : pairs.length === 0
         ? `<div class="state-empty">Tidak ada pasangan interferensi terdeteksi.</div>`
-        : renderTable(pairs, model)
+        : renderTableWithFilter(pairs, model)
     }
   `;
+
+  // Pasang event filter setelah render
+  container.querySelector('#interfFilter')?.addEventListener('change', e => {
+    const val = e.target.value;
+    container.querySelectorAll('tr[data-level]').forEach(row => {
+      row.style.display = (!val || row.dataset.level === val) ? '' : 'none';
+    });
+    const tbody = container.querySelector('.interf-table tbody');
+    if (tbody) {
+      const visible = [...tbody.querySelectorAll('tr[data-level]')].filter(r => r.style.display !== 'none');
+      visible.forEach((r, i) => { const nd = r.querySelector('.row-num'); if (nd) nd.textContent = i+1; });
+    }
+  });
 }
 
-function renderTable(pairs, model) {
+function renderTableWithFilter(pairs, model) {
+  const criticalCount  = pairs.filter(p => p.level === 'critical').length;
+  const warningCount   = pairs.filter(p => p.level === 'warning').length;
+
   const rows = pairs.map((p, i) => {
-    const barPct = Math.min(100, Math.max(0, ((p.margin_db+10)/30)*100));
-    const barClr = p.level==='critical' ? 'var(--red)' : p.level==='warning' ? 'var(--amber)' : 'var(--phosphor)';
-    const typeBadge = p.type==='co_channel' ? `<span class="badge-co">CO</span>`
-                    : p.type==='adjacent_1' ? `<span class="badge-adj1">ADJ±1</span>`
-                    : `<span class="badge-adj2">ADJ±2</span>`;
-    return `<tr>
-      <td style="color:var(--txt-3)">${i+1}</td>
+    const barPct = Math.min(100, Math.max(0, ((p.margin_db + 10) / 30) * 100));
+    const barClr = p.level === 'critical' ? 'var(--red)' : p.level === 'warning' ? 'var(--amber)' : 'var(--phosphor)';
+    const typeBadge = p.type === 'co_channel' ? `<span class="badge-co">CO</span>`
+                    : p.type === 'adjacent_1'  ? `<span class="badge-adj1">ADJ±1</span>`
+                    :                            `<span class="badge-adj2">ADJ±2</span>`;
+    const levelLabel = p.level === 'critical' ? 'Kritis' : p.level === 'warning' ? 'Peringatan' : 'Aman';
+    return `<tr data-level="${p.level}">
+      <td style="color:var(--txt-3)" class="row-num">${i+1}</td>
       <td>
         <div style="color:var(--txt)">${esc(p.tx.stn_name)}</div>
-        <div style="font-size:10px;color:var(--txt-3)">${parseFloat(p.tx.freq).toFixed(1)} MHz · ${esc(p.tx.wilayah_layanan||p.tx.kota||'—')}</div>
+        <div style="font-size:10px;color:var(--txt-3)">${parseFloat(p.tx.freq).toFixed(1)} MHz · ${esc(p.tx.wilayah_layanan||'—')}</div>
+        <div style="font-size:9px;color:var(--txt-3)">ERP ${p.tx.erp_dbm} dBm</div>
       </td>
       <td>
         <div style="color:var(--txt)">${esc(p.rx.stn_name)}</div>
-        <div style="font-size:10px;color:var(--txt-3)">${parseFloat(p.rx.freq).toFixed(1)} MHz · ${esc(p.rx.wilayah_layanan||p.rx.kota||'—')}</div>
+        <div style="font-size:10px;color:var(--txt-3)">${parseFloat(p.rx.freq).toFixed(1)} MHz · ${esc(p.rx.wilayah_layanan||'—')}</div>
+        <div style="font-size:9px;color:var(--txt-3)">ERP ${p.rx.erp_dbm} dBm</div>
       </td>
       <td>${typeBadge}</td>
-      <td>${p.dist_km} km</td>
-      <td>${p.pr_actual} dB</td>
+      <td style="font-family:var(--mono);font-size:11px">${p.dist_km} km</td>
+      <td style="font-family:var(--mono);font-size:11px">${p.pr_actual > 0 ? '+' : ''}${p.pr_actual} dB</td>
       <td>
         <div style="display:flex;align-items:center;gap:6px">
           <div style="flex:1;height:4px;background:var(--bg-raised);border-radius:2px">
             <div style="height:100%;width:${barPct}%;background:${barClr};border-radius:2px"></div>
           </div>
-          <span style="color:${barClr};min-width:32px;font-size:10px">${p.margin_db>0?'+':''}${p.margin_db}</span>
+          <span style="color:${barClr};min-width:36px;font-size:10px;text-align:right">${p.margin_db > 0 ? '+' : ''}${p.margin_db}</span>
         </div>
       </td>
-      <td style="color:${barClr};text-transform:capitalize">${p.level}</td>
+      <td style="color:${barClr}">${levelLabel}</td>
     </tr>`;
   }).join('');
 
   return `
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap">
+      <div style="font-size:11px;color:var(--txt-3)">${pairs.length} pasangan terdeteksi</div>
+      <select id="interfFilter" style="margin-left:auto;font-family:var(--mono);font-size:11px;background:var(--bg-raised);color:var(--txt);border:1px solid var(--border);border-radius:4px;padding:3px 8px">
+        <option value="">Semua level</option>
+        ${criticalCount  ? `<option value="critical">Kritis (${criticalCount})</option>` : ''}
+        ${warningCount   ? `<option value="warning">Peringatan (${warningCount})</option>` : ''}
+        <option value="ok">Aman</option>
+      </select>
+    </div>
     <div style="overflow-x:auto">
       <table class="interf-table">
         <thead><tr>
-          <th>#</th><th>Stasiun TX</th><th>Stasiun RX</th>
+          <th>#</th>
+          <th>Interferor ↑ ERP lebih besar</th>
+          <th>Korban ↓ ERP lebih kecil</th>
           <th>Tipe</th><th>Jarak</th><th>D/U</th><th>Margin</th><th>Level</th>
         </tr></thead>
         <tbody>${rows}</tbody>
       </table>
     </div>
     <div style="margin-top:8px;font-family:var(--mono);font-size:10px;color:var(--txt-3)">
-      Model: ${esc(model)} · Margin = D/U aktual − proteksi minimum (ITU-R BS.412)
+      Model: ${esc(model)} · D/U = ERP korban − ERP interferor · Margin = D/U − proteksi minimum
     </div>`;
 }
 

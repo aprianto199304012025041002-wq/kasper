@@ -133,6 +133,7 @@ async function boot() {
     }
   );
   window.__openMobFilter = () => openFilterDrawer();
+  window.__openDetailFreq = (f) => openDetailPage({ freq: f });
 }
 
 // ── Shell ────────────────────────────────────────────────────────────
