@@ -22,6 +22,12 @@
 //   margin    = D/U_korban − threshold
 //
 // ERP fallback: 40 dBm (10 W) — representatif untuk FM komunitas/lokal kecil
+//
+// Distance cutoff (per tipe, ITU-R FM planning practice):
+//   Co-channel  : 150 km
+//   Adjacent ±1 :  60 km
+//   Adjacent ±2 :  30 km
+// Pair "ok" hanya disimpan jika jarak ≤ 10 km (co-located dalam satu kota)
 
 const CO_THRESHOLD   = 30; // dB
 const ADJ1_THRESHOLD = 20;
@@ -72,7 +78,9 @@ export function computeInterference(stations) {
       else continue; // tidak relevan
 
       const distKm = haversineKm(a.lat, a.lon, b.lat, b.lon);
-      if (distKm > 300) continue; // terlalu jauh, tidak signifikan
+      // Distance cutoff per tipe — berdasarkan FM planning practice (ITU-R BS.412)
+      const DIST_CUT = { co_channel: 150, adjacent_1: 60, adjacent_2: 30 };
+      if (distKm > DIST_CUT[type]) continue;
 
       // Evaluasi dari sisi stasiun yang lebih lemah sebagai "korban"
       // Path loss sama untuk kedua arah (jarak & frekuensi identik), sehingga cancel.
@@ -89,7 +97,8 @@ export function computeInterference(stations) {
                   : margin_db < 0   ? 'warning'
                   : 'ok';
 
-      if (level === 'critical' || level === 'warning' || distKm < 50) {
+      // Simpan: semua critical+warning, dan pair ok yang sangat dekat (≤10 km, co-located)
+      if (level === 'critical' || level === 'warning' || (level === 'ok' && distKm <= 10)) {
         pairs.push({
           tx: {
             stn_name: interferer.stn_name,
