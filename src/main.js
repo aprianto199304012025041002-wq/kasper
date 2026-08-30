@@ -96,6 +96,8 @@ function initKeyboard() {
           syncURL(); renderSidebar(); renderContent();
         }
         break;
+      case '?':
+        toggleHelpOverlay(); break;
       case 'd': toggleTheme(); break;
       case 'b':
         state.sidebarCollapsed = !state.sidebarCollapsed;
@@ -1208,6 +1210,34 @@ const WILAYAH_SHORT = {
   'WONOTUNGGAL, BANDAR': 'Wonotunggal – Bandar',
 };
 function shortWilayah(w) { return WILAYAH_SHORT[w] || w; }
+
+function toggleHelpOverlay() {
+  let el = document.getElementById('helpOverlay');
+  if (el) { el.remove(); return; }
+  el = document.createElement('div');
+  el.id = 'helpOverlay';
+  el.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;display:flex;align-items:center;justify-content:center';
+  el.innerHTML = `
+    <div style="background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--r2);padding:24px 28px;min-width:340px;max-width:90vw;font-family:var(--mono)">
+      <div style="font-size:13px;font-weight:700;color:var(--txt);margin-bottom:16px;letter-spacing:.05em">KASPER — Keyboard Shortcuts</div>
+      ${[
+        ['1 / 2 / 3','Grid / Pita / Geo view'],
+        ['4','Halaman Interferensi'],
+        ['f  atau  /','Fokus ke kotak cari'],
+        ['Esc','Hapus filter / tutup detail'],
+        ['b','Toggle sidebar'],
+        ['d','Toggle tema gelap/terang'],
+        ['?','Tampilkan / tutup bantuan ini'],
+      ].map(([k,v]) => `
+        <div style="display:flex;gap:16px;padding:5px 0;border-bottom:1px solid var(--border)">
+          <span style="min-width:120px;color:var(--phosphor);font-size:11px">${k}</span>
+          <span style="color:var(--txt-2);font-size:11px">${v}</span>
+        </div>`).join('')}
+      <div style="margin-top:14px;font-size:10px;color:var(--txt-3);text-align:center">Klik di luar atau tekan ? untuk tutup</div>
+    </div>`;
+  el.addEventListener('click', e => { if (e.target === el) el.remove(); });
+  document.body.appendChild(el);
+}
 
 function exportExpiredCSV() {
   const now = Date.now();
