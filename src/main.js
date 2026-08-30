@@ -1108,13 +1108,17 @@ function openInlineDetail(info) {
       return;
     }
     const s = stations[0] || {};
+    const nowMs = Date.now();
+    const sExpired = s.validity && new Date(s.validity).getTime() < nowMs;
+    const validLabel = s.validity ? fmtDateTT(s.validity) + (sExpired ? ' ⚠' : '') : '—';
     rows = [
       ['Frekuensi', freq.toFixed(3)+' MHz', true],
-      ['Nama stasiun', s.stn_name||'—', false],
+      ['Nama stasiun', (sExpired ? '⚠ ' : '') + (s.stn_name||'—'), false],
       ['Wilayah Layanan', s.wilayah_layanan||s.kota||'—', false],
       ['Kecamatan', s.kecamatan||'—', false],
       ['ERP', s.erp_dbm ? s.erp_dbm+' dBm' : '—', true],
       ['Jenis', s.jenis||'—', false],
+      ['Berlaku s.d.', validLabel, sExpired],
     ];
     cta = `<button class="cd-cta" id="cdCtaDetail">Lihat detail stasiun →</button>`;
   } else if (info.type === 'adjacent_1' || info.type === 'adjacent_2') {
