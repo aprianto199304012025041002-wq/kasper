@@ -178,6 +178,7 @@ function renderShell() {
             ${(state.filterCities?.length || state.searchTerm || state.filterChanView !== 'all') ?
               `<button class="toolbar-reset" id="fReset" title="Reset semua filter [Esc]">↺ Reset</button>` : ''}
             <button class="toolbar-btn" id="exportExpiredBtn" title="Export daftar izin habis ke CSV" style="display:${state.filterChanView==='expired'?'':'none'}">⬇ CSV</button>
+            <button class="toolbar-btn" id="helpBtn" title="Keyboard shortcuts [?]" style="padding:4px 8px;color:var(--txt-3)">?</button>
           </div>
         </div>
         <div id="statsBar"></div>
@@ -371,6 +372,8 @@ function renderStatsBar(summary, allotmentStats = null, expiredCount = 0) {
       state.filterChanView = cell.dataset.filterChan;
       const sel = document.getElementById('fChanView');
       if (sel) sel.value = state.filterChanView;
+      const expBtn = document.getElementById('exportExpiredBtn');
+      if (expBtn) expBtn.style.display = state.filterChanView === 'expired' ? '' : 'none';
       syncURL(); renderContent();
     });
   });
@@ -460,6 +463,7 @@ function attachEvents() {
       document.getElementById('fSearch')?.focus();
     }
     if (e.target.id === 'exportExpiredBtn') { exportExpiredCSV(); return; }
+    if (e.target.id === 'helpBtn') { toggleHelpOverlay(); return; }
     if (e.target.id === 'fReset') {
       state.filterCities = []; state.selectedWilayah = null;
       state.filterChanView = 'all'; state.searchTerm = '';
