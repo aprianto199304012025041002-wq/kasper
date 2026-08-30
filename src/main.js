@@ -678,9 +678,17 @@ function renderContent() {
       state._allotmentCache[city] = idx;
     }
     const allotIdx = state._allotmentCache[city];
+    // Index stasiun per frekuensi — O(1) lookup per channel, bukan O(stations) per channel
+    const stationsByFreq = {};
+    cityStations.forEach(s => {
+      const fk = Math.round(parseFloat(s.freq) * 10);
+      if (!stationsByFreq[fk]) stationsByFreq[fk] = [];
+      stationsByFreq[fk].push(s);
+    });
     const row = state.data.channel_map.map(c => {
       const allotment_status = allotIdx[c.freq] ?? null;
-      const ownStations = cityStations.filter(s => Math.abs(parseFloat(s.freq) - c.freq) < 0.01);
+      const fk = Math.round(c.freq * 10);
+      const ownStations = stationsByFreq[fk] || [];
       if (ownStations.length > 0)
         return { ...c, allotment_status, type: 'used', station: ownStations[0], coStations: ownStations };
       if (c.type === 'used') return { ...c, allotment_status, type: 'free', station: null };
