@@ -86,6 +86,7 @@ function initKeyboard() {
         document.getElementById('fSearch')?.focus();
         break;
       case 'Escape':
+        if (document.getElementById('helpOverlay')) { document.getElementById('helpOverlay').remove(); break; }
         if (state.searchTerm) {
           state.searchTerm = '';
           const el = document.getElementById('fSearch');

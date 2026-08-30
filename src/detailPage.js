@@ -104,9 +104,10 @@ export function renderDetailPage(data, onBack, allData, targetEl) {
           const distKm = (lat && lon && nLat && nLon)
             ? ` · ${haversineKm(lat, lon, nLat, nLon).toFixed(1)} km`
             : '';
-          return `<div class="neighbor-row" data-freq="${nf}">
-            <span class="neighbor-freq">${nf.toFixed(1)}</span>
-            <span class="neighbor-name">${esc(n.stn_name||'—')}</span>
+          const nExp = isExpired(n.validity);
+          return `<div class="neighbor-row" data-freq="${nf}" style="${nExp?'opacity:.75':''}">
+            <span class="neighbor-freq" style="${nExp?'color:var(--red)':''}">${nf.toFixed(1)}</span>
+            <span class="neighbor-name">${esc(n.stn_name||'—')}${nExp?' <span style="color:var(--red);font-size:9px">⚠</span>':''}</span>
             <span class="neighbor-dist">${parseFloat(diff)>0?'+':''}${diff} MHz${distKm}</span>
           </div>`;
         }).join('')}
