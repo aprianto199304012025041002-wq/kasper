@@ -75,6 +75,9 @@ export function renderDetailPage(data, onBack, allData, targetEl) {
         <div class="dp-item"><div class="dp-item__label">Upper edge</div><div class="dp-item__val mono">${Number(upper).toFixed(4)} MHz</div></div>
         <div class="dp-item"><div class="dp-item__label">Bandwidth</div><div class="dp-item__val mono">${bwKhz} kHz</div></div>
         <div class="dp-item"><div class="dp-item__label">Jenis</div><div class="dp-item__val">${esc(jenis)}</div></div>
+        ${s.tower_height_m ? `<div class="dp-item"><div class="dp-item__label">Tinggi antena</div><div class="dp-item__val mono">${s.tower_height_m} m</div></div>` : ''}
+        ${s.antenna_gain   ? `<div class="dp-item"><div class="dp-item__label">Gain antena</div><div class="dp-item__val mono">${s.antenna_gain} dBd</div></div>` : ''}
+        ${(s.equip_type||s.eq_mfr||s.eq_mdl) ? `<div class="dp-item" style="grid-column:1/-1"><div class="dp-item__label">Perangkat</div><div class="dp-item__val mono" style="font-size:10px">${esc([s.equip_type,s.eq_mfr,s.eq_mdl].filter(Boolean).join(' · '))}</div></div>` : ''}
       </div>
     </div>
 
@@ -83,6 +86,7 @@ export function renderDetailPage(data, onBack, allData, targetEl) {
       <div class="dp-grid">
         <div class="dp-item"><div class="dp-item__label">No. SIMF</div><div class="dp-item__val mono" style="font-size:11px">${esc(s.no_simf||'—')}</div></div>
         <div class="dp-item"><div class="dp-item__label">Status</div><div class="dp-item__val" style="color:${status.toLowerCase()==='granted'?'var(--phosphor)':'var(--txt-3)'}">${esc(status)}</div></div>
+        <div class="dp-item"><div class="dp-item__label">Tgl. Permohonan</div><div class="dp-item__val">${fmtDate(s.appl_date)}</div></div>
         <div class="dp-item"><div class="dp-item__label">Tgl. Izin</div><div class="dp-item__val">${fmtDate(s.licence_date)}</div></div>
         <div class="dp-item"><div class="dp-item__label">Berlaku s.d.</div><div class="dp-item__val" style="${isExpired(s.validity)?'color:var(--red)':''}" title="${isExpired(s.validity)?'Izin telah berakhir':''}">${fmtDate(s.validity)}${isExpired(s.validity)?' ⚠':''}</div></div>
         <div class="dp-item"><div class="dp-item__label">Kecamatan</div><div class="dp-item__val">${esc(s.kecamatan||'—')}</div></div>
