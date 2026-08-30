@@ -1564,3 +1564,22 @@ input, select { font-family: inherit; color: inherit; }
   padding: 2px 4px 0;
   letter-spacing: .06em;
 }
+
+/* ── Print ─────────────────────────────────────────────────────────── */
+@media print {
+  .app-sidebar, .app-toolbar, .kasper-fab, .kasper-drawer,
+  #tooltip, #helpOverlay, .toolbar-btn, .toolbar-reset,
+  .stat-cell--btn, .legend-bar { display: none !important; }
+
+  .app-layout { display: block !important; }
+  .app-main   { overflow: visible !important; height: auto !important; }
+
+  .city-block { break-inside: avoid; margin-bottom: 16px; }
+  .ch-row     { flex-wrap: wrap !important; }
+
+  .ch-cell--used    { border: 1px solid #000 !important; background: #fff !important; color: #000 !important; }
+  .ch-cell--expired { border: 1px dashed #c00 !important; background: #fff !important; }
+  .ch-cell--adj1, .ch-cell--adj2 { border: 1px solid #999 !important; background: #eee !important; }
+
+  .dp-panel, .detail-overlay { display: none !important; }
+}
