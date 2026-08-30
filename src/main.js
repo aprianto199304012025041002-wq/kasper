@@ -207,13 +207,16 @@ function filterSidebarNav() {
   const q = (document.getElementById('sidebarSearch')?.value || '').toLowerCase();
   document.querySelectorAll('.sidebar__item[data-wilayah]').forEach(el => {
     const name = el.dataset.wilayah.toLowerCase();
-    el.style.display = (!q || name.includes(q)) ? '' : 'none';
+    const label = (el.querySelector('.sidebar__label')?.textContent || '').toLowerCase();
+    el.style.display = (!q || name.includes(q) || label.includes(q)) ? '' : 'none';
   });
   document.querySelectorAll('.sidebar__section-label').forEach(label => {
     const sec = label.nextElementSibling;
+    const wrapper = label.closest('.sidebar__section');
     if (!sec) return;
     const anyVisible = [...sec.querySelectorAll('.sidebar__item')].some(i => i.style.display !== 'none');
     label.style.display = sec.style.display = anyVisible ? '' : 'none';
+    if (wrapper) wrapper.style.display = anyVisible ? '' : 'none';
   });
 }
 
