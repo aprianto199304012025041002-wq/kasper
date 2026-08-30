@@ -98,11 +98,14 @@ switch ($route) {
                 SELECT id, freq, stn_name, clnt_name,
                     city AS kota, area_of_service AS wilayah_layanan, province,
                     erp_pwr_dbm AS erp_dbm, status_simf AS status,
+                    validity_date AS validity,
                     sid_lat AS latitude, sid_long AS longitude,
                     ABS(freq - ?) AS freq_distance
                 FROM isr
                 WHERE service='Broadcast' AND subservice='FM'
                   AND ABS(freq - ?) BETWEEN 0.05 AND 2.0
+                  AND sid_lat IS NOT NULL AND sid_long IS NOT NULL
+                  AND sid_lat != 0 AND sid_long != 0
                 ORDER BY freq_distance ASC LIMIT 30
             ");
             $stmt2->execute([$freq, $freq]);
