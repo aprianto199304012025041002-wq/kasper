@@ -277,6 +277,11 @@ input, select { font-family: inherit; color: inherit; }
   color: var(--txt-3);
   flex-shrink: 0;
 }
+.sidebar__badge--exp {
+  color: var(--red);
+  margin-right: 4px;
+  font-size: 9px;
+}
 
 /* Sidebar toggle button (visible when collapsed) */
 .sidebar-toggle {

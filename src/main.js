@@ -246,6 +246,14 @@ function renderSidebar() {
   )].sort();
 
   const cnt = (w) => state._stationCountMap?.[w] ?? 0;
+  const now = Date.now();
+  const expMap = {};
+  state.data.stations.forEach(s => {
+    const w = s.wilayah_layanan || s.kota || '';
+    if (w && s.validity && new Date(s.validity).getTime() < now)
+      expMap[w] = (expMap[w] || 0) + 1;
+  });
+  const expCnt = (w) => expMap[w] || 0;
 
   const DIY = new Set(['KOTA YOGYAKARTA','BANTUL, BANGUNTAPAN',
     'SLEMAN, NGAGLIK, KALASAN, NGEMPLAK, PAKEM','WATES, SENTOLO',
@@ -256,9 +264,11 @@ function renderSidebar() {
 
   const itemHtml = (w) => {
     const active = state.selectedWilayah === w;
+    const exp = expCnt(w);
+    const expBadge = exp > 0 ? `<span class="sidebar__badge sidebar__badge--exp" title="${exp} izin habis">⚠${exp}</span>` : '';
     return `<button class="sidebar__item${active?' is-active':''}" data-wilayah="${esc(w)}">
       <span class="sidebar__label">${esc(shortWilayah(w))}</span>
-      <span class="sidebar__badge">${cnt(w)}</span>
+      ${expBadge}<span class="sidebar__badge">${cnt(w)}</span>
     </button>`;
   };
 
