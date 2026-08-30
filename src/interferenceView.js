@@ -36,6 +36,16 @@ export function renderInterferencePanel(container, data) {
     }
   `;
 
+  // Pasang click-to-detail pada nama stasiun
+  container.querySelectorAll('.interf-stn-link[data-freq]').forEach(el => {
+    el.addEventListener('click', () => {
+      const f = parseFloat(el.dataset.freq);
+      if (window.__openDetailFreq) window.__openDetailFreq(f);
+    });
+    el.addEventListener('mouseenter', () => { el.style.textDecoration = 'underline'; });
+    el.addEventListener('mouseleave', () => { el.style.textDecoration = ''; });
+  });
+
   // Pasang event filter setelah render
   container.querySelector('#interfFilter')?.addEventListener('change', e => {
     const val = e.target.value;
@@ -64,12 +74,12 @@ function renderTableWithFilter(pairs, model) {
     return `<tr data-level="${p.level}">
       <td style="color:var(--txt-3)" class="row-num">${i+1}</td>
       <td>
-        <div style="color:var(--txt)">${esc(p.tx.stn_name)}</div>
+        <div class="interf-stn-link" data-freq="${p.tx.freq}" style="color:var(--txt);cursor:pointer" title="Buka detail ${esc(p.tx.stn_name)}">${esc(p.tx.stn_name)}</div>
         <div style="font-size:10px;color:var(--txt-3)">${parseFloat(p.tx.freq).toFixed(1)} MHz · ${esc(p.tx.wilayah_layanan||'—')}</div>
         <div style="font-size:9px;color:var(--txt-3)">ERP ${p.tx.erp_dbm} dBm</div>
       </td>
       <td>
-        <div style="color:var(--txt)">${esc(p.rx.stn_name)}</div>
+        <div class="interf-stn-link" data-freq="${p.rx.freq}" style="color:var(--txt);cursor:pointer" title="Buka detail ${esc(p.rx.stn_name)}">${esc(p.rx.stn_name)}</div>
         <div style="font-size:10px;color:var(--txt-3)">${parseFloat(p.rx.freq).toFixed(1)} MHz · ${esc(p.rx.wilayah_layanan||'—')}</div>
         <div style="font-size:9px;color:var(--txt-3)">ERP ${p.rx.erp_dbm} dBm</div>
       </td>
