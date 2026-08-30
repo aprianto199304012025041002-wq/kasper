@@ -714,6 +714,7 @@ function renderContent() {
     });
   });
   renderStatsBar(activeSummary, allotTotal > 0 ? { total: allotTotal, used: allotUsed, free: allotFree } : null, activeSummary.expired);
+  renderFreeBlocksPanel();
 
   const geo = state.geoSettings || {};
   const applyFilter = (row) => {

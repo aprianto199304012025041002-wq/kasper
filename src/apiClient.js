@@ -28,5 +28,3 @@ export async function fetchInterference(filters = {}) {
   if (!r.ok) throw new Error(`Interference API error ${r.status}`);
   return r.json();
 }
-
-export const isUsingFallback = () => false;
