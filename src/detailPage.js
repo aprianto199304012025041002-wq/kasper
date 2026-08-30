@@ -94,7 +94,7 @@ export function renderDetailPage(data, onBack, allData, targetEl) {
     </div>
 
     <div class="dp-section">
-      <div class="dp-section__label">Lokasi pemancar${lat&&lon ? ` · ${lat.toFixed(5)}, ${lon.toFixed(5)}` : ' · Koordinat belum tersedia'}</div>
+      <div class="dp-section__label">Lokasi pemancar${lat&&lon ? ` · ${lat.toFixed(5)}, ${lon.toFixed(5)} · <a href="https://maps.google.com/?q=${lat},${lon}" target="_blank" rel="noopener" style="color:var(--cyan);text-decoration:none;font-size:9px">↗ Google Maps</a>` : ' · Koordinat belum tersedia'}</div>
       <div id="stationMap" class="dp-map"></div>
     </div>
 
