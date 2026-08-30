@@ -102,7 +102,8 @@ export function computeChannelMapForWilayah(stations, wilayah) {
   });
 }
 
-export function findFreeBlocks(channelMap) {
+// findFreeBlocks — tidak dipakai saat ini, disimpan untuk referensi
+function findFreeBlocks(channelMap) {
   // Hanya kanal yang free DAN allotted (bukan not_allotted) yang dihitung sebagai slot tersedia
   const freeFreqs = channelMap
     .filter((c) => c.type === 'free' && c.allotment_status !== 'not_allotted')

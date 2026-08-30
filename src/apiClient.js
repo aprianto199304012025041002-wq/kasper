@@ -12,7 +12,7 @@ export async function fetchSpectrum(filters = {}) {
   const raw = await r.json();
   const stations = (raw.stations || []).map(s => ({ ...s, freq: parseFloat(s.freq) }));
   const channelMap = (raw.channel_map?.length > 0) ? raw.channel_map : computeChannelMap(stations);
-  return { ...raw, stations, channel_map: channelMap, summary: raw.summary || summarize(channelMap), free_blocks: raw.free_blocks || [] };
+  return { ...raw, stations, channel_map: channelMap, summary: raw.summary || summarize(channelMap) };
 }
 
 export async function fetchStationDetail(freq) {
