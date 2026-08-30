@@ -301,7 +301,7 @@ function renderSidebar() {
 }
 
 // ── Stats bar ────────────────────────────────────────────────────────
-function renderStatsBar(summary, allotmentStats = null) {
+function renderStatsBar(summary, allotmentStats = null, expiredCount = 0) {
   const el = document.getElementById('statsBar');
   if (!el) return;
   const pctU = +((summary.used  / summary.total) * 100).toFixed(1);
@@ -344,6 +344,12 @@ function renderStatsBar(summary, allotmentStats = null) {
       <div class="stat-cell__val --green">${summary.free}<span class="unit">${pctF}%</span></div>
       <div class="stat-cell__meter" style="width:${pctF}%;background:var(--phosphor)"></div>
     </div>
+    ${expiredCount > 0 ? `
+    <div class="stat-cell stat-cell--btn" data-filter-chan="expired" title="Filter: izin habis">
+      <div class="stat-cell__label">⚠ Izin habis</div>
+      <div class="stat-cell__val --red">${expiredCount}<span class="unit">stasiun</span></div>
+      <div class="stat-cell__meter" style="width:${(expiredCount/summary.used*100).toFixed(1)}%;background:var(--red)"></div>
+    </div>` : ''}
     ${extra}
   </div>`;
   // Stats cell click → filter
@@ -653,17 +659,18 @@ function renderContent() {
 
   // Hitung summary dari cityRows aktif (akurat untuk filter wilayah)
   const activeSummary = (() => {
-    let used = 0, adj1 = 0, adj2 = 0, free = 0;
+    let used = 0, adj1 = 0, adj2 = 0, free = 0, expired = 0;
+    const now = Date.now();
     cityRows.forEach(({ row }) => {
       row.forEach(c => {
-        if      (c.type === 'used')       used++;
+        if      (c.type === 'used')       { used++; const v = c.station?.validity; if (v && new Date(v).getTime() < now) expired++; }
         else if (c.type === 'adjacent_1') adj1++;
         else if (c.type === 'adjacent_2') adj2++;
         else if (c.type === 'free')       free++;
       });
     });
     const total = used + adj1 + adj2 + free;
-    return { total, used, adjacent_1: adj1, adjacent_2: adj2, free };
+    return { total, used, adjacent_1: adj1, adjacent_2: adj2, free, expired };
   })();
   // hitung allotment stats
   cityRows.forEach(({ row }) => {
@@ -674,7 +681,7 @@ function renderContent() {
       }
     });
   });
-  renderStatsBar(activeSummary, allotTotal > 0 ? { total: allotTotal, used: allotUsed, free: allotFree } : null);
+  renderStatsBar(activeSummary, allotTotal > 0 ? { total: allotTotal, used: allotUsed, free: allotFree } : null, activeSummary.expired);
 
   const geo = state.geoSettings || {};
   const applyFilter = (row) => {
