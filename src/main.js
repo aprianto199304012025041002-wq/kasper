@@ -790,7 +790,8 @@ function renderCellGeo(c) {
   const label = showLabel ? `<span class="ch-cell__freq">${c.freq.toFixed(1)}</span>` : '';
   if (c.type === 'used') {
     const co = c.coStations?.length > 1 ? `<span class="ch-cell__co">${c.coStations.length}</span>` : '';
-    return `<div class="ch-cell ch-cell--used" data-freq="${c.freq}" style="width:36px;height:36px">
+    const exp = isStationExpired(c) ? ' ch-cell--expired' : '';
+    return `<div class="ch-cell ch-cell--used${exp}" data-freq="${c.freq}" style="width:36px;height:36px">
       ${label}${co}
     </div>`;
   }
@@ -834,10 +835,12 @@ function renderBandSVG(row, city, isLight = false) {
         const t = i/SINE_STEPS, px = x0+t*(x1-x0), py = cy - amp*Math.sin(Math.PI*t);
         return `${i?'L':'M'}${px.toFixed(1)},${py.toFixed(1)}`;
       }).join(' ');
-      paths.push(`<path d="${pts} L${x1.toFixed(1)},${cy} L${x0.toFixed(1)},${cy} Z" fill="#FFB800" opacity=".1"/>`);
-      paths.push(`<path d="${pts}" stroke="#FFB800" stroke-width="1.6" fill="none"/>`);
+      const waveClr = isStationExpired(c) ? '#FF3B3B' : '#FFB800';
+      const dashAttr = isStationExpired(c) ? ' stroke-dasharray="4,2"' : '';
+      paths.push(`<path d="${pts} L${x1.toFixed(1)},${cy} L${x0.toFixed(1)},${cy} Z" fill="${waveClr}" opacity=".08"/>`);
+      paths.push(`<path d="${pts}" stroke="${waveClr}" stroke-width="1.6" fill="none"${dashAttr}/>`);
       const cnt = (c.coStations||[]).length > 1 ? ` ×${c.coStations.length}` : '';
-      labels.push(`<text x="${x.toFixed(1)}" y="${(cy-amp-5).toFixed(1)}" text-anchor="middle" font-size="7" fill="#FFB800" font-family="monospace">${c.freq.toFixed(1)}${cnt}</text>`);
+      labels.push(`<text x="${x.toFixed(1)}" y="${(cy-amp-5).toFixed(1)}" text-anchor="middle" font-size="7" fill="${waveClr}" font-family="monospace">${c.freq.toFixed(1)}${cnt}</text>`);
       hits.push(`<rect class="band-hit" data-freq="${c.freq}" x="${x0.toFixed(1)}" y="0" width="${(x1-x0).toFixed(1)}" height="${cy}" fill="transparent"/>`);
     } else if (c.type === 'adjacent_1' || c.type === 'adjacent_2') {
       const is2 = c.type==='adjacent_2';
