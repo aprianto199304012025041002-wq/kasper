@@ -45,26 +45,25 @@ jobs:
           # Verifikasi: placeholder tidak boleh ada lagi
           grep -q 'PLACEHOLDER' api/data.php && echo "ERROR: placeholder masih ada!" && exit 1 || echo "OK: credentials injected"
 
-      # Deploy API dulu — agar saat frontend baru aktif, API sudah siap
-      - name: Deploy API via FTP
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
-        with:
-          server: ${{ secrets.FTP_HOST }}
-          username: ${{ secrets.FTP_USER }}
-          password: ${{ secrets.FTP_PASS }}
-          local-dir: ./api/
-          server-dir: /public_html/api/
+      # Siapkan folder deploy tunggal: dist/ + api/ digabung
+      # Menghindari dua koneksi FTP berurutan yang bisa kena throttle Hostinger
+      - name: Prepare deploy folder
+        run: |
+          mkdir -p deploy_root/api
+          cp -r dist/. deploy_root/
+          cp -r api/. deploy_root/api/
 
-      # Frontend deploy TANPA dangerous-clean-slate — hanya update file yang berubah
-      # Ini mencegah penghapusan file lain di public_html (file manual, folder lain)
-      - name: Deploy frontend (dist/) via FTP
+      # Deploy sekali — satu koneksi FTP untuk semua file
+      - name: Deploy via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: ${{ secrets.FTP_HOST }}
           username: ${{ secrets.FTP_USER }}
           password: ${{ secrets.FTP_PASS }}
-          local-dir: ./dist/
+          local-dir: ./deploy_root/
           server-dir: /public_html/
+          timeout: 60000
+          retry-count: 3
 
       # Health check — pastikan site up dan API merespons setelah deploy
       - name: Health check
