@@ -53,18 +53,26 @@ jobs:
           cp -r dist/. deploy_root/
           cp -r api/. deploy_root/api/
 
-      # Deploy sekali — satu koneksi FTP untuk semua file
-      - name: Deploy via FTP
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
-        with:
-          server: ${{ secrets.FTP_HOST }}
-          username: ${{ secrets.FTP_USER }}
-          password: ${{ secrets.FTP_PASS }}
-          local-dir: ./deploy_root/
-          server-dir: /public_html/
-          protocol: ftps
-          timeout: 120000
-          retry-count: 5
+      # Deploy via lftp — lebih handal dari FTP action, support passive mode eksplisit
+      - name: Install lftp
+        run: sudo apt-get install -y lftp
+
+      - name: Deploy via lftp
+        env:
+          FTP_HOST: ${{ secrets.FTP_HOST }}
+          FTP_USER: ${{ secrets.FTP_USER }}
+          FTP_PASS: ${{ secrets.FTP_PASS }}
+        run: |
+          lftp -c "
+            set ftp:passive-mode yes;
+            set ftp:ssl-allow no;
+            set net:timeout 30;
+            set net:max-retries 5;
+            set net:reconnect-interval-base 5;
+            open ftp://$FTP_USER:$FTP_PASS@$FTP_HOST;
+            mirror --reverse --delete --verbose --parallel=2 deploy_root/ /public_html/;
+            bye
+          "
 
       # Health check — pastikan site up dan API merespons setelah deploy
       - name: Health check
