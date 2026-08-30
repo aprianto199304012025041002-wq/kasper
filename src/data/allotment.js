@@ -605,13 +605,28 @@ const ALLOTMENT = {
   },
 };
 
+// Cache Set per wilayah untuk lookup O(1)
+const _allotCache = {};
+function _getCache(wilayah) {
+  if (!_allotCache[wilayah]) {
+    const a = ALLOTMENT[wilayah];
+    if (!a) { _allotCache[wilayah] = null; return null; }
+    _allotCache[wilayah] = {
+      rri: new Set(a.rri.map(f => Math.round(f * 10) / 10)),
+      lps: new Set(a.lps.map(f => Math.round(f * 10) / 10)),
+      meta: a,
+    };
+  }
+  return _allotCache[wilayah];
+}
+
 // Lookup: frekuensi -> { wilayah, slot: 'rri'|'lps'|null }
 function getAllotmentByFreq(wilayah, freq) {
-  const a = ALLOTMENT[wilayah];
-  if (!a) return null;
+  const c = _getCache(wilayah);
+  if (!c) return null;
   const f = Math.round(freq * 10) / 10;
-  if (a.rri.includes(f)) return { ...a, slot: 'rri' };
-  if (a.lps.includes(f)) return { ...a, slot: 'lps' };
+  if (c.rri.has(f)) return { ...c.meta, slot: 'rri' };
+  if (c.lps.has(f)) return { ...c.meta, slot: 'lps' };
   return null;
 }
 
