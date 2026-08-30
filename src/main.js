@@ -260,12 +260,14 @@ function renderSidebar() {
   });
   const expCnt = (w) => expMap[w] || 0;
 
-  const DIY = new Set(['KOTA YOGYAKARTA','BANTUL, BANGUNTAPAN',
-    'SLEMAN, NGAGLIK, KALASAN, NGEMPLAK, PAKEM','WATES, SENTOLO',
-    'WONOSARI','GAMPING','DEPOK','PATUK']);
-
-  const diy    = allWilayah.filter(w => DIY.has(w));
-  const jateng = allWilayah.filter(w => !DIY.has(w));
+  // Grup berdasarkan province dari data — tidak hardcode nama wilayah
+  const wilayahProvince = {};
+  state.data.stations.forEach(s => {
+    const w = s.wilayah_layanan || s.kota || '';
+    if (w && s.province) wilayahProvince[w] = s.province;
+  });
+  const diy    = allWilayah.filter(w => (wilayahProvince[w]||'').includes('YOGYAKARTA'));
+  const jateng = allWilayah.filter(w => !(wilayahProvince[w]||'').includes('YOGYAKARTA'));
 
   const itemHtml = (w) => {
     const active = state.selectedWilayah === w;
