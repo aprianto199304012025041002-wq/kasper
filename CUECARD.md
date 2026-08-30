@@ -92,7 +92,24 @@ state = {
 - `window.__openDetailFreq` di-expose global di boot() — dipakai neighbor rows, interference table, cell drawer
 - `findFreeBlocks` di channelEngine.js — diekspor tapi tidak dipakai di mana pun (dead export, biarkan dulu)
 
-## Fitur expired (izin habis) — semua sudah di-push, konsisten 5 view
+## Sesi terkini — semua sudah di-push
+
+| Commit | Apa |
+|---|---|
+| interference engine | Distance cutoff per tipe: co 150 km / adj±1 60 km / adj±2 30 km; pair ok hanya ≤10 km |
+| interference table | Sortable columns (Jarak/D/U/Margin/Level), klik header → ▲▼; nama stasiun klik → detail |
+| detail drawer | Tgl. Permohonan (appl_date), tinggi antena, gain, perangkat; neighbor expired ⚠ |
+| header status | Total expired global tampil merah saat load |
+| sidebar | Group DIY/Jateng dari `province` data (bukan hardcode Set); search match label pendek; section wrapper hide; badge ⚠N per wilayah |
+| grid view | City block count akurat saat filter aktif (N/total); badge ⚠N expired per wilayah |
+| filter/empty state | Global empty state saat semua rows filtered habis; filter expired di band view |
+| export CSV | Tombol ⬇ CSV muncul saat filter expired aktif; download `kasper_izin_habis_YYYY-MM-DD.csv` |
+| help overlay | Tekan `?` atau klik tombol `?` di toolbar → modal keyboard shortcuts; Escape tutup |
+| export btn sync | Stat cell click juga update visibility export button |
+
+## Fitur expired (izin habis) — konsisten end-to-end
+
+
 
 | Lokasi | Apa |
 |---|---|
