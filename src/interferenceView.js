@@ -52,11 +52,35 @@ export function renderInterferencePanel(container, data) {
     container.querySelectorAll('tr[data-level]').forEach(row => {
       row.style.display = (!val || row.dataset.level === val) ? '' : 'none';
     });
-    const tbody = container.querySelector('.interf-table tbody');
-    if (tbody) {
-      const visible = [...tbody.querySelectorAll('tr[data-level]')].filter(r => r.style.display !== 'none');
-      visible.forEach((r, i) => { const nd = r.querySelector('.row-num'); if (nd) nd.textContent = i+1; });
-    }
+    renumberRows(container);
+  });
+
+  // Sort by column header
+  let _sortCol = null, _sortAsc = true;
+  container.querySelectorAll('.interf-th-sort[data-sort]').forEach(th => {
+    th.addEventListener('click', () => {
+      const col = th.dataset.sort;
+      if (_sortCol === col) _sortAsc = !_sortAsc; else { _sortCol = col; _sortAsc = col === 'dist'; }
+      // Update header indicators
+      container.querySelectorAll('.interf-th-sort').forEach(h => {
+        h.textContent = h.textContent.replace(/ [▲▼]$/, '');
+        if (h.dataset.sort === col) h.textContent += _sortAsc ? ' ▲' : ' ▼';
+      });
+      const tbody = container.querySelector('.interf-table tbody');
+      if (!tbody) return;
+      const rows = [...tbody.querySelectorAll('tr[data-level]')];
+      const levelRank = { critical: 0, warning: 1, ok: 2 };
+      rows.sort((a, b) => {
+        let va, vb;
+        if (col === 'level')  { va = levelRank[a.dataset.level]; vb = levelRank[b.dataset.level]; }
+        else if (col === 'dist')   { va = parseFloat(a.dataset.dist);   vb = parseFloat(b.dataset.dist); }
+        else if (col === 'du')     { va = parseFloat(a.dataset.du);     vb = parseFloat(b.dataset.du); }
+        else if (col === 'margin') { va = parseFloat(a.dataset.margin); vb = parseFloat(b.dataset.margin); }
+        return _sortAsc ? va - vb : vb - va;
+      });
+      rows.forEach(r => tbody.appendChild(r));
+      renumberRows(container);
+    });
   });
 }
 
@@ -71,7 +95,7 @@ function renderTableWithFilter(pairs, model) {
                     : p.type === 'adjacent_1'  ? `<span class="badge-adj1">ADJ±1</span>`
                     :                            `<span class="badge-adj2">ADJ±2</span>`;
     const levelLabel = p.level === 'critical' ? 'Kritis' : p.level === 'warning' ? 'Peringatan' : 'Aman';
-    return `<tr data-level="${p.level}">
+    return `<tr data-level="${p.level}" data-dist="${p.dist_km}" data-du="${p.pr_actual}" data-margin="${p.margin_db}">
       <td style="color:var(--txt-3)" class="row-num">${i+1}</td>
       <td>
         <div class="interf-stn-link" data-freq="${p.tx.freq}" style="color:var(--txt);cursor:pointer" title="Buka detail ${esc(p.tx.stn_name)}">${esc(p.tx.stn_name)}</div>
@@ -109,19 +133,30 @@ function renderTableWithFilter(pairs, model) {
       </select>
     </div>
     <div style="overflow-x:auto">
-      <table class="interf-table">
+      <table class="interf-table" id="interfTable">
         <thead><tr>
           <th>#</th>
           <th>Interferor ↑ ERP lebih besar</th>
           <th>Korban ↓ ERP lebih kecil</th>
-          <th>Tipe</th><th>Jarak</th><th>D/U</th><th>Margin</th><th>Level</th>
+          <th>Tipe</th>
+          <th class="interf-th-sort" data-sort="dist" style="cursor:pointer;user-select:none" title="Sort by jarak">Jarak ↕</th>
+          <th class="interf-th-sort" data-sort="du"   style="cursor:pointer;user-select:none" title="Sort by D/U">D/U ↕</th>
+          <th class="interf-th-sort" data-sort="margin" style="cursor:pointer;user-select:none" title="Sort by margin">Margin ↕</th>
+          <th class="interf-th-sort" data-sort="level" style="cursor:pointer;user-select:none" title="Sort by level">Level ↕</th>
         </tr></thead>
         <tbody>${rows}</tbody>
       </table>
     </div>
     <div style="margin-top:8px;font-family:var(--mono);font-size:10px;color:var(--txt-3)">
-      Model: ${esc(model)} · D/U = ERP korban − ERP interferor · Margin = D/U − proteksi minimum
+      Model: ${esc(model)} · D/U = ERP korban − ERP interferor · Margin = D/U − proteksi minimum · Klik header untuk sort
     </div>`;
+}
+
+function renumberRows(container) {
+  const tbody = container.querySelector('.interf-table tbody');
+  if (!tbody) return;
+  const visible = [...tbody.querySelectorAll('tr[data-level]')].filter(r => r.style.display !== 'none');
+  visible.forEach((r, i) => { const nd = r.querySelector('.row-num'); if (nd) nd.textContent = i+1; });
 }
 
 function esc(s) { const d=document.createElement('div'); d.textContent=String(s||'—'); return d.innerHTML; }
