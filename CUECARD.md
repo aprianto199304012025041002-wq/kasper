@@ -38,7 +38,7 @@ state = {
   page,            // 'main' | 'interference'
   view,            // 'grid' | 'band' | 'geo'
   filterCities[],  // [] = semua wilayah
-  filterChanView,  // 'all' | 'free' | 'used'
+  filterChanView,  // 'all' | 'free' | 'used' | 'expired'
   searchTerm,
   geoSettings: { showAdj, showLabel, onlyFree },
   data,            // { stations[], channel_map[], summary }
@@ -58,9 +58,9 @@ state = {
 - ✅ Band view: SVG per wilayah, theme-aware, hint "geser →"
 - ✅ Geo view: cell kecil, geo opts (Guard/Label/Kosong) di toolbar desktop + mobile drawer
 - ✅ ⚡ RF: interference dihitung client-side, tabel D/U + margin, filter level, breakdown adj±1/±2
-- ✅ Stats bar: akurat per wilayah aktif, cell Terisi/Kosong klik untuk filter
+- ✅ Stats bar: akurat per wilayah aktif, cell Terisi/Kosong/Izin-habis klik untuk filter
 - ✅ Free slot panel: muncul saat satu wilayah aktif, list kanal KM 570 yang belum terisi
-- ✅ Detail drawer: slide kanan, Leaflet map (theme-aware), ERP dalam dBm + Watt, neighbor scroll
+- ✅ Detail drawer: slide kanan, Leaflet map (theme-aware), ERP dBm+Watt, Tgl.Izin, validity terformat+highlight, neighbor + jarak km
 - ✅ Share URL: tombol ⎘ di detail → salin ?freq=xxx ke clipboard
 - ✅ ?freq= URL: buka detail drawer otomatis saat load
 - ✅ URL state sync: view, page, city, search, wilayah
@@ -89,8 +89,22 @@ state = {
 - Stasiun tanpa koordinat lat/lon tidak dievaluasi di interference engine
 - `computeChannelMap` fallback di apiClient (jika API tidak return channel_map) tidak punya allotment_status
 - Wilayah dengan 0 stasiun tidak tampil di grid (filter di cityRows)
-- CSS warning vite (angka di comment) → false positive, tidak mempengaruhi output
-- `window.__openDetailFreq` di-expose global di boot() — dipakai oleh neighbor rows di detail drawer
+- `window.__openDetailFreq` di-expose global di boot() — dipakai neighbor rows, interference table, cell drawer
+- `findFreeBlocks` di channelEngine.js — diekspor tapi tidak dipakai di mana pun (dead export, biarkan dulu)
+
+## Fitur expired (izin habis) — semua sudah di-push, konsisten 5 view
+
+| Lokasi | Apa |
+|---|---|
+| Grid + Geo | Cell border merah putus-putus, nama merah (`ch-cell--expired`) |
+| Band SVG | Gelombang merah putus-putus menggantikan kuning solid |
+| Tooltip | Judul ⚠ + baris "Berlaku s.d." terformat |
+| Detail drawer | Tanggal merah + ⚠, field "Tgl. Izin" (`licence_date`) ditambahkan |
+| Stats bar | Cell "⚠ Izin habis" muncul bila ada, klik untuk filter |
+| Filter toolbar | Opsi "⚠ Izin habis" di dropdown `fChanView` |
+| Mobile drawer | Tombol "⚠ HABIS" sejajar SEMUA/KOSONG/TERPAKAI |
+| Legend | Chip "Izin habis" ditambahkan |
+| Interference table | Nama stasiun bisa diklik → buka detail drawer via `window.__openDetailFreq` |
 
 ## Perbaikan sesi terakhir (semua sudah di-push)
 | File | Apa |
