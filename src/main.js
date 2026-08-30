@@ -753,6 +753,22 @@ function renderContent() {
 
   // ── Grid / Geo view ───────────────────────────────────────────────
   const cellFn = state.view === 'geo' ? (c) => renderCellGeo(c) : renderCell;
+
+  // Kalau filter expired aktif dan tidak ada hasil sama sekali
+  const totalFiltered = cityRows.reduce((s, { row }) => s + applyFilter(row).length, 0);
+  if (totalFiltered === 0 && state.filterChanView !== 'all') {
+    el.innerHTML = `<div class="state-empty" style="padding:48px 24px;text-align:center">
+      <div style="font-size:24px;margin-bottom:12px">✓</div>
+      <div style="font-size:13px;color:var(--txt-2)">${
+        state.filterChanView === 'expired' ? 'Tidak ada stasiun dengan izin habis di wilayah ini.' :
+        state.filterChanView === 'free'    ? 'Tidak ada kanal kosong di wilayah ini.' :
+        'Tidak ada hasil untuk filter ini.'
+      }</div>
+    </div>`;
+    attachCellTooltips();
+    return;
+  }
+
   el.innerHTML = cityRows.map(({ city, row }) =>
     `<div class="city-block">
       <div class="city-block__head">
