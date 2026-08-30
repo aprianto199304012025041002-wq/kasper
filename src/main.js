@@ -769,17 +769,28 @@ function renderContent() {
     return;
   }
 
-  el.innerHTML = cityRows.map(({ city, row }) =>
-    `<div class="city-block">
+  el.innerHTML = cityRows.map(({ city, row }) => {
+    const filtered = applyFilter(row);
+    const usedInRow = filtered.filter(c => c.type === 'used').length;
+    const totalInRow = state._stationCountMap?.[city] ?? 0;
+    const nowTs = Date.now();
+    const expInRow = row.filter(c => c.type === 'used' && c.station?.validity && new Date(c.station.validity).getTime() < nowTs).length;
+    const countLabel = state.filterChanView !== 'all'
+      ? `${usedInRow} / ${totalInRow} stasiun`
+      : `${totalInRow} stasiun`;
+    const expBadge = expInRow > 0 && state.filterChanView === 'all'
+      ? ` <span style="color:var(--red);font-size:9px;font-family:var(--mono)" title="${expInRow} izin habis">⚠${expInRow}</span>`
+      : '';
+    return `<div class="city-block">
       <div class="city-block__head">
         <span class="city-block__name" data-city="${esc(city)}">${esc(shortWilayah(city))}</span>
-        <span class="city-block__count">${state._stationCountMap?.[city] ?? 0} stasiun</span>
+        <span class="city-block__count">${countLabel}${expBadge}</span>
       </div>
-      <div class="ch-row">${applyFilter(row).map(c => cellFn(c)).join('') ||
+      <div class="ch-row">${filtered.map(c => cellFn(c)).join('') ||
         '<div class="state-empty" style="min-height:60px;font-size:11px;padding:16px">Tidak ada stasiun aktif di wilayah ini</div>'
       }</div>
-    </div>`
-  ).join('');
+    </div>`;
+  }).join('');
 
   attachCellTooltips();
 }
