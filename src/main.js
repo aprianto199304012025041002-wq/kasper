@@ -56,6 +56,10 @@ function syncURL() {
   if (state.filterCities?.length)     p.set('city', state.filterCities.join('|'));
   if (state.searchTerm)               p.set('q', state.searchTerm);
   if (state.selectedWilayah)          p.set('w', state.selectedWilayah);
+  const geo = state.geoSettings || {};
+  if (geo.showAdj === false)  p.set('gAdj', '0');
+  if (geo.showLabel === false) p.set('gLbl', '0');
+  if (geo.onlyFree)           p.set('gFree', '1');
   history.replaceState(null, '', p.toString() ? `?${p}` : location.pathname);
 }
 
@@ -68,6 +72,13 @@ function restoreURL() {
   if (p.has('q'))    state.searchTerm       = p.get('q');
   if (p.has('w'))    state.selectedWilayah  = p.get('w');
   if (p.has('freq')) state._openFreqOnLoad  = parseFloat(p.get('freq'));
+  if (p.has('gAdj') || p.has('gLbl') || p.has('gFree')) {
+    state.geoSettings = {
+      showAdj:   p.get('gAdj')  !== '0',
+      showLabel: p.get('gLbl')  !== '0',
+      onlyFree:  p.get('gFree') === '1',
+    };
+  }
 }
 
 // -- Keyboard shortcuts -----------------------------------------------
