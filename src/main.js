@@ -542,9 +542,11 @@ async function loadData() {
       if (w) state._stationCountMap[w] = (state._stationCountMap[w] || 0) + 1;
     });
     const total = state.data.stations?.length ?? 0;
+    const nowTs = Date.now();
+    const totalExpired = (state.data.stations || []).filter(s => s.validity && new Date(s.validity).getTime() < nowTs).length;
     const statusEl = document.getElementById('headerStatus');
-    const now = new Date().toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'});
-    if (statusEl) statusEl.textContent = `${total} stasiun · ${now}`;
+    const nowStr = new Date().toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'});
+    if (statusEl) statusEl.innerHTML = `${total} stasiun${totalExpired ? ` · <span style="color:var(--red)" title="${totalExpired} izin habis">⚠ ${totalExpired} habis</span>` : ''} · ${nowStr}`;
   } catch(e) {
     state.error = e.message; state.loading = false;
   }
@@ -723,7 +725,7 @@ function renderContent() {
           <span class="city-block__count">${state._stationCountMap?.[city] ?? 0} stasiun</span>
           <span class="band-scroll-hint-mobile">geser →</span>
         </div>
-        <div class="band-scroll">${renderBandSVG(row, city, _isLight)}</div>
+        <div class="band-scroll">${renderBandSVG(applyFilter(row), city, _isLight)}</div>
       </div>`
     ).join('');
     return;
