@@ -1174,7 +1174,16 @@ async function openDetailPage(stationOrFreq) {
     `<div class="state-loading"><span class="live-dot"></span> Memuat detail…</div>`;
   el.classList.add('is-open');
   try {
-    const detail = await fetchStationDetail(parseFloat(freq));
+    // Cache detail per frekuensi — invalidate saat data berubah
+    if (!state._detailCache) state._detailCache = { _data: null };
+    if (state._detailCache._data !== state.data) {
+      state._detailCache = { _data: state.data };
+    }
+    const fkey = parseFloat(freq).toFixed(3);
+    if (!state._detailCache[fkey]) {
+      state._detailCache[fkey] = await fetchStationDetail(parseFloat(freq));
+    }
+    const detail = state._detailCache[fkey];
     renderDetailPage(detail, closeStationDrawer, state.data, document.getElementById('stationDrawerPanel'));
   } catch(e) {
     const p = document.getElementById('stationDrawerPanel');
