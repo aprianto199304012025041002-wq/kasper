@@ -167,7 +167,7 @@ function renderShell() {
           <button class="toolbar-tab${state.page==='interference'?' is-active':''}" data-page="interference" title="Analisis interferensi RF [4]">⚡ RF</button>
           <div class="toolbar-right">
             <div class="toolbar-search-wrap">
-              <input type="search" class="toolbar-search" id="fSearch" placeholder="Cari stasiun / frekuensi…" value="${esc(state.searchTerm)}"/>
+              <input type="search" class="toolbar-search" id="fSearch" placeholder="Cari stasiun / pemilik / frekuensi…" value="${esc(state.searchTerm)}"/>
               ${state.searchTerm ? `<button class="toolbar-search-clear" id="fSearchClear" title="Hapus pencarian">✕</button>` : ''}
             </div>
             <select class="toolbar-select" id="fChanView">
@@ -653,6 +653,7 @@ function renderContent() {
     if (c.type !== 'used') return String(c.freq).includes(searchLower);
     return String(c.freq).includes(searchLower)
       || (c.station?.stn_name || '').toLowerCase().includes(searchLower)
+      || (c.station?.clnt_name || '').toLowerCase().includes(searchLower)
       || (c.station?.wilayah_layanan || c.station?.kota || '').toLowerCase().includes(searchLower);
   };
 
@@ -1269,7 +1270,7 @@ function toggleHelpOverlay() {
       ${[
         ['1 / 2 / 3','Grid / Pita / Geo view'],
         ['4','Halaman Interferensi'],
-        ['f  atau  /','Fokus ke kotak cari'],
+        ['f  atau  /','Fokus ke kotak cari (nama / pemilik / frekuensi)'],
         ['Esc','Hapus filter / tutup detail'],
         ['b','Toggle sidebar'],
         ['d','Toggle tema gelap/terang'],
