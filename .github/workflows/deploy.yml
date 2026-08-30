@@ -62,8 +62,9 @@ jobs:
           password: ${{ secrets.FTP_PASS }}
           local-dir: ./deploy_root/
           server-dir: /public_html/
-          timeout: 60000
-          retry-count: 3
+          protocol: ftps
+          timeout: 120000
+          retry-count: 5
 
       # Health check — pastikan site up dan API merespons setelah deploy
       - name: Health check
