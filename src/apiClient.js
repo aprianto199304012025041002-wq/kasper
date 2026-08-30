@@ -1,5 +1,5 @@
 // src/apiClient.js — langsung ke API, tanpa fallback sama sekali
-import { computeChannelMap, summarize } from './channelEngine.js';
+import { computeChannelMap } from './channelEngine.js';
 
 const API_BASE = 'https://kasper.balmonjogja.info/api';
 const FETCH_TIMEOUT_MS = 15000;
@@ -11,8 +11,8 @@ export async function fetchSpectrum(filters = {}) {
   if (!r.ok) throw new Error(`API error ${r.status}`);
   const raw = await r.json();
   const stations = (raw.stations || []).map(s => ({ ...s, freq: parseFloat(s.freq) }));
-  const channelMap = (raw.channel_map?.length > 0) ? raw.channel_map : computeChannelMap(stations);
-  return { ...raw, stations, channel_map: channelMap, summary: raw.summary || summarize(channelMap) };
+  const channel_map = computeChannelMap(stations);
+  return { ...raw, stations, channel_map };
 }
 
 export async function fetchStationDetail(freq) {

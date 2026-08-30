@@ -128,7 +128,8 @@ function findFreeBlocks(channelMap) {
   return blocks.sort((a, b) => b.count - a.count);
 }
 
-export function summarize(channelMap) {
+// summarize — tidak dipakai saat ini (PHP return summary), disimpan untuk referensi
+function summarize(channelMap) {
   const total = channelMap.length;
   const used  = channelMap.filter((c) => c.type === 'used').length;
   const adj1  = channelMap.filter((c) => c.type === 'adjacent_1').length;
