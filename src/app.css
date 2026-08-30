@@ -1519,6 +1519,20 @@ input, select { font-family: inherit; color: inherit; }
 }
 .toolbar-reset:hover { background: var(--bg-hover); color: var(--txt); }
 
+.toolbar-btn {
+  font-family: var(--mono);
+  font-size: 11px;
+  padding: 4px 10px;
+  background: var(--bg-raised);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--phosphor);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background .15s;
+}
+.toolbar-btn:hover { background: var(--bg-hover); }
+
 /* -- Toolbar geo options (desktop) ---------------------------------- */
 .toolbar-geo-opt {
   display: flex;

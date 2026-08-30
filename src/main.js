@@ -175,6 +175,7 @@ function renderShell() {
             </select>
             ${(state.filterCities?.length || state.searchTerm || state.filterChanView !== 'all') ?
               `<button class="toolbar-reset" id="fReset" title="Reset semua filter [Esc]">↺ Reset</button>` : ''}
+            <button class="toolbar-btn" id="exportExpiredBtn" title="Export daftar izin habis ke CSV" style="display:${state.filterChanView==='expired'?'':'none'}">⬇ CSV</button>
           </div>
         </div>
         <div id="statsBar"></div>
@@ -434,7 +435,13 @@ function renderFreeBlocksPanel() {
 // ── Attach events ─────────────────────────────────────────────────────
 function attachEvents() {
   document.addEventListener('change', e => {
-    if (e.target.id === 'fChanView') { state.filterChanView = e.target.value; syncURL(); renderContent(); }
+    if (e.target.id === 'fChanView') {
+      state.filterChanView = e.target.value;
+      syncURL(); renderContent();
+      // Show/hide export button
+      const expBtn = document.getElementById('exportExpiredBtn');
+      if (expBtn) expBtn.style.display = state.filterChanView === 'expired' ? '' : 'none';
+    }
     if (['dGeoAdj','dGeoLabel','dGeoFree'].includes(e.target.id)) {
       state.geoSettings = {
         showAdj:   document.getElementById('dGeoAdj')?.checked ?? true,
@@ -450,6 +457,7 @@ function attachEvents() {
       syncURL(); renderControls(); renderContent();
       document.getElementById('fSearch')?.focus();
     }
+    if (e.target.id === 'exportExpiredBtn') { exportExpiredCSV(); return; }
     if (e.target.id === 'fReset') {
       state.filterCities = []; state.selectedWilayah = null;
       state.filterChanView = 'all'; state.searchTerm = '';
@@ -1200,6 +1208,37 @@ const WILAYAH_SHORT = {
   'WONOTUNGGAL, BANDAR': 'Wonotunggal – Bandar',
 };
 function shortWilayah(w) { return WILAYAH_SHORT[w] || w; }
+
+function exportExpiredCSV() {
+  const now = Date.now();
+  const rows = (state.data?.stations || [])
+    .filter(s => s.validity && new Date(s.validity).getTime() < now)
+    .sort((a, b) => new Date(a.validity) - new Date(b.validity));
+
+  if (!rows.length) { alert('Tidak ada stasiun dengan izin habis.'); return; }
+
+  const BULAN = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agt','Sep','Okt','Nov','Des'];
+  const fmtD = raw => { if (!raw) return ''; const d = new Date(raw); return `${d.getUTCDate()} ${BULAN[d.getUTCMonth()]} ${d.getUTCFullYear()}`; };
+  const esc_csv = v => `"${String(v||'').replace(/"/g,'""')}"`;
+
+  const header = ['No','Frekuensi (MHz)','Nama Stasiun','Pemilik','Jenis','Wilayah Layanan','No. SIMF','Tgl. Izin','Berlaku s.d.','ERP (dBm)'];
+  const lines = [header.map(esc_csv).join(',')];
+  rows.forEach((s, i) => {
+    lines.push([
+      i+1, parseFloat(s.freq).toFixed(3), s.stn_name||'', s.clnt_name||'',
+      s.jenis_penyiaran||'', s.wilayah_layanan||s.kota||'',
+      s.no_simf||'', fmtD(s.licence_date), fmtD(s.validity), s.erp_dbm||''
+    ].map(esc_csv).join(','));
+  });
+
+  const blob = new Blob(['﻿'+lines.join('\r\n')], {type:'text/csv;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  const today = new Date().toISOString().slice(0,10);
+  a.download = `kasper_izin_habis_${today}.csv`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
 
 function esc(s) { const d=document.createElement('div'); d.textContent=String(s); return d.innerHTML; }
 
