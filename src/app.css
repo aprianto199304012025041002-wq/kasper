@@ -549,8 +549,8 @@ input, select { font-family: inherit; color: inherit; }
   overflow: hidden;
 }
 .sync-fhdr {
-  width: 52px;
-  min-width: 52px;
+  width: 64px;
+  min-width: 64px;
   font-family: var(--mono);
   font-size: 8px;
   color: var(--txt-3);
@@ -628,10 +628,6 @@ input, select { font-family: inherit; color: inherit; }
   min-width: 64px;
   height: 44px;
   flex-shrink: 0;
-}
-.sync-fhdr {
-  width: 64px;
-  min-width: 64px;
 }
 
 /* -- Channel grid (dipertahankan untuk band view & mobile) ------------ */
