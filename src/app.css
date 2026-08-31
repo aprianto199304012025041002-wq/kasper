@@ -536,8 +536,8 @@ input, select { font-family: inherit; color: inherit; }
   z-index: 10;
 }
 .sync-corner {
-  width: 162px;
-  min-width: 162px;
+  width: 192px;
+  min-width: 192px;
   flex-shrink: 0;
   background: var(--bg-base);
   border-right: 1px solid var(--border);
@@ -572,9 +572,9 @@ input, select { font-family: inherit; color: inherit; }
 }
 .sync-row:last-child { border-bottom: none; }
 .sync-label {
-  width: 160px;
-  min-width: 160px;
-  max-width: 160px;
+  width: 190px;
+  min-width: 190px;
+  max-width: 190px;
   position: sticky;
   left: 0;
   z-index: 2;
@@ -595,8 +595,6 @@ input, select { font-family: inherit; color: inherit; }
   text-transform: uppercase;
   color: var(--txt-2);
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 .sync-label__count {
   font-family: var(--mono);
@@ -617,11 +615,23 @@ input, select { font-family: inherit; color: inherit; }
   gap: 3px;
   padding: 3px 0 3px 3px;
 }
+/* Cells di sync grid lebih lebar dari geo/band view */
+.sync-cells .ch-cell {
+  width: 64px;
+  min-width: 64px;
+}
+.sync-cells .ch-cell__name {
+  max-width: 60px;
+}
 .sync-cell-empty {
-  width: 52px;
-  min-width: 52px;
-  height: 52px;
+  width: 64px;
+  min-width: 64px;
+  height: 44px;
   flex-shrink: 0;
+}
+.sync-fhdr {
+  width: 64px;
+  min-width: 64px;
 }
 
 /* -- Channel grid (dipertahankan untuk band view & mobile) ------------ */
