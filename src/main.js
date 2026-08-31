@@ -792,28 +792,63 @@ function renderContent() {
     return;
   }
 
-  // ── Sync-scroll: satu container horizontal, semua wilayah sejajar ──
+  // ── Sync-scroll: spreadsheet layout — label sticky kiri, freq header sticky atas ──
   const nowTs = Date.now();
-  const rows = cityRows.map(({ city, row }) => {
+
+  // Kumpulkan semua frekuensi unik yang muncul di filtered rows (union semua wilayah)
+  const allFreqs = new Set();
+  const filteredByCity = {};
+  cityRows.forEach(({ city, row }) => {
     const filtered = applyFilter(row);
+    filteredByCity[city] = filtered;
+    filtered.forEach(c => allFreqs.add(c.freq));
+  });
+  const sortedFreqs = [...allFreqs].sort((a, b) => a - b);
+
+  // Header baris frekuensi
+  const freqHeader = sortedFreqs.map(f =>
+    `<div class="sync-fhdr">${f.toFixed(1)}</div>`
+  ).join('');
+
+  // Tiap wilayah = satu baris, tiap frekuensi = satu slot
+  const rows = cityRows.map(({ city, row }) => {
+    const filtered = filteredByCity[city];
+    const cellMap = {};
+    filtered.forEach(c => { cellMap[c.freq] = cellFn(c); });
     const usedInRow = filtered.filter(c => c.type === 'used').length;
     const totalInRow = state._stationCountMap?.[city] ?? 0;
     const expInRow = row.filter(c => c.type === 'used' && c.station?.validity && new Date(c.station.validity).getTime() < nowTs).length;
     const countLabel = state.filterChanView !== 'all' ? `${usedInRow}/${totalInRow}` : `${totalInRow}`;
     const expBadge = expInRow > 0 && state.filterChanView === 'all'
       ? `<span class="city-exp-badge" title="${expInRow} izin habis">⚠${expInRow}</span>` : '';
-    const cells = filtered.length
-      ? filtered.map(c => cellFn(c)).join('')
-      : '<div class="ch-cell ch-cell--empty"></div>';
+    const slots = sortedFreqs.map(f =>
+      cellMap[f] ?? `<div class="sync-cell-empty"></div>`
+    ).join('');
     return `<div class="sync-row">
       <div class="sync-label" data-city="${esc(city)}">
         <span class="sync-label__name">${esc(shortWilayah(city))}</span>
         <span class="sync-label__count">${countLabel}${expBadge}</span>
       </div>
-      <div class="sync-cells">${cells}</div>
+      <div class="sync-cells">${slots}</div>
     </div>`;
   });
-  el.innerHTML = `<div class="sync-scroll-outer"><div class="sync-scroll-inner">${rows.join('')}</div></div>`;
+
+  el.innerHTML = `<div class="sync-table">
+    <div class="sync-thead">
+      <div class="sync-corner"></div>
+      <div class="sync-fhdr-row">${freqHeader}</div>
+    </div>
+    <div class="sync-tbody">${rows.join('')}</div>
+  </div>`;
+
+  // Sync scroll header dengan body
+  const thead = el.querySelector('.sync-thead');
+  const tbody = el.querySelector('.sync-tbody');
+  if (tbody && thead) {
+    tbody.addEventListener('scroll', () => {
+      thead.scrollLeft = tbody.scrollLeft;
+    }, { passive: true });
+  }
 
   attachCellTooltips();
 }

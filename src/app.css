@@ -465,6 +465,19 @@ input, select { font-family: inherit; color: inherit; }
   overflow-y: auto;
   overflow-x: hidden;
   padding: 12px;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+/* Sync-table mengisi sisa tinggi content-area */
+.content-area > .sync-table {
+  flex: 1;
+  min-height: 0;
+  margin: -12px;  /* cancel content-area padding */
+  padding-top: 0;
+}
+.content-area > .sync-table .sync-tbody {
+  overflow: auto;
 }
 
 /* -- City row block --------------------------------------------------- */
@@ -501,23 +514,61 @@ input, select { font-family: inherit; color: inherit; }
   margin-left: auto;
 }
 
-/* -- Sync-scroll grid (semua wilayah sejajar) ------------------------- */
-.sync-scroll-outer {
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-  padding-bottom: 8px;
-}
-.sync-scroll-inner {
-  display: inline-flex;
+/* -- Sync-scroll grid (spreadsheet: label kiri sticky, freq header atas sticky) */
+.sync-table {
+  display: flex;
   flex-direction: column;
-  gap: 4px;
-  min-width: max-content;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+/* Header frekuensi — scroll horizontal tapi tidak vertikal */
+.sync-thead {
+  display: flex;
+  flex-shrink: 0;
+  overflow: hidden;         /* scroll dikendalikan JS dari tbody */
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-base);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+.sync-corner {
+  width: 122px;
+  min-width: 122px;
+  flex-shrink: 0;
+  background: var(--bg-base);
+  border-right: 1px solid var(--border);
+}
+.sync-fhdr-row {
+  display: flex;
+  gap: 3px;
+  padding: 3px 0 3px 3px;
+  overflow: hidden;
+}
+.sync-fhdr {
+  width: 52px;
+  min-width: 52px;
+  font-family: var(--mono);
+  font-size: 8px;
+  color: var(--txt-3);
+  text-align: center;
+  padding: 2px 0;
+  flex-shrink: 0;
+}
+/* Body — scroll vertikal DAN horizontal */
+.sync-tbody {
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+  flex: 1;
 }
 .sync-row {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 0;
+  border-bottom: 1px solid var(--border-subtle, rgba(255,255,255,.04));
 }
+.sync-row:last-child { border-bottom: none; }
 .sync-label {
   width: 120px;
   min-width: 120px;
@@ -526,18 +577,19 @@ input, select { font-family: inherit; color: inherit; }
   left: 0;
   z-index: 2;
   background: var(--bg-base);
-  padding: 3px 8px 3px 2px;
+  padding: 3px 6px 3px 2px;
   display: flex;
   flex-direction: column;
   justify-content: center;
   border-right: 1px solid var(--border);
   cursor: pointer;
+  align-self: stretch;
 }
 .sync-label__name {
   font-family: var(--mono);
-  font-size: 9.5px;
+  font-size: 9px;
   font-weight: 600;
-  letter-spacing: .06em;
+  letter-spacing: .05em;
   text-transform: uppercase;
   color: var(--txt-2);
   white-space: nowrap;
@@ -546,11 +598,11 @@ input, select { font-family: inherit; color: inherit; }
 }
 .sync-label__count {
   font-family: var(--mono);
-  font-size: 9px;
+  font-size: 8.5px;
   color: var(--txt-3);
   margin-top: 1px;
 }
-.sync-label:hover .sync-label__name { color: var(--txt); }
+.sync-label:hover .sync-label__name { color: var(--cyan); }
 .city-exp-badge {
   color: var(--red);
   font-size: 8px;
@@ -561,15 +613,16 @@ input, select { font-family: inherit; color: inherit; }
   display: flex;
   flex-wrap: nowrap;
   gap: 3px;
-  padding: 1px 0;
+  padding: 3px 0 3px 3px;
 }
-.ch-cell--empty {
+.sync-cell-empty {
   width: 52px;
+  min-width: 52px;
   height: 52px;
-  visibility: hidden;
+  flex-shrink: 0;
 }
 
-/* -- Channel grid ----------------------------------------------------- */
+/* -- Channel grid (dipertahankan untuk band view & mobile) ------------ */
 .ch-row {
   display: flex;
   flex-wrap: nowrap;
