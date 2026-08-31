@@ -1257,7 +1257,30 @@ input, select { font-family: inherit; color: inherit; }
   #app { height: auto; min-height: 100vh; flex-direction: column; }
   .app-body { flex-direction: column; overflow: visible; height: auto; }
   .app-main { overflow: visible; height: auto; }
-  .content-area { overflow: visible; padding: 8px; }
+  .content-area { overflow: visible; padding: 8px; display: block; }
+
+  /* Sync grid — mobile: kembali ke stack per wilayah dengan scroll sendiri */
+  .sync-table { display: block; height: auto; overflow: visible; }
+  .sync-thead { display: none; }
+  .sync-tbody { overflow: visible; height: auto; }
+  .sync-row   { flex-direction: column; border-bottom: none; margin-bottom: 10px; }
+  .sync-label {
+    position: static;
+    width: auto; min-width: 0; max-width: none;
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+    padding: 4px 2px;
+    flex-direction: row;
+    align-items: center;
+    gap: 6px;
+  }
+  .sync-label__name { font-size: 10px; }
+  .sync-label__count { margin-top: 0; }
+  .sync-cells {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 4px 0;
+  }
 
   /* Sidebar hilang - navigasi via FAB drawer */
   .sidebar { display: none !important; }
