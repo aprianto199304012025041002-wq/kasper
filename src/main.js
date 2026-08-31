@@ -1165,6 +1165,10 @@ function openInlineDetail(info) {
 // ── Station detail drawer ─────────────────────────────────────────────
 async function openDetailPage(stationOrFreq) {
   const freq = stationOrFreq?.freq ?? stationOrFreq;
+  // Sync freq ke URL supaya bisa di-share/bookmark
+  const p = new URLSearchParams(location.search);
+  p.set('freq', parseFloat(freq).toFixed(3));
+  history.replaceState(null, '', `?${p}`);
   let el = document.getElementById('stationDrawer');
   if (!el) {
     el = document.createElement('div');
@@ -1194,7 +1198,13 @@ async function openDetailPage(stationOrFreq) {
     if (p) p.innerHTML = `<div class="state-error"><div>⚠</div><div>Gagal memuat detail: ${esc(e.message)}</div></div>`;
   }
 }
-function closeStationDrawer() { document.getElementById('stationDrawer')?.classList.remove('is-open'); }
+function closeStationDrawer() {
+  document.getElementById('stationDrawer')?.classList.remove('is-open');
+  // Hapus freq dari URL saat drawer ditutup
+  const p = new URLSearchParams(location.search);
+  p.delete('freq');
+  history.replaceState(null, '', p.toString() ? `?${p}` : location.pathname);
+}
 
 // ── Wilayah short labels ──────────────────────────────────────────────
 const WILAYAH_SHORT = {
