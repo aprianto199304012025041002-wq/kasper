@@ -792,6 +792,24 @@ function renderContent() {
     return;
   }
 
+  // ── Geo view: layout per-wilayah biasa (cell 36px, tidak sync) ───
+  if (state.view === 'geo') {
+    el.innerHTML = cityRows.map(({ city, row }) => {
+      const filtered = applyFilter(row);
+      return `<div class="city-block">
+        <div class="city-block__head">
+          <span class="city-block__name" data-city="${esc(city)}">${esc(shortWilayah(city))}</span>
+          <span class="city-block__count">${state._stationCountMap?.[city] ?? 0} stasiun</span>
+        </div>
+        <div class="ch-row">${filtered.map(c => renderCellGeo(c)).join('') ||
+          '<div class="state-empty" style="min-height:40px;font-size:11px;padding:12px">—</div>'
+        }</div>
+      </div>`;
+    }).join('');
+    attachCellTooltips();
+    return;
+  }
+
   // ── Sync-scroll: spreadsheet layout — label sticky kiri, freq header sticky atas ──
   const nowTs = Date.now();
 
