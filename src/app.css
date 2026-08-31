@@ -501,6 +501,74 @@ input, select { font-family: inherit; color: inherit; }
   margin-left: auto;
 }
 
+/* -- Sync-scroll grid (semua wilayah sejajar) ------------------------- */
+.sync-scroll-outer {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 8px;
+}
+.sync-scroll-inner {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: max-content;
+}
+.sync-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0;
+}
+.sync-label {
+  width: 120px;
+  min-width: 120px;
+  max-width: 120px;
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  background: var(--bg-base);
+  padding: 3px 8px 3px 2px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  border-right: 1px solid var(--border);
+  cursor: pointer;
+}
+.sync-label__name {
+  font-family: var(--mono);
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--txt-2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sync-label__count {
+  font-family: var(--mono);
+  font-size: 9px;
+  color: var(--txt-3);
+  margin-top: 1px;
+}
+.sync-label:hover .sync-label__name { color: var(--txt); }
+.city-exp-badge {
+  color: var(--red);
+  font-size: 8px;
+  font-family: var(--mono);
+  margin-left: 3px;
+}
+.sync-cells {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 3px;
+  padding: 1px 0;
+}
+.ch-cell--empty {
+  width: 52px;
+  height: 52px;
+  visibility: hidden;
+}
+
 /* -- Channel grid ----------------------------------------------------- */
 .ch-row {
   display: flex;

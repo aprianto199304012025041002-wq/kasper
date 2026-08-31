@@ -519,7 +519,8 @@ async function handleClick(e) {
     const freq = parseFloat(cell.dataset.freq);
     const chGlobal = state.data.channel_map.find(c => c.freq === freq);
     if (!chGlobal) return;
-    const city = cell.closest('.city-block')?.querySelector('.city-block__name')?.dataset?.city;
+    const city = cell.closest('.sync-row')?.querySelector('.sync-label')?.dataset?.city
+      || cell.closest('.city-block')?.querySelector('.city-block__name')?.dataset?.city;
     const coStations = city
       ? state.data.stations.filter(s => {
           if (Math.abs(parseFloat(s.freq) - freq) >= 0.01) return false;
@@ -791,28 +792,28 @@ function renderContent() {
     return;
   }
 
-  el.innerHTML = cityRows.map(({ city, row }) => {
+  // ── Sync-scroll: satu container horizontal, semua wilayah sejajar ──
+  const nowTs = Date.now();
+  const rows = cityRows.map(({ city, row }) => {
     const filtered = applyFilter(row);
     const usedInRow = filtered.filter(c => c.type === 'used').length;
     const totalInRow = state._stationCountMap?.[city] ?? 0;
-    const nowTs = Date.now();
     const expInRow = row.filter(c => c.type === 'used' && c.station?.validity && new Date(c.station.validity).getTime() < nowTs).length;
-    const countLabel = state.filterChanView !== 'all'
-      ? `${usedInRow} / ${totalInRow} stasiun`
-      : `${totalInRow} stasiun`;
+    const countLabel = state.filterChanView !== 'all' ? `${usedInRow}/${totalInRow}` : `${totalInRow}`;
     const expBadge = expInRow > 0 && state.filterChanView === 'all'
-      ? ` <span style="color:var(--red);font-size:9px;font-family:var(--mono)" title="${expInRow} izin habis">⚠${expInRow}</span>`
-      : '';
-    return `<div class="city-block">
-      <div class="city-block__head">
-        <span class="city-block__name" data-city="${esc(city)}">${esc(shortWilayah(city))}</span>
-        <span class="city-block__count">${countLabel}${expBadge}</span>
+      ? `<span class="city-exp-badge" title="${expInRow} izin habis">⚠${expInRow}</span>` : '';
+    const cells = filtered.length
+      ? filtered.map(c => cellFn(c)).join('')
+      : '<div class="ch-cell ch-cell--empty"></div>';
+    return `<div class="sync-row">
+      <div class="sync-label" data-city="${esc(city)}">
+        <span class="sync-label__name">${esc(shortWilayah(city))}</span>
+        <span class="sync-label__count">${countLabel}${expBadge}</span>
       </div>
-      <div class="ch-row">${filtered.map(c => cellFn(c)).join('') ||
-        '<div class="state-empty" style="min-height:60px;font-size:11px;padding:16px">Tidak ada stasiun aktif di wilayah ini</div>'
-      }</div>
+      <div class="sync-cells">${cells}</div>
     </div>`;
-  }).join('');
+  });
+  el.innerHTML = `<div class="sync-scroll-outer"><div class="sync-scroll-inner">${rows.join('')}</div></div>`;
 
   attachCellTooltips();
 }
@@ -973,7 +974,8 @@ function attachCellTooltips() {
     const cell = e.target.closest('.ch-cell[data-freq]');
     if (!cell) return;
     const freq = parseFloat(cell.dataset.freq);
-    const city = cell.closest('.city-block')?.querySelector('.city-block__name')?.dataset?.city;
+    const city = cell.closest('.sync-row')?.querySelector('.sync-label')?.dataset?.city
+      || cell.closest('.city-block')?.querySelector('.city-block__name')?.dataset?.city;
     // Cari channel dari allotmentCache per-wilayah jika ada
     const chGlobal = state.data?.channel_map.find(c => c.freq === freq);
     if (!chGlobal) return;
@@ -1320,7 +1322,14 @@ function toggleHelpOverlay() {
         </div>`).join('')}
       <div style="margin-top:14px;font-size:10px;color:var(--txt-3);text-align:center">Klik di luar atau tekan ? untuk tutup</div>
     </div>`;
-  el.addEventListener('click', e => { if (e.target === el) el.remove(); });
+  el.addEventListener('click', e => {
+    const syncLabel = e.target.closest('.sync-label[data-city]');
+    if (syncLabel) {
+      const city = syncLabel.dataset.city;
+      if (state.selectedWilayah === city) { state.selectedWilayah = null; state.filterCities = []; }
+      else { state.selectedWilayah = city; state.filterCities = [city]; }
+      syncURL(); renderSidebar(); renderContent(); return;
+    } if (e.target === el) el.remove(); });
   document.body.appendChild(el);
 }
 
