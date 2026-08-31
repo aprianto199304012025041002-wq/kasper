@@ -824,9 +824,10 @@ function renderContent() {
     const slots = sortedFreqs.map(f =>
       cellMap[f] ?? `<div class="sync-cell-empty"></div>`
     ).join('');
+    const shortName = shortWilayah(city);
     return `<div class="sync-row">
-      <div class="sync-label" data-city="${esc(city)}">
-        <span class="sync-label__name">${esc(shortWilayah(city))}</span>
+      <div class="sync-label" data-city="${esc(city)}" title="${esc(shortName)}">
+        <span class="sync-label__name">${esc(shortName)}</span>
         <span class="sync-label__count">${countLabel}${expBadge}</span>
       </div>
       <div class="sync-cells">${slots}</div>
