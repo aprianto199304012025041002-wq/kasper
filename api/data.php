@@ -209,7 +209,8 @@ switch ($route) {
     // GET /api/health
     case 'health':
         $cnt = $pdo->query("SELECT COUNT(*) FROM isr WHERE service='Broadcast' AND subservice='FM'")->fetchColumn();
-        out(['status' => 'ok', 'total_fm' => (int)$cnt, 'time' => date('c')]);
+        $exp = $pdo->query("SELECT COUNT(*) FROM isr WHERE service='Broadcast' AND subservice='FM' AND validity_date < CURDATE()")->fetchColumn();
+        out(['status' => 'ok', 'total_fm' => (int)$cnt, 'expired' => (int)$exp, 'time' => date('c')]);
 
     default:
         http_response_code(404);
