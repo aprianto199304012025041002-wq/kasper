@@ -832,6 +832,13 @@ function renderContent() {
   ).join('');
 
   // Tiap wilayah = satu baris, tiap frekuensi = satu slot
+  // Tambahkan section divider antara DIY dan Jateng
+  const wilayahProvince2 = {};
+  state.data.stations.forEach(s => {
+    const w = s.wilayah_layanan || s.kota || '';
+    if (w && s.province) wilayahProvince2[w] = s.province;
+  });
+  let _lastProvince = null;
   const rows = cityRows.map(({ city, row }) => {
     const filtered = filteredByCity[city];
     const cellMap = {};
@@ -846,7 +853,16 @@ function renderContent() {
       cellMap[f] ?? `<div class="sync-cell-empty"></div>`
     ).join('');
     const shortName = shortWilayah(city);
-    return `<div class="sync-row">
+    const cityProv = wilayahProvince2[city] || '';
+    const provLabel = cityProv.includes('YOGYAKARTA') ? 'D.I. Yogyakarta' : 'Jawa Tengah';
+    const divider = (_lastProvince !== null && cityProv !== _lastProvince)
+      ? `<div class="sync-divider"><span>${provLabel}</span></div>` : '';
+    if (_lastProvince === null) {
+      _lastProvince = cityProv;
+    } else {
+      _lastProvince = cityProv;
+    }
+    return divider + `<div class="sync-row">
       <div class="sync-label" data-city="${esc(city)}" title="${esc(shortName)}">
         <span class="sync-label__name">${esc(shortName)}</span>
         <span class="sync-label__count">${countLabel}${expBadge}</span>

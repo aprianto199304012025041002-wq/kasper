@@ -628,6 +628,24 @@ input, select { font-family: inherit; color: inherit; }
   flex-shrink: 0;
 }
 
+.sync-divider {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 2px 3px;
+  border-top: 1px solid var(--border);
+  margin-top: 2px;
+}
+.sync-divider span {
+  font-family: var(--mono);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--txt-3);
+  white-space: nowrap;
+}
+
 /* -- Channel grid (dipertahankan untuk band view & mobile) ------------ */
 .ch-row {
   display: flex;
