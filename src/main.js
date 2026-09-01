@@ -761,19 +761,25 @@ function renderContent() {
     return row;
   };
 
-  // ── Band view ─────────────────────────────────────────────────────
+  // ── Band view — sync scroll, label sticky kiri ─────────────────────
   const _isLight = document.documentElement.getAttribute('data-theme') === 'light';
   if (state.view === 'band') {
-    el.innerHTML = cityRows.map(({ city, row }) =>
-      `<div class="city-block">
-        <div class="city-block__head">
-          <span class="city-block__name" data-city="${esc(city)}">${esc(shortWilayah(city))}</span>
-          <span class="city-block__count">${state._stationCountMap?.[city] ?? 0} stasiun</span>
-          <span class="band-scroll-hint-mobile">geser →</span>
+    const bandRows = cityRows.map(({ city, row }) => {
+      const nowTs2 = Date.now();
+      const expInRow2 = row.filter(c => c.type === 'used' && c.station?.validity && new Date(c.station.validity).getTime() < nowTs2).length;
+      const expBadge2 = expInRow2 > 0 ? `<span class="city-exp-badge" title="${expInRow2} izin habis">⚠${expInRow2}</span>` : '';
+      return `<div class="sync-row band-sync-row">
+        <div class="sync-label" data-city="${esc(city)}" title="${esc(shortWilayah(city))}">
+          <span class="sync-label__name">${esc(shortWilayah(city))}</span>
+          <span class="sync-label__count">${state._stationCountMap?.[city] ?? 0}${expBadge2}</span>
         </div>
         <div class="band-scroll">${renderBandSVG(applyFilter(row), city, _isLight)}</div>
-      </div>`
-    ).join('');
+      </div>`;
+    });
+    el.innerHTML = `<div class="sync-table">
+      <div class="sync-tbody band-tbody">${bandRows.join('')}</div>
+    </div>`;
+    attachCellTooltips();
     return;
   }
 
