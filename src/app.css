@@ -531,8 +531,6 @@ input, select { font-family: inherit; color: inherit; }
   overflow: hidden;         /* scroll dikendalikan JS dari tbody */
   border-bottom: 1px solid var(--border);
   background: var(--bg-base);
-  position: sticky;
-  top: 0;
   z-index: 10;
 }
 .sync-corner {

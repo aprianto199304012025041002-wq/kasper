@@ -735,6 +735,9 @@ function renderContent() {
       }
     });
   });
+  // Simpan scroll position sync-tbody sebelum re-render
+  const _prevScrollLeft = el.querySelector('.sync-tbody')?.scrollLeft ?? 0;
+
   renderStatsBar(activeSummary, allotTotal > 0 ? { total: allotTotal, used: allotUsed, free: allotFree } : null, activeSummary.expired);
   renderFreeBlocksPanel();
 
@@ -860,10 +863,14 @@ function renderContent() {
     <div class="sync-tbody">${rows.join('')}</div>
   </div>`;
 
-  // Sync scroll header dengan body
+  // Sync scroll header dengan body + restore posisi sebelumnya
   const thead = el.querySelector('.sync-thead');
   const tbody = el.querySelector('.sync-tbody');
   if (tbody && thead) {
+    if (_prevScrollLeft > 0) {
+      tbody.scrollLeft = _prevScrollLeft;
+      thead.scrollLeft = _prevScrollLeft;
+    }
     tbody.addEventListener('scroll', () => {
       thead.scrollLeft = tbody.scrollLeft;
     }, { passive: true });
