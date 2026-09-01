@@ -764,11 +764,22 @@ function renderContent() {
   // ── Band view — sync scroll, label sticky kiri ─────────────────────
   const _isLight = document.documentElement.getAttribute('data-theme') === 'light';
   if (state.view === 'band') {
+    const _bandProvMap = {};
+    state.data.stations.forEach(s => {
+      const w = s.wilayah_layanan || s.kota || '';
+      if (w && s.province) _bandProvMap[w] = s.province;
+    });
+    let _bandLastProv = null;
     const bandRows = cityRows.map(({ city, row }) => {
       const nowTs2 = Date.now();
       const expInRow2 = row.filter(c => c.type === 'used' && c.station?.validity && new Date(c.station.validity).getTime() < nowTs2).length;
       const expBadge2 = expInRow2 > 0 ? `<span class="city-exp-badge" title="${expInRow2} izin habis">⚠${expInRow2}</span>` : '';
-      return `<div class="sync-row band-sync-row">
+      const cityProv2 = _bandProvMap[city] || '';
+      const provLabel2 = cityProv2.includes('YOGYAKARTA') ? 'D.I. Yogyakarta' : 'Jawa Tengah';
+      const divider2 = (_bandLastProv !== null && cityProv2 !== _bandLastProv)
+        ? `<div class="sync-divider"><span>${provLabel2}</span></div>` : '';
+      _bandLastProv = cityProv2;
+      return divider2 + `<div class="sync-row band-sync-row">
         <div class="sync-label" data-city="${esc(city)}" title="${esc(shortWilayah(city))}">
           <span class="sync-label__name">${esc(shortWilayah(city))}</span>
           <span class="sync-label__count">${state._stationCountMap?.[city] ?? 0}${expBadge2}</span>
