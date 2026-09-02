@@ -1387,6 +1387,7 @@ async function refreshData() {
   state._allotmentCache = null;
   state._detailCache = null;
   state._wpMap = null;
+  state.interfData = null;
   await loadData();
   if (btn) { btn.style.opacity = ''; btn.style.pointerEvents = ''; }
 }
