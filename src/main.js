@@ -823,13 +823,15 @@ function renderContent() {
   // ── Sync-scroll: spreadsheet layout — label sticky kiri, freq header sticky atas ──
   const nowTs = Date.now();
 
-  // Kumpulkan semua frekuensi unik yang muncul di filtered rows (union semua wilayah)
+  // Kumpulkan frekuensi unik — skip wilayah yang 0 hasil setelah filter+search
   const allFreqs = new Set();
   const filteredByCity = {};
-  cityRows.forEach(({ city, row }) => {
-    const filtered = applyFilter(row);
+  const activeCityRows = cityRows.filter(({ city, row }) => {
+    const filtered = applyFilter(row).filter(c => matchSearch(c));
+    if (!filtered.length) return false;
     filteredByCity[city] = filtered;
     filtered.forEach(c => allFreqs.add(c.freq));
+    return true;
   });
   const sortedFreqs = [...allFreqs].sort((a, b) => a - b);
 
@@ -839,9 +841,8 @@ function renderContent() {
   ).join('');
 
   // Tiap wilayah = satu baris, tiap frekuensi = satu slot
-  // Tambahkan section divider antara DIY dan Jateng
   let _lastProvince = null;
-  const rows = cityRows.map(({ city, row }) => {
+  const rows = activeCityRows.map(({ city, row }) => {
     const filtered = filteredByCity[city];
     const cellMap = {};
     filtered.forEach(c => { cellMap[c.freq] = cellFn(c); });
