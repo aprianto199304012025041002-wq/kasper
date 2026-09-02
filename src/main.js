@@ -868,8 +868,9 @@ function renderContent() {
     } else {
       _lastProvince = cityProv;
     }
-    return divider + `<div class="sync-row">
-      <div class="sync-label" data-city="${esc(city)}" title="${esc(shortName)}">
+    const isSelected = state.selectedWilayah === city || state.filterCities?.[0] === city;
+    return divider + `<div class="sync-row${isSelected ? ' sync-row--active' : ''}">
+      <div class="sync-label${isSelected ? ' sync-label--active' : ''}" data-city="${esc(city)}" title="${esc(shortName)}">
         <span class="sync-label__name">${esc(shortName)}</span>
         <span class="sync-label__count">${countLabel}${expBadge}</span>
       </div>

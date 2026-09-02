@@ -596,6 +596,9 @@ input, select { font-family: inherit; color: inherit; }
   margin-top: 1px;
 }
 .sync-label:hover .sync-label__name { color: var(--cyan); }
+.sync-label--active { background: var(--cyan-dim); border-right-color: var(--cyan); }
+.sync-label--active .sync-label__name { color: var(--cyan); }
+.sync-row--active { background: rgba(0,196,255,.03); }
 .city-exp-badge {
   color: var(--red);
   font-size: 8px;
