@@ -510,11 +510,6 @@ input, select { font-family: inherit; color: inherit; }
   border-radius: 10px;
   padding: 1px 6px;
 }
-.city-block__province {
-  font-size: 9px;
-  color: var(--txt-3);
-  margin-left: auto;
-}
 
 /* -- Sync-scroll grid (spreadsheet: label kiri sticky, freq header atas sticky) */
 .sync-table {
@@ -1377,7 +1372,7 @@ input, select { font-family: inherit; color: inherit; }
   #app { height: 100vh; }
   .app-body { height: calc(100vh - var(--header-h) - var(--toolbar-h)); overflow: hidden; }
   .app-main { overflow: hidden; }
-  .content-area { overflow-y: auto; padding: 6px; }
+  .content-area { overflow: hidden; padding: 0; display: flex; flex-direction: column; flex: 1; min-height: 0; }
 
   /* Statsbar - satu baris horizontal */
   .statsbar { flex-wrap: nowrap; overflow-x: auto; }
@@ -1720,14 +1715,7 @@ input, select { font-family: inherit; color: inherit; }
 #freeBlocksPanel > div { margin: 8px 12px 0; }
 
 /* -- Band scroll hint ----------------------------------------------- */
-.band-scroll-hint-mobile {
-  font-family: var(--mono);
-  font-size: 9px;
-  color: var(--txt-3);
-  text-align: right;
-  padding: 2px 4px 0;
-  letter-spacing: .06em;
-}
+
 
 /* ── Print ─────────────────────────────────────────────────────────── */
 @media print {
