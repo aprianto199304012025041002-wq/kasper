@@ -275,13 +275,8 @@ function renderSidebar() {
   const expCnt = (w) => expMap[w] || 0;
 
   // Grup berdasarkan province dari data — tidak hardcode nama wilayah
-  const wilayahProvince = {};
-  state.data.stations.forEach(s => {
-    const w = s.wilayah_layanan || s.kota || '';
-    if (w && s.province) wilayahProvince[w] = s.province;
-  });
-  const diy    = allWilayah.filter(w => (wilayahProvince[w]||'').includes('YOGYAKARTA'));
-  const jateng = allWilayah.filter(w => !(wilayahProvince[w]||'').includes('YOGYAKARTA'));
+  const diy    = allWilayah.filter(w => isYogya(w));
+  const jateng = allWilayah.filter(w => !isYogya(w));
 
   const itemHtml = (w) => {
     const active = state.selectedWilayah === w;
@@ -764,17 +759,12 @@ function renderContent() {
   // ── Band view — sync scroll, label sticky kiri ─────────────────────
   const _isLight = document.documentElement.getAttribute('data-theme') === 'light';
   if (state.view === 'band') {
-    const _bandProvMap = {};
-    state.data.stations.forEach(s => {
-      const w = s.wilayah_layanan || s.kota || '';
-      if (w && s.province) _bandProvMap[w] = s.province;
-    });
     let _bandLastProv = null;
     const bandRows = cityRows.map(({ city, row }) => {
       const nowTs2 = Date.now();
       const expInRow2 = row.filter(c => c.type === 'used' && c.station?.validity && new Date(c.station.validity).getTime() < nowTs2).length;
       const expBadge2 = expInRow2 > 0 ? `<span class="city-exp-badge" title="${expInRow2} izin habis">⚠${expInRow2}</span>` : '';
-      const cityProv2 = _bandProvMap[city] || '';
+      const cityProv2 = getWilayahProvinceMap()[city] || '';
       const provLabel2 = cityProv2.includes('YOGYAKARTA') ? 'D.I. Yogyakarta' : 'Jawa Tengah';
       const divider2 = (_bandLastProv !== null && cityProv2 !== _bandLastProv)
         ? `<div class="sync-divider"><span>${provLabel2}</span></div>` : '';
@@ -850,11 +840,6 @@ function renderContent() {
 
   // Tiap wilayah = satu baris, tiap frekuensi = satu slot
   // Tambahkan section divider antara DIY dan Jateng
-  const wilayahProvince2 = {};
-  state.data.stations.forEach(s => {
-    const w = s.wilayah_layanan || s.kota || '';
-    if (w && s.province) wilayahProvince2[w] = s.province;
-  });
   let _lastProvince = null;
   const rows = cityRows.map(({ city, row }) => {
     const filtered = filteredByCity[city];
@@ -870,7 +855,7 @@ function renderContent() {
       cellMap[f] ?? `<div class="sync-cell-empty"></div>`
     ).join('');
     const shortName = shortWilayah(city);
-    const cityProv = wilayahProvince2[city] || '';
+    const cityProv = getWilayahProvinceMap()[city] || '';
     const provLabel = cityProv.includes('YOGYAKARTA') ? 'D.I. Yogyakarta' : 'Jawa Tengah';
     const divider = (_lastProvince !== null && cityProv !== _lastProvince)
       ? `<div class="sync-divider"><span>${provLabel}</span></div>` : '';
@@ -1391,6 +1376,19 @@ const WILAYAH_SHORT = {
   'WONOTUNGGAL, BANDAR': 'Wonotunggal – Bandar',
 };
 function shortWilayah(w) { return WILAYAH_SHORT[w] || w; }
+
+// Cache wilayah→province map — dipakai di sidebar, grid, band view
+function getWilayahProvinceMap() {
+  if (state._wpMap && state._wpMapData === state.data) return state._wpMap;
+  state._wpMap = {};
+  state._wpMapData = state.data;
+  (state.data?.stations || []).forEach(s => {
+    const w = s.wilayah_layanan || s.kota || '';
+    if (w && s.province) state._wpMap[w] = s.province;
+  });
+  return state._wpMap;
+}
+function isYogya(city) { return (getWilayahProvinceMap()[city] || '').includes('YOGYAKARTA'); }
 
 function toggleHelpOverlay() {
   let el = document.getElementById('helpOverlay');
