@@ -319,6 +319,7 @@ function renderSidebar() {
       state.page = 'main';
       syncURL(); renderSidebar(); renderContent();
       document.getElementById('dynamicContent')?.scrollTo(0, 0);
+      document.querySelector('.sync-tbody')?.scrollTo(0, 0);
     });
   });
   nav.querySelector('[data-page="interference"]')?.addEventListener('click', () => {
