@@ -760,7 +760,9 @@ function renderContent() {
   const _isLight = document.documentElement.getAttribute('data-theme') === 'light';
   if (state.view === 'band') {
     let _bandLastProv = null;
-    const bandRows = cityRows.map(({ city, row }) => {
+    const bandRows = cityRows.flatMap(({ city, row }) => {
+      const filtered = applyFilter(row);
+      if (!filtered.length) return [];
       const nowTs2 = Date.now();
       const expInRow2 = row.filter(c => c.type === 'used' && c.station?.validity && new Date(c.station.validity).getTime() < nowTs2).length;
       const expBadge2 = expInRow2 > 0 ? `<span class="city-exp-badge" title="${expInRow2} izin habis">⚠${expInRow2}</span>` : '';
@@ -769,13 +771,13 @@ function renderContent() {
       const divider2 = (_bandLastProv !== null && cityProv2 !== _bandLastProv)
         ? `<div class="sync-divider"><span>${provLabel2}</span></div>` : '';
       _bandLastProv = cityProv2;
-      return divider2 + `<div class="sync-row band-sync-row">
+      return [divider2 + `<div class="sync-row band-sync-row">
         <div class="sync-label" data-city="${esc(city)}" title="${esc(shortWilayah(city))}">
           <span class="sync-label__name">${esc(shortWilayah(city))}</span>
           <span class="sync-label__count">${state._stationCountMap?.[city] ?? 0}${expBadge2}</span>
         </div>
-        <div class="band-scroll">${renderBandSVG(applyFilter(row), city, _isLight)}</div>
-      </div>`;
+        <div class="band-scroll">${renderBandSVG(filtered, city, _isLight)}</div>
+      </div>`];
     });
     el.innerHTML = `<div class="sync-table">
       <div class="sync-tbody band-tbody">${bandRows.join('')}</div>
@@ -827,7 +829,7 @@ function renderContent() {
   const allFreqs = new Set();
   const filteredByCity = {};
   const activeCityRows = cityRows.filter(({ city, row }) => {
-    const filtered = applyFilter(row).filter(c => matchSearch(c));
+    const filtered = applyFilter(row);
     if (!filtered.length) return false;
     filteredByCity[city] = filtered;
     filtered.forEach(c => allFreqs.add(c.freq));
