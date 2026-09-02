@@ -1397,6 +1397,7 @@ async function refreshData() {
   state._wpMap = null;
   state.interfData = null;
   await loadData();
+  if (state.page === 'interference') await loadInterference();
   if (btn) { btn.style.opacity = ''; btn.style.pointerEvents = ''; }
 }
 
