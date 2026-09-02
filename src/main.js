@@ -110,6 +110,7 @@ function initKeyboard() {
         break;
       case '?':
         toggleHelpOverlay(); break;
+      case 'r': refreshData(); break;
       case 'd': toggleTheme(); break;
       case 'b':
         state.sidebarCollapsed = !state.sidebarCollapsed;
@@ -247,6 +248,7 @@ function renderHeader() {
     <div class="app-header__status">
       <span class="live-dot"></span>
       <span id="headerStatus">—</span>
+      <button id="refreshBtn" class="theme-toggle" title="Refresh data [R]" style="font-size:13px">↺</button>
       <button id="themeToggle" class="theme-toggle" title="Toggle dark/light mode">◑</button>
     </div>
   </header>`;
@@ -476,6 +478,7 @@ function attachEvents() {
     }
     if (e.target.id === 'exportExpiredBtn') { exportExpiredCSV(); return; }
     if (e.target.id === 'helpBtn') { toggleHelpOverlay(); return; }
+    if (e.target.id === 'refreshBtn') { refreshData(); return; }
     if (e.target.id === 'fReset') {
       state.filterCities = []; state.selectedWilayah = null;
       state.filterChanView = 'all'; state.searchTerm = '';
@@ -1378,6 +1381,16 @@ const WILAYAH_SHORT = {
 };
 function shortWilayah(w) { return WILAYAH_SHORT[w] || w; }
 
+async function refreshData() {
+  const btn = document.getElementById('refreshBtn');
+  if (btn) { btn.style.opacity = '.4'; btn.style.pointerEvents = 'none'; }
+  state._allotmentCache = null;
+  state._detailCache = null;
+  state._wpMap = null;
+  await loadData();
+  if (btn) { btn.style.opacity = ''; btn.style.pointerEvents = ''; }
+}
+
 // Cache wilayah→province map — dipakai di sidebar, grid, band view
 function getWilayahProvinceMap() {
   if (state._wpMap && state._wpMapData === state.data) return state._wpMap;
@@ -1406,6 +1419,7 @@ function toggleHelpOverlay() {
         ['f  atau  /','Fokus ke kotak cari (nama / pemilik / frekuensi)'],
         ['Esc','Hapus filter / tutup detail'],
         ['b','Toggle sidebar'],
+        ['r','Refresh data dari server'],
         ['d','Toggle tema gelap/terang'],
         ['?','Tampilkan / tutup bantuan ini'],
       ].map(([k,v]) => `
