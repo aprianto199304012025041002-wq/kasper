@@ -598,15 +598,17 @@ async function loadData() {
 }
 
 async function loadInterference() {
+  if (state._interfLoading) return;
+  state._interfLoading = true;
   state.loading = true; renderContent();
   try {
     const raw = await fetchInterference({});
     const stations = raw.stations || state.data?.stations || [];
-    // Hitung di background agar tidak freeze UI
     await new Promise(resolve => {
       const compute = () => {
         state.interfData = computeInterference(stations);
         state.loading = false;
+        state._interfLoading = false;
         renderContent();
         resolve();
       };
@@ -621,7 +623,9 @@ async function loadInterference() {
     state.interfData = stations.length
       ? computeInterference(stations)
       : { pairs:[], summary:{}, stations_evaluated:0, model:'error:'+e.message };
-    state.loading = false; renderContent();
+    state.loading = false;
+    state._interfLoading = false;
+    renderContent();
   }
 }
 
@@ -1397,6 +1401,7 @@ async function refreshData() {
   state._detailCache = null;
   state._wpMap = null;
   state.interfData = null;
+  state._interfLoading = false;
   await loadData();
   if (state.page === 'interference') await loadInterference();
   if (btn) { btn.style.opacity = ''; btn.style.pointerEvents = ''; }
