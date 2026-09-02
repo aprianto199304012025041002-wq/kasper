@@ -94,6 +94,41 @@ state = {
 
 ## Sesi terkini — semua sudah di-push
 
+### Sync scroll grid (fitur besar)
+- Grid view pakai layout spreadsheet: freq header sticky atas, label wilayah sticky kiri, satu scrollbar
+- Frekuensi sejajar lintas semua wilayah — bisa lihat co-channel visual langsung
+- Band view juga pakai sync scroll (label sticky kiri, waveform sejajar)
+- Geo view tetap per-wilayah (ada Leaflet map)
+- Mobile sama dengan desktop, label 120px di mobile
+- Divider DIY/Jateng di grid dan band view
+- Scroll position dipertahankan saat filter/wilayah ganti
+- cell 64px di sync grid (lebih lebar dari geo/band 52px)
+
+### Deploy & infra
+- FTP action diganti ke `lftp` — passive mode eksplisit, parallel=2, auto-reconnect
+- Health check retry 3x, non-fatal (tidak fail workflow)
+- Dua FTP step digabung jadi satu deploy folder
+
+### Fitur & fixes lain
+- `?freq=` di URL saat detail drawer buka — shareable link per stasiun
+- Link ↗ Google Maps di seksi lokasi detail drawer
+- Cell drawer (inline) tampilkan expired + validity
+- Search match `no_simf`, `clnt_name`
+- Tooltip co-channel tampilkan semua nama
+- Print CSS `@media print`
+- Help overlay `?` + tombol di toolbar
+- Export CSV izin habis
+- Stat cell "⚠ Izin habis" di statsbar klik-filter
+- Sidebar badge ⚠N per wilayah
+- City block badge ⚠N + count akurat saat filter aktif
+- Global empty state saat filter tidak ada hasil
+- Cache detail drawer per frekuensi (O(1))
+- Station lookup per channel O(n)→O(1) freq index
+- getAllotmentByFreq O(n)→O(1) Set cache
+- Neighbours query filter koordinat valid + validity_date
+
+## Sesi sebelumnya — semua sudah di-push
+
 | Commit | Apa |
 |---|---|
 | interference engine | Distance cutoff per tipe: co 150 km / adj±1 60 km / adj±2 30 km; pair ok hanya ≤10 km |
