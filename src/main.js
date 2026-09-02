@@ -790,8 +790,7 @@ function renderContent() {
   const cellFn = state.view === 'geo' ? (c) => renderCellGeo(c) : renderCell;
 
   // Kalau filter expired aktif dan tidak ada hasil sama sekali
-  const totalFiltered = cityRows.reduce((s, { row }) => s + applyFilter(row).length, 0);
-  if (totalFiltered === 0 && state.filterChanView !== 'all') {
+  if (activeCityRows.length === 0 && state.filterChanView !== 'all') {
     el.innerHTML = `<div class="state-empty" style="padding:48px 24px;text-align:center">
       <div style="font-size:24px;margin-bottom:12px">✓</div>
       <div style="font-size:13px;color:var(--txt-2)">${
@@ -806,17 +805,16 @@ function renderContent() {
 
   // ── Geo view: layout per-wilayah biasa (cell 36px, tidak sync) ───
   if (state.view === 'geo') {
-    el.innerHTML = cityRows.map(({ city, row }) => {
+    el.innerHTML = cityRows.flatMap(({ city, row }) => {
       const filtered = applyFilter(row);
-      return `<div class="city-block">
+      if (!filtered.length) return [];
+      return [`<div class="city-block">
         <div class="city-block__head">
           <span class="city-block__name" data-city="${esc(city)}">${esc(shortWilayah(city))}</span>
           <span class="city-block__count">${state._stationCountMap?.[city] ?? 0} stasiun</span>
         </div>
-        <div class="ch-row">${filtered.map(c => renderCellGeo(c)).join('') ||
-          '<div class="state-empty" style="min-height:40px;font-size:11px;padding:12px">—</div>'
-        }</div>
-      </div>`;
+        <div class="ch-row">${filtered.map(c => renderCellGeo(c)).join('')}</div>
+      </div>`];
     }).join('');
     attachCellTooltips();
     return;
