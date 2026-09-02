@@ -479,6 +479,13 @@ function attachEvents() {
     if (e.target.id === 'exportExpiredBtn') { exportExpiredCSV(); return; }
     if (e.target.id === 'helpBtn') { toggleHelpOverlay(); return; }
     if (e.target.id === 'refreshBtn') { refreshData(); return; }
+    const syncLabel = e.target.closest('.sync-label[data-city]');
+    if (syncLabel && !e.target.closest('#kasperDrawer') && !e.target.closest('#helpOverlay')) {
+      const city = syncLabel.dataset.city;
+      if (state.selectedWilayah === city) { state.selectedWilayah = null; state.filterCities = []; }
+      else { state.selectedWilayah = city; state.filterCities = [city]; }
+      syncURL(); renderSidebar(); renderContent(); return;
+    }
     if (e.target.id === 'fReset') {
       state.filterCities = []; state.selectedWilayah = null;
       state.filterChanView = 'all'; state.searchTerm = '';
@@ -1431,14 +1438,7 @@ function toggleHelpOverlay() {
         </div>`).join('')}
       <div style="margin-top:14px;font-size:10px;color:var(--txt-3);text-align:center">Klik di luar atau tekan ? untuk tutup</div>
     </div>`;
-  el.addEventListener('click', e => {
-    const syncLabel = e.target.closest('.sync-label[data-city]');
-    if (syncLabel) {
-      const city = syncLabel.dataset.city;
-      if (state.selectedWilayah === city) { state.selectedWilayah = null; state.filterCities = []; }
-      else { state.selectedWilayah = city; state.filterCities = [city]; }
-      syncURL(); renderSidebar(); renderContent(); return;
-    } if (e.target === el) el.remove(); });
+  el.addEventListener('click', e => { if (e.target === el) el.remove(); });
   document.body.appendChild(el);
 }
 
