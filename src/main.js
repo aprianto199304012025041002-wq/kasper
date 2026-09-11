@@ -45,6 +45,7 @@ let state = {
   sidebarCollapsed:false,
   _allotmentCache: null,
   _allotmentCacheData: null,
+  _interfLoading:  false,
 };
 
 // ── URL sync ─────────────────────────────────────────────────────────
