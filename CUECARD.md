@@ -94,6 +94,36 @@ state = {
 
 ## Sesi terkini — semua sudah di-push
 
+### Fixes sesi akhir
+| File | Apa |
+|---|---|
+| `main.js` | sync-label click handler nyasar ke toggleHelpOverlay — dipindah ke event delegation |
+| `main.js` | Active state (cyan) pada sync-label wilayah yang dipilih |
+| `main.js` | Scroll ke atas saat pilih wilayah dari sidebar (sync-tbody + dynamicContent) |
+| `main.js` | Guard double-call loadInterference dengan `_interfLoading` flag |
+| `main.js` | `_interfLoading: false` eksplisit di state init |
+| `main.js` | Tombol ↺ refresh data di header + shortcut `R`, invalidate semua cache |
+| `main.js` | Refresh di halaman interferensi juga reload interfData |
+| `main.js` | Skip wilayah kosong di semua view (grid/band/geo) saat filter/search aktif |
+| `main.js` | `activeCityRows` — hanya wilayah yang punya hasil masuk ke sync grid |
+| `main.js` | `getWilayahProvinceMap()` cached helper — hapus 3× duplikat province map |
+| `main.js` | `isYogya()` helper untuk grouping DIY/Jateng |
+| `app.css` | Hapus CSS mati: `.city-block__province`, `.band-scroll-hint-mobile` |
+| `app.css` | Fix content-area landscape mobile untuk sync grid |
+| `deploy.yml` | Health check retry 3x + non-fatal; sleep 20s |
+| `deploy.yml` | FTP diganti lftp — passive mode, parallel=2, auto-reconnect |
+
+### Sync scroll grid (fitur besar sesi ini)
+- Grid view: freq header sticky atas, label wilayah sticky kiri, satu scrollbar
+- Band view: sync scroll juga, waveform SVG sejajar lintas wilayah
+- Geo view: tetap per-wilayah (ada Leaflet map)
+- Mobile = desktop, label 120px di mobile
+- Divider DIY/Jateng di grid dan band view
+- Scroll position dipertahankan saat filter/wilayah ganti
+- Cell 64px di sync grid; label wilayah 190px (nama terpanjang: "Banjarharejo – Ketanggungan")
+
+## Sesi sebelumnya — semua sudah di-push
+
 ### Sync scroll grid (fitur besar)
 - Grid view pakai layout spreadsheet: freq header sticky atas, label wilayah sticky kiri, satu scrollbar
 - Frekuensi sejajar lintas semua wilayah — bisa lihat co-channel visual langsung
