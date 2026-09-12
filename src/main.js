@@ -602,7 +602,8 @@ async function loadData() {
 async function loadInterference() {
   if (state._interfLoading) return;
   state._interfLoading = true;
-  state.loading = true; renderContent();
+  // Jangan set state.loading global — hanya render interference panel sendiri
+  if (state.page === 'interference') renderContent();
   try {
     const raw = await fetchInterference({});
     const stations = raw.stations || state.data?.stations || [];
@@ -657,8 +658,12 @@ function renderContent() {
     return;
   }
   if (state.page === 'interference') {
-    el.innerHTML = '<div class="interf-wrap" id="interfPanel"></div>';
-    if (state.interfData) renderInterferencePanel(document.getElementById('interfPanel'), state.interfData);
+    if (state._interfLoading) {
+      el.innerHTML = `<div class="state-loading"><span class="live-dot"></span> Memuat interferensi…</div>`;
+    } else {
+      el.innerHTML = '<div class="interf-wrap" id="interfPanel"></div>';
+      if (state.interfData) renderInterferencePanel(document.getElementById('interfPanel'), state.interfData);
+    }
     return;
   }
   if (!state.data) return;
