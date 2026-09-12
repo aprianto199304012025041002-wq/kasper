@@ -571,8 +571,7 @@ async function loadData() {
   renderContent();
   try {
     state.data = await fetchSpectrum({});
-    state._allotmentCache = null;
-    state._allotmentCacheData = null;
+    state._allotmentCache = null;    state._allotmentCacheData = null;
     // Pre-compute station count per wilayah
     state._stationCountMap = {};
     (state.data.stations || []).forEach(s => {
@@ -586,7 +585,7 @@ async function loadData() {
     const nowStr = new Date().toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'});
     if (statusEl) statusEl.innerHTML = `${total} stasiun${totalExpired ? ` · <span style="color:var(--red)" title="${totalExpired} izin habis">⚠ ${totalExpired} habis</span>` : ''} · ${nowStr}`;
   } catch(e) {
-    state.error = e.message;
+    state.error = e.message || String(e);
   } finally {
     state.loading = false;
   }
@@ -644,7 +643,18 @@ function renderContent() {
         `<div class="stat-cell"><div class="stat-cell__label">${l}</div><div class="stat-cell__val" style="color:var(--txt-3)">—</div></div>`
       ).join('')}
     </div>`;
-    el.innerHTML = `<div class="state-loading"><span class="live-dot"></span> Memuat… <small style="opacity:.5;font-size:10px">[loading=true, data=${state.data?'ada':'null'}, interf=${state._interfLoading}]</small></div>`;
+    el.innerHTML = `<div class="state-loading"><span class="live-dot"></span> Memuat… <small style="opacity:.5;font-size:10px">[loading=true, data=${state.data?'ada':'null'}, interf=${state._interfLoading}, err=${state.error||'null'}]</small></div>`;
+    // Safety: jika loading >20 detik tanpa resolve, paksa error
+    if (!state._loadingTimer) {
+      state._loadingTimer = setTimeout(() => {
+        if (state.loading) {
+          state.loading = false;
+          state.error = state.error || 'Timeout: API tidak merespons dalam 20 detik';
+          state._loadingTimer = null;
+          renderContent();
+        }
+      }, 20000);
+    }
     return;
   }
   if (state.error) {
