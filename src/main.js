@@ -644,7 +644,7 @@ function renderContent() {
         `<div class="stat-cell"><div class="stat-cell__label">${l}</div><div class="stat-cell__val" style="color:var(--txt-3)">—</div></div>`
       ).join('')}
     </div>`;
-    el.innerHTML = `<div class="state-loading"><span class="live-dot"></span> Memuat…</div>`;
+    el.innerHTML = `<div class="state-loading"><span class="live-dot"></span> Memuat… <small style="opacity:.5;font-size:10px">[loading=true, data=${state.data?'ada':'null'}, interf=${state._interfLoading}]</small></div>`;
     return;
   }
   if (state.error) {
