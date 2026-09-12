@@ -610,7 +610,6 @@ async function loadInterference() {
     await new Promise(resolve => {
       const compute = () => {
         state.interfData = computeInterference(stations);
-        state.loading = false;
         state._interfLoading = false;
         renderContent();
         resolve();
