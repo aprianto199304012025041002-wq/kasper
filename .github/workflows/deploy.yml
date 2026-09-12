@@ -63,16 +63,29 @@ jobs:
           FTP_USER: ${{ secrets.FTP_USER }}
           FTP_PASS: ${{ secrets.FTP_PASS }}
         run: |
-          lftp -c "
-            set ftp:passive-mode yes;
-            set ftp:ssl-allow no;
-            set net:timeout 30;
-            set net:max-retries 5;
-            set net:reconnect-interval-base 5;
-            open ftp://$FTP_USER:$FTP_PASS@$FTP_HOST;
-            mirror --reverse --delete --verbose --parallel=2 deploy_root/ /public_html/;
-            bye
-          "
+          for attempt in 1 2 3; do
+            echo "Deploy attempt $attempt/3..."
+            if lftp -c "
+              set ftp:passive-mode yes;
+              set ftp:ssl-allow no;
+              set net:timeout 60;
+              set net:max-retries 3;
+              set net:reconnect-interval-base 10;
+              open ftp://$FTP_USER:$FTP_PASS@$FTP_HOST;
+              mirror --reverse --delete --verbose --parallel=2 deploy_root/ /public_html/;
+              bye
+            "; then
+              echo "Deploy sukses pada attempt $attempt"
+              break
+            fi
+            if [ $attempt -lt 3 ]; then
+              echo "Gagal, tunggu 30 detik sebelum retry..."
+              sleep 30
+            else
+              echo "Semua attempt gagal"
+              exit 1
+            fi
+          done
 
       # Health check — pastikan site up dan API merespons setelah deploy
       - name: Health check
