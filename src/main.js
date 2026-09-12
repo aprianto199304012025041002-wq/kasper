@@ -571,7 +571,6 @@ async function loadData() {
   renderContent();
   try {
     state.data = await fetchSpectrum({});
-    state.loading = false;
     state._allotmentCache = null;
     state._allotmentCacheData = null;
     // Pre-compute station count per wilayah
@@ -587,7 +586,9 @@ async function loadData() {
     const nowStr = new Date().toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'});
     if (statusEl) statusEl.innerHTML = `${total} stasiun${totalExpired ? ` · <span style="color:var(--red)" title="${totalExpired} izin habis">⚠ ${totalExpired} habis</span>` : ''} · ${nowStr}`;
   } catch(e) {
-    state.error = e.message; state.loading = false;
+    state.error = e.message;
+  } finally {
+    state.loading = false;
   }
   renderControls(); renderSidebar(); renderContent();
   // Buka detail stasiun dari URL ?freq=
@@ -624,6 +625,7 @@ async function loadInterference() {
     state.interfData = stations.length
       ? computeInterference(stations)
       : { pairs:[], summary:{}, stations_evaluated:0, model:'error:'+e.message };
+  } finally {
     state.loading = false;
     state._interfLoading = false;
     renderContent();
