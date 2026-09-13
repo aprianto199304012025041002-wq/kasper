@@ -4,33 +4,17 @@ import { computeChannelMap } from './channelEngine.js';
 const API_BASE = 'https://kasper.balmonjogja.info/api';
 const FETCH_TIMEOUT_MS = 60000;
 
-// XHR-based fetch dengan timeout — lebih reliable dari fetch+AbortController di Firefox mobile
+// Native fetch dengan explicit cache-busting — lebih compatible dari XHR di beberapa mobile browser
 function fetchWithTimeout(url, ms = FETCH_TIMEOUT_MS) {
-  return new Promise((resolve, reject) => {
-    const xhr = new XMLHttpRequest();
-    const tid = setTimeout(() => {
-      xhr.abort();
-      reject(new Error(`Timeout ${ms}ms: ${url}`));
-    }, ms);
-    xhr.open('GET', url);
-    xhr.onload = () => {
-      clearTimeout(tid);
-      if (xhr.status >= 200 && xhr.status < 300) {
-        try {
-          const data = JSON.parse(xhr.responseText);
-          resolve({ ok: true, status: xhr.status, json: () => Promise.resolve(data) });
-        } catch (e) {
-          reject(new Error(`JSON parse error: ${xhr.responseText.slice(0, 100)}`));
-        }
-      } else {
-        reject(new Error(`HTTP ${xhr.status}: ${xhr.responseText.slice(0, 100)}`));
-      }
-    };
-    xhr.onerror = () => { clearTimeout(tid); reject(new Error('Network error')); };
-    xhr.ontimeout = () => { clearTimeout(tid); reject(new Error(`XHR timeout ${ms}ms`)); };
-    xhr.timeout = ms;
-    xhr.send();
-  });
+  const ctrl = new AbortController();
+  const tid = setTimeout(() => ctrl.abort(), ms);
+  // Tambah cache-bust param untuk cegah cached response yang corrupt
+  const bustUrl = url + (url.includes('?') ? '&' : '?') + '_t=' + Date.now();
+  return fetch(bustUrl, {
+    signal: ctrl.signal,
+    cache: 'no-store',
+    headers: { 'Accept': 'application/json' }
+  }).finally(() => clearTimeout(tid));
 }
 
 export async function fetchSpectrum(filters = {}) {

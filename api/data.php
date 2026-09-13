@@ -2,6 +2,9 @@
 // data.php — satu-satunya file PHP, langsung query MySQL
 declare(strict_types=1);
 
+// Bersihkan output buffer apapun yang mungkin ada dari PHP config
+while (ob_get_level()) ob_end_clean();
+
 header('Content-Type: application/json; charset=utf-8');
 $allowed = ['https://kasper.balmonjogja.info', 'http://localhost:5173', 'http://localhost:4173', 'http://127.0.0.1:5173'];
 $origin  = $_SERVER['HTTP_ORIGIN'] ?? '';
