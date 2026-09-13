@@ -648,20 +648,15 @@ function renderContent() {
         `<div class="stat-cell"><div class="stat-cell__label">${l}</div><div class="stat-cell__val" style="color:var(--txt-3)">—</div></div>`
       ).join('')}
     </div>`;
-    el.innerHTML = `<div class="state-loading"><span class="live-dot"></span> Memuat… <small style="opacity:.5;font-size:9px;display:block;word-break:break-all">[loading=true, data=${state.data?'ada':'null'}, interf=${state._interfLoading}, err=${state.error||'null'}]<br>caller: ${state._lastLoadCaller||'?'}</small></div>`;
-    // Safety: jika loading >20 detik tanpa resolve, paksa error
-    if (!state._loadingTimer) {
-      state._loadingTimer = setTimeout(() => {
-        if (state.loading) {
-          state.loading = false;
-          state.error = state.error || 'Timeout: API tidak merespons dalam 20 detik';
-          state._loadingTimer = null;
-          renderContent();
-        }
-      }, 20000);
+    if (!state._loadStart) state._loadStart = Date.now();
+    const elapsed = Math.floor((Date.now() - state._loadStart) / 1000);
+    el.innerHTML = `<div class="state-loading"><span class="live-dot"></span> Memuat data… ${elapsed > 3 ? `<small style="opacity:.5">(${elapsed}s)</small>` : ''}<small style="opacity:.4;font-size:9px;display:block;word-break:break-all">[loading=true, data=${state.data?'ada':'null'}, err=${state.error||'null'}, caller: ${state._lastLoadCaller||'?'}]</small></div>`;
+    if (!state._loadingTimerTick) {
+      state._loadingTimerTick = setInterval(() => { if (state.loading) renderContent(); else { clearInterval(state._loadingTimerTick); state._loadingTimerTick = null; state._loadStart = null; } }, 1000);
     }
     return;
   }
+  clearInterval(state._loadingTimerTick); state._loadingTimerTick = null; state._loadStart = null;
   if (state.error) {
     el.innerHTML = `<div class="state-error">
       <div style="font-size:20px">⚠</div>

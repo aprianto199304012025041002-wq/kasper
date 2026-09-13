@@ -2,7 +2,7 @@
 import { computeChannelMap } from './channelEngine.js';
 
 const API_BASE = 'https://kasper.balmonjogja.info/api';
-const FETCH_TIMEOUT_MS = 15000;
+const FETCH_TIMEOUT_MS = 60000;
 
 // XHR-based fetch dengan timeout — lebih reliable dari fetch+AbortController di Firefox mobile
 function fetchWithTimeout(url, ms = FETCH_TIMEOUT_MS) {
