@@ -132,8 +132,10 @@ switch ($route) {
               $where
             ORDER BY freq ASC
         ");
+        $t_sql0 = microtime(true);
         $stmt->execute($p);
         $stations = $stmt->fetchAll();
+        $t_sql1 = microtime(true);
         foreach ($stations as &$s) $s['freq'] = (float)$s['freq'];
 
         // Hitung summary di server untuk efisiensi
@@ -160,7 +162,8 @@ switch ($route) {
             'pct_free' => $total ? round($free/$total*100, 1) : 0,
         ];
 
-        out(['stations' => $stations, 'total' => count($stations), 'summary' => $summary]);
+        out(['stations' => $stations, 'total' => count($stations), 'summary' => $summary,
+             'debug_sql_ms' => isset($t_sql0) ? round(($t_sql1-$t_sql0)*1000) : null]);
 
     // GET /api/cities
     case 'cities':
@@ -208,9 +211,13 @@ switch ($route) {
 
     // GET /api/health
     case 'health':
+        $t0 = microtime(true);
         $cnt = $pdo->query("SELECT COUNT(*) FROM isr WHERE service='Broadcast' AND subservice='FM'")->fetchColumn();
+        $t1 = microtime(true);
         $exp = $pdo->query("SELECT COUNT(*) FROM isr WHERE service='Broadcast' AND subservice='FM' AND validity_date < CURDATE()")->fetchColumn();
-        out(['status' => 'ok', 'total_fm' => (int)$cnt, 'expired' => (int)$exp, 'time' => date('c')]);
+        $t2 = microtime(true);
+        out(['status' => 'ok', 'total_fm' => (int)$cnt, 'expired' => (int)$exp, 'time' => date('c'),
+             'db_ms' => round(($t1-$t0)*1000), 'total_ms' => round(($t2-$t0)*1000)]);
 
     default:
         http_response_code(404);
