@@ -4,11 +4,28 @@ import { computeChannelMap } from './channelEngine.js';
 const API_BASE = 'https://kasper.balmonjogja.info/api';
 const FETCH_TIMEOUT_MS = 15000;
 
-// AbortController manual — kompatibel semua browser (AbortSignal.timeout tidak support Safari lama)
+// XHR-based fetch dengan timeout — lebih reliable dari fetch+AbortController di Firefox mobile
 function fetchWithTimeout(url, ms = FETCH_TIMEOUT_MS) {
-  const ctrl = new AbortController();
-  const tid = setTimeout(() => ctrl.abort(new Error(`Timeout ${ms}ms`)), ms);
-  return fetch(url, { signal: ctrl.signal }).finally(() => clearTimeout(tid));
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    const tid = setTimeout(() => {
+      xhr.abort();
+      reject(new Error(`Timeout ${ms}ms: ${url}`));
+    }, ms);
+    xhr.open('GET', url);
+    xhr.onload = () => {
+      clearTimeout(tid);
+      if (xhr.status >= 200 && xhr.status < 300) {
+        resolve({ ok: true, status: xhr.status, json: () => Promise.resolve(JSON.parse(xhr.responseText)) });
+      } else {
+        reject(new Error(`HTTP ${xhr.status}`));
+      }
+    };
+    xhr.onerror = () => { clearTimeout(tid); reject(new Error('Network error')); };
+    xhr.ontimeout = () => { clearTimeout(tid); reject(new Error(`XHR timeout ${ms}ms`)); };
+    xhr.timeout = ms;
+    xhr.send();
+  });
 }
 
 export async function fetchSpectrum(filters = {}) {
