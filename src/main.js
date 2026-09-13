@@ -567,15 +567,11 @@ async function handleClick(e) {
 
 // ── Data loading ──────────────────────────────────────────────────────
 async function loadData() {
-  // DEBUG: hitung berapa kali dipanggil
-  state._loadCount = (state._loadCount || 0) + 1;
-  const callN = state._loadCount;
-  const caller = new Error().stack?.split('\n').slice(1,4).join(' | ') || 'unknown';
-  state._lastLoadCaller = `#${callN} ${caller}`;
   state.loading = true; state.error = null; state.data = null;
   renderContent();
   try {
     state.data = await fetchSpectrum({});
+    state.loading = false;
     state._allotmentCache = null;    state._allotmentCacheData = null;
     // Pre-compute station count per wilayah
     state._stationCountMap = {};
@@ -590,9 +586,7 @@ async function loadData() {
     const nowStr = new Date().toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'});
     if (statusEl) statusEl.innerHTML = `${total} stasiun${totalExpired ? ` · <span style="color:var(--red)" title="${totalExpired} izin habis">⚠ ${totalExpired} habis</span>` : ''} · ${nowStr}`;
   } catch(e) {
-    state.error = e.message || String(e);
-  } finally {
-    state.loading = false;
+    state.error = e.message || String(e); state.loading = false;
   }
   renderControls(); renderSidebar(); renderContent();
   // Buka detail stasiun dari URL ?freq=
@@ -648,15 +642,9 @@ function renderContent() {
         `<div class="stat-cell"><div class="stat-cell__label">${l}</div><div class="stat-cell__val" style="color:var(--txt-3)">—</div></div>`
       ).join('')}
     </div>`;
-    if (!state._loadStart) state._loadStart = Date.now();
-    const elapsed = Math.floor((Date.now() - state._loadStart) / 1000);
-    el.innerHTML = `<div class="state-loading"><span class="live-dot"></span> Memuat data… ${elapsed > 3 ? `<small style="opacity:.5">(${elapsed}s)</small>` : ''}<small style="opacity:.4;font-size:9px;display:block;word-break:break-all">[loading=true, data=${state.data?'ada':'null'}, err=${state.error||'null'}, caller: ${state._lastLoadCaller||'?'}]</small></div>`;
-    if (!state._loadingTimerTick) {
-      state._loadingTimerTick = setInterval(() => { if (state.loading) renderContent(); else { clearInterval(state._loadingTimerTick); state._loadingTimerTick = null; state._loadStart = null; } }, 1000);
-    }
+    el.innerHTML = `<div class="state-loading"><span class="live-dot"></span> Memuat data spektrum…</div>`;
     return;
   }
-  clearInterval(state._loadingTimerTick); state._loadingTimerTick = null; state._loadStart = null;
   if (state.error) {
     el.innerHTML = `<div class="state-error">
       <div style="font-size:20px">⚠</div>
