@@ -567,9 +567,11 @@ async function handleClick(e) {
 
 // ── Data loading ──────────────────────────────────────────────────────
 async function loadData() {
-  // DEBUG: lacak siapa yang panggil loadData
+  // DEBUG: hitung berapa kali dipanggil
+  state._loadCount = (state._loadCount || 0) + 1;
+  const callN = state._loadCount;
   const caller = new Error().stack?.split('\n').slice(1,4).join(' | ') || 'unknown';
-  state._lastLoadCaller = caller;
+  state._lastLoadCaller = `#${callN} ${caller}`;
   state.loading = true; state.error = null; state.data = null;
   renderContent();
   try {
