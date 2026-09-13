@@ -16,9 +16,14 @@ function fetchWithTimeout(url, ms = FETCH_TIMEOUT_MS) {
     xhr.onload = () => {
       clearTimeout(tid);
       if (xhr.status >= 200 && xhr.status < 300) {
-        resolve({ ok: true, status: xhr.status, json: () => Promise.resolve(JSON.parse(xhr.responseText)) });
+        try {
+          const data = JSON.parse(xhr.responseText);
+          resolve({ ok: true, status: xhr.status, json: () => Promise.resolve(data) });
+        } catch (e) {
+          reject(new Error(`JSON parse error: ${xhr.responseText.slice(0, 100)}`));
+        }
       } else {
-        reject(new Error(`HTTP ${xhr.status}`));
+        reject(new Error(`HTTP ${xhr.status}: ${xhr.responseText.slice(0, 100)}`));
       }
     };
     xhr.onerror = () => { clearTimeout(tid); reject(new Error('Network error')); };
