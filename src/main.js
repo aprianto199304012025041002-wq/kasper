@@ -567,27 +567,35 @@ async function handleClick(e) {
 
 // ── Data loading ──────────────────────────────────────────────────────
 async function loadData() {
+  const dbg = (msg) => { const el = document.getElementById('dynamicContent'); if(el) el.innerHTML = `<div style="padding:16px;font-size:12px;font-family:monospace">${msg}</div>`; };
   state.loading = true; state.error = null; state.data = null;
-  renderContent();
+  dbg('1. loading=true, memanggil fetchSpectrum...');
   try {
-    state.data = await fetchSpectrum({});
+    const raw = await fetchSpectrum({});
+    dbg('2. fetchSpectrum selesai, stations=' + (raw?.stations?.length ?? 'null'));
+    state.data = raw;
+    dbg('3. state.data ter-assign');
     state.loading = false;
+    dbg('4. loading=false');
     state._allotmentCache = null;    state._allotmentCacheData = null;
-    // Pre-compute station count per wilayah
     state._stationCountMap = {};
     (state.data.stations || []).forEach(s => {
       const w = s.wilayah_layanan || s.kota || '';
       if (w) state._stationCountMap[w] = (state._stationCountMap[w] || 0) + 1;
     });
+    dbg('5. stationCountMap selesai');
     const total = state.data.stations?.length ?? 0;
     const nowTs = Date.now();
     const totalExpired = (state.data.stations || []).filter(s => s.validity && new Date(s.validity).getTime() < nowTs).length;
     const statusEl = document.getElementById('headerStatus');
     const nowStr = new Date().toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'});
     if (statusEl) statusEl.innerHTML = `${total} stasiun${totalExpired ? ` · <span style="color:var(--red)" title="${totalExpired} izin habis">⚠ ${totalExpired} habis</span>` : ''} · ${nowStr}`;
+    dbg('6. statusEl updated');
   } catch(e) {
     state.error = e.message || String(e); state.loading = false;
+    dbg('CATCH: ' + state.error);
   }
+  dbg('7. memanggil renderControls/Sidebar/Content...');
   renderControls(); renderSidebar(); renderContent();
   // Buka detail stasiun dari URL ?freq=
   if (state._openFreqOnLoad) {
