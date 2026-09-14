@@ -647,10 +647,6 @@ function renderContent() {
     el.innerHTML = `<div style="padding:16px;font-size:11px;font-family:monospace;word-break:break-all">loading=true<br>data=${state.data?'ada':'null'}<br>caller: ${caller}</div>`;
     return;
   }
-    </div>`;
-    el.innerHTML = `<div class="state-loading"><span class="live-dot"></span> Memuat data spektrum…</div>`;
-    return;
-  }
   if (state.error) {
     el.innerHTML = `<div class="state-error">
       <div style="font-size:20px">⚠</div>
