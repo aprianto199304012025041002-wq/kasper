@@ -595,7 +595,6 @@ async function loadData() {
     state.error = e.message || String(e); state.loading = false;
     dbg('CATCH: ' + state.error);
   }
-  dbg('7. memanggil renderControls/Sidebar/Content...');
   renderControls(); renderSidebar(); renderContent();
   // Buka detail stasiun dari URL ?freq=
   if (state._openFreqOnLoad) {
@@ -644,11 +643,10 @@ function renderContent() {
   if (!el) return;
 
   if (state.loading) {
-    // Skeleton stats bar saat loading agar layout tidak loncat
-    document.getElementById('statsBar').innerHTML = `<div class="statsbar">
-      ${['Total kanal FM','Terisi','Adjacent guard','Kosong'].map(l =>
-        `<div class="stat-cell"><div class="stat-cell__label">${l}</div><div class="stat-cell__val" style="color:var(--txt-3)">—</div></div>`
-      ).join('')}
+    const caller = new Error().stack?.split('\n').slice(1,3).map(l=>l.trim()).join(' ← ') || '?';
+    el.innerHTML = `<div style="padding:16px;font-size:11px;font-family:monospace;word-break:break-all">loading=true<br>data=${state.data?'ada':'null'}<br>caller: ${caller}</div>`;
+    return;
+  }
     </div>`;
     el.innerHTML = `<div class="state-loading"><span class="live-dot"></span> Memuat data spektrum…</div>`;
     return;
