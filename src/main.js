@@ -599,6 +599,20 @@ async function loadData() {
   renderControls(); renderSidebar();
   try { renderContent(); } catch(e) { dbg('renderContent ERROR: ' + e.message + ' | ' + e.stack?.split('\n')[1]); }
   dbg(`8. setelah renderContent — loading=${state.loading}, data=${state.data?'ada':'null'}`);
+  // Observer: tangkap siapa yang timpa #dynamicContent setelah render selesai
+  const _dc = document.getElementById('dynamicContent');
+  if (_dc && !window._dcObserver) {
+    window._dcObserver = new MutationObserver(() => {
+      const txt = _dc.innerHTML.slice(0,80);
+      if (txt.includes('Memuat') || txt.includes('loading')) {
+        const who = new Error().stack?.split('\n').slice(1,4).map(l=>l.trim()).join(' | ') || '?';
+        _dc.innerHTML = `<div style="padding:16px;font-size:11px;font-family:monospace;word-break:break-all">DITIMPA OLEH:<br>${who}</div>`;
+        window._dcObserver.disconnect();
+        window._dcObserver = null;
+      }
+    });
+    window._dcObserver.observe(_dc, { childList: true, subtree: false });
+  }
   // Buka detail stasiun dari URL ?freq=
   if (state._openFreqOnLoad) {
     const freq = state._openFreqOnLoad;
