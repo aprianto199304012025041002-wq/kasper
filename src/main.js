@@ -595,7 +595,9 @@ async function loadData() {
     state.error = e.message || String(e); state.loading = false;
     dbg('CATCH: ' + state.error);
   }
+  dbg(`7. sebelum render — loading=${state.loading}, data=${state.data?'ada':'null'}`);
   renderControls(); renderSidebar(); renderContent();
+  dbg(`8. setelah renderContent — loading=${state.loading}, data=${state.data?'ada':'null'}`);
   // Buka detail stasiun dari URL ?freq=
   if (state._openFreqOnLoad) {
     const freq = state._openFreqOnLoad;
