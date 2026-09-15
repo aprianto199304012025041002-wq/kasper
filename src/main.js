@@ -567,52 +567,27 @@ async function handleClick(e) {
 
 // ── Data loading ──────────────────────────────────────────────────────
 async function loadData() {
-  const dbg = (msg) => { const el = document.getElementById('dynamicContent'); if(el) el.innerHTML = `<div style="padding:16px;font-size:12px;font-family:monospace">${msg}</div>`; };
   state.loading = true; state.error = null; state.data = null;
-  dbg('1. loading=true, memanggil fetchSpectrum...');
+  renderContent();
   try {
-    const raw = await fetchSpectrum({});
-    dbg('2. fetchSpectrum selesai, stations=' + (raw?.stations?.length ?? 'null'));
-    state.data = raw;
-    dbg('3. state.data ter-assign');
+    state.data = await fetchSpectrum({});
     state.loading = false;
-    dbg('4. loading=false');
     state._allotmentCache = null;    state._allotmentCacheData = null;
     state._stationCountMap = {};
     (state.data.stations || []).forEach(s => {
       const w = s.wilayah_layanan || s.kota || '';
       if (w) state._stationCountMap[w] = (state._stationCountMap[w] || 0) + 1;
     });
-    dbg('5. stationCountMap selesai');
     const total = state.data.stations?.length ?? 0;
     const nowTs = Date.now();
     const totalExpired = (state.data.stations || []).filter(s => s.validity && new Date(s.validity).getTime() < nowTs).length;
     const statusEl = document.getElementById('headerStatus');
     const nowStr = new Date().toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'});
     if (statusEl) statusEl.innerHTML = `${total} stasiun${totalExpired ? ` · <span style="color:var(--red)" title="${totalExpired} izin habis">⚠ ${totalExpired} habis</span>` : ''} · ${nowStr}`;
-    dbg('6. statusEl updated');
   } catch(e) {
     state.error = e.message || String(e); state.loading = false;
-    dbg('CATCH: ' + state.error);
   }
-  dbg(`7. sebelum render — loading=${state.loading}, data=${state.data?'ada':'null'}`);
-  renderControls(); renderSidebar();
-  try { renderContent(); } catch(e) { dbg('renderContent ERROR: ' + e.message + ' | ' + e.stack?.split('\n')[1]); }
-  dbg(`8. setelah renderContent — loading=${state.loading}, data=${state.data?'ada':'null'}`);
-  // Observer: tangkap siapa yang timpa #dynamicContent setelah render selesai
-  const _dc = document.getElementById('dynamicContent');
-  if (_dc && !window._dcObserver) {
-    window._dcObserver = new MutationObserver(() => {
-      const txt = _dc.innerHTML.slice(0,80);
-      if (txt.includes('Memuat') || txt.includes('loading')) {
-        const who = new Error().stack?.split('\n').slice(1,4).map(l=>l.trim()).join(' | ') || '?';
-        _dc.innerHTML = `<div style="padding:16px;font-size:11px;font-family:monospace;word-break:break-all">DITIMPA OLEH:<br>${who}</div>`;
-        window._dcObserver.disconnect();
-        window._dcObserver = null;
-      }
-    });
-    window._dcObserver.observe(_dc, { childList: true, subtree: false });
-  }
+  renderControls(); renderSidebar(); renderContent();
   // Buka detail stasiun dari URL ?freq=
   if (state._openFreqOnLoad) {
     const freq = state._openFreqOnLoad;
@@ -660,8 +635,12 @@ function renderContent() {
   if (!el) return;
 
   if (state.loading) {
-    const caller = new Error().stack?.split('\n').slice(1,3).map(l=>l.trim()).join(' ← ') || '?';
-    el.innerHTML = `<div style="padding:16px;font-size:11px;font-family:monospace;word-break:break-all">loading=true<br>data=${state.data?'ada':'null'}<br>caller: ${caller}</div>`;
+    document.getElementById('statsBar').innerHTML = `<div class="statsbar">
+      ${['Total kanal FM','Terisi','Adjacent guard','Kosong'].map(l =>
+        `<div class="stat-cell"><div class="stat-cell__label">${l}</div><div class="stat-cell__val" style="color:var(--txt-3)">—</div></div>`
+      ).join('')}
+    </div>`;
+    el.innerHTML = `<div class="state-loading"><span class="live-dot"></span> Memuat data spektrum…</div>`;
     return;
   }
   if (state.error) {
