@@ -572,7 +572,9 @@ async function loadData() {
   try {
     state.data = await fetchSpectrum({});
     state.loading = false;
-    state._allotmentCache = null;    state._allotmentCacheData = null;
+    state._allotmentCache = null;
+    state._allotmentCacheData = null;
+    // Pre-compute station count per wilayah
     state._stationCountMap = {};
     (state.data.stations || []).forEach(s => {
       const w = s.wilayah_layanan || s.kota || '';
@@ -585,7 +587,7 @@ async function loadData() {
     const nowStr = new Date().toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'});
     if (statusEl) statusEl.innerHTML = `${total} stasiun${totalExpired ? ` · <span style="color:var(--red)" title="${totalExpired} izin habis">⚠ ${totalExpired} habis</span>` : ''} · ${nowStr}`;
   } catch(e) {
-    state.error = e.message || String(e); state.loading = false;
+    state.error = e.message; state.loading = false;
   }
   renderControls(); renderSidebar(); renderContent();
   // Buka detail stasiun dari URL ?freq=
@@ -599,14 +601,14 @@ async function loadData() {
 async function loadInterference() {
   if (state._interfLoading) return;
   state._interfLoading = true;
-  // Jangan set state.loading global — hanya render interference panel sendiri
-  if (state.page === 'interference') renderContent();
+  state.loading = true; renderContent();
   try {
     const raw = await fetchInterference({});
     const stations = raw.stations || state.data?.stations || [];
     await new Promise(resolve => {
       const compute = () => {
         state.interfData = computeInterference(stations);
+        state.loading = false;
         state._interfLoading = false;
         renderContent();
         resolve();
@@ -622,7 +624,6 @@ async function loadInterference() {
     state.interfData = stations.length
       ? computeInterference(stations)
       : { pairs:[], summary:{}, stations_evaluated:0, model:'error:'+e.message };
-  } finally {
     state.loading = false;
     state._interfLoading = false;
     renderContent();
@@ -635,12 +636,13 @@ function renderContent() {
   if (!el) return;
 
   if (state.loading) {
+    // Skeleton stats bar saat loading agar layout tidak loncat
     document.getElementById('statsBar').innerHTML = `<div class="statsbar">
       ${['Total kanal FM','Terisi','Adjacent guard','Kosong'].map(l =>
         `<div class="stat-cell"><div class="stat-cell__label">${l}</div><div class="stat-cell__val" style="color:var(--txt-3)">—</div></div>`
       ).join('')}
     </div>`;
-    el.innerHTML = `<div class="state-loading"><span class="live-dot"></span> Memuat data spektrum…</div>`;
+    el.innerHTML = `<div class="state-loading"><span class="live-dot"></span> Memuat…</div>`;
     return;
   }
   if (state.error) {
@@ -653,12 +655,8 @@ function renderContent() {
     return;
   }
   if (state.page === 'interference') {
-    if (state._interfLoading) {
-      el.innerHTML = `<div class="state-loading"><span class="live-dot"></span> Memuat interferensi…</div>`;
-    } else {
-      el.innerHTML = '<div class="interf-wrap" id="interfPanel"></div>';
-      if (state.interfData) renderInterferencePanel(document.getElementById('interfPanel'), state.interfData);
-    }
+    el.innerHTML = '<div class="interf-wrap" id="interfPanel"></div>';
+    if (state.interfData) renderInterferencePanel(document.getElementById('interfPanel'), state.interfData);
     return;
   }
   if (!state.data) return;
