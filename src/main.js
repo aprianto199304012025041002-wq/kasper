@@ -155,29 +155,30 @@ async function boot() {
 // ── Shell ────────────────────────────────────────────────────────────
 function renderShell() {
   document.getElementById('app').innerHTML = `
-    ${renderHeader()}
-    <div class="app-body">
-      <aside class="sidebar${state.sidebarCollapsed ? ' is-collapsed' : ''}" id="sidebar">
-        <div class="sidebar__top">
-          <input type="search" class="sidebar__search" id="sidebarSearch" placeholder="Cari wilayah…"/>
-          <button class="sidebar__collapse" id="sidebarCollapseBtn" title="Sembunyikan sidebar">‹</button>
+    <div class="app-layout${state.sidebarCollapsed ? ' sidebar-collapsed' : ''}" id="appLayout">
+      ${renderHeader()}
+      <aside class="app-sidebar" id="sidebar">
+        <div class="sidebar-header">
+          <input type="search" class="sidebar-search" id="sidebarSearch" placeholder="Cari wilayah…"/>
+          <button class="sidebar-collapse-btn" id="sidebarCollapseBtn" title="Sembunyikan sidebar">‹</button>
         </div>
-        <nav class="sidebar__nav" id="sidebarNav"><div style="padding:8px 10px;font-size:11px;color:var(--txt-3)">Memuat…</div></nav>
+        <nav class="sidebar-nav" id="sidebarNav"><div style="padding:10px 12px;font-size:11px;color:var(--txt-3)">Memuat…</div></nav>
       </aside>
-      <button class="sidebar-toggle" id="sidebarToggle">›</button>
       <div class="app-main" id="appMain">
-        <div class="toolbar" id="toolbar">
-          <button class="toolbar-tab${state.view==='grid'?' is-active':''}" data-view="grid" title="Grid view [1]">GRID</button>
-          <button class="toolbar-tab${state.view==='band'?' is-active':''}" data-view="band" title="Pita frekuensi [2]">PITA</button>
-          <button class="toolbar-tab${state.view==='geo'?' is-active':''}" data-view="geo" title="Geo density [3]">GEO</button>
-          ${state.view==='geo' && state.page==='main' ? `
-          <div class="toolbar-sep"></div>
-          <label class="toolbar-geo-opt"><input type="checkbox" id="dGeoAdj" ${state.geoSettings?.showAdj!==false?'checked':''}> Guard</label>
-          <label class="toolbar-geo-opt"><input type="checkbox" id="dGeoLabel" ${state.geoSettings?.showLabel!==false?'checked':''}> Label</label>
-          <label class="toolbar-geo-opt"><input type="checkbox" id="dGeoFree" ${state.geoSettings?.onlyFree?'checked':''}> Kosong saja</label>
-          ` : ''}
-          <div class="toolbar-sep"></div>
-          <button class="toolbar-tab${state.page==='interference'?' is-active':''}" data-page="interference" title="Analisis interferensi RF [4]">⚡ RF</button>
+        <div class="app-toolbar" id="toolbar">
+          <div class="toolbar-tabs">
+            <button class="toolbar-tab${state.view==='grid'?' is-active':''}" data-view="grid" title="Grid view [1]">Grid</button>
+            <button class="toolbar-tab${state.view==='band'?' is-active':''}" data-view="band" title="Pita frekuensi [2]">Pita</button>
+            <button class="toolbar-tab${state.view==='geo'?' is-active':''}" data-view="geo" title="Geo density [3]">Geo</button>
+            ${state.view==='geo' && state.page==='main' ? `
+            <div class="toolbar-sep"></div>
+            <label class="toolbar-geo-opt"><input type="checkbox" id="dGeoAdj" ${state.geoSettings?.showAdj!==false?'checked':''}> Guard</label>
+            <label class="toolbar-geo-opt"><input type="checkbox" id="dGeoLabel" ${state.geoSettings?.showLabel!==false?'checked':''}> Label</label>
+            <label class="toolbar-geo-opt"><input type="checkbox" id="dGeoFree" ${state.geoSettings?.onlyFree?'checked':''}> Kosong saja</label>
+            ` : ''}
+            <div class="toolbar-sep"></div>
+            <button class="toolbar-tab${state.page==='interference'?' is-active':''}" data-page="interference" title="Analisis interferensi RF [4]">⚡ RF</button>
+          </div>
           <div class="toolbar-right">
             <div class="toolbar-search-wrap">
               <input type="search" class="toolbar-search" id="fSearch" placeholder="Cari stasiun / pemilik / frekuensi…" value="${esc(state.searchTerm)}"/>
@@ -190,9 +191,9 @@ function renderShell() {
               <option value="expired" ${state.filterChanView==='expired' ?'selected':''}>⚠ Izin habis</option>
             </select>
             ${(state.filterCities?.length || state.searchTerm || state.filterChanView !== 'all') ?
-              `<button class="toolbar-reset" id="fReset" title="Reset semua filter [Esc]">↺ Reset</button>` : ''}
-            <button class="toolbar-btn" id="exportExpiredBtn" title="Export daftar izin habis ke CSV" style="display:${state.filterChanView==='expired'?'':'none'}">⬇ CSV</button>
-            <button class="toolbar-btn" id="helpBtn" title="Keyboard shortcuts [?]" style="padding:4px 8px;color:var(--txt-3)">?</button>
+              `<button class="toolbar-btn" id="fReset" title="Reset semua filter [Esc]">↺ Reset</button>` : ''}
+            <button class="toolbar-btn" id="exportExpiredBtn" style="display:${state.filterChanView==='expired'?'':'none'}">⬇ CSV</button>
+            <button class="toolbar-btn" id="helpBtn" title="Keyboard shortcuts [?]">?</button>
           </div>
         </div>
         <div id="statsBar"></div>
@@ -201,6 +202,7 @@ function renderShell() {
         <div id="dynamicContent" class="content-area"></div>
       </div>
     </div>
+    <button class="sidebar-toggle-btn" id="sidebarToggle">›</button>
     <div class="tooltip-float" id="tooltip"></div>`;
 
   document.getElementById('sidebarCollapseBtn')?.addEventListener('click', toggleSidebar);
@@ -210,24 +212,23 @@ function renderShell() {
 
 function toggleSidebar() {
   state.sidebarCollapsed = !state.sidebarCollapsed;
-  document.getElementById('sidebar')?.classList.toggle('is-collapsed', state.sidebarCollapsed);
-  document.getElementById('sidebarToggle')?.classList.toggle('is-visible', state.sidebarCollapsed);
+  document.getElementById('appLayout')?.classList.toggle('sidebar-collapsed', state.sidebarCollapsed);
   const btn = document.getElementById('sidebarCollapseBtn');
   if (btn) btn.textContent = state.sidebarCollapsed ? '›' : '‹';
 }
 
 function filterSidebarNav() {
   const q = (document.getElementById('sidebarSearch')?.value || '').toLowerCase();
-  document.querySelectorAll('.sidebar__item[data-wilayah]').forEach(el => {
+  document.querySelectorAll('.sidebar-item[data-wilayah]').forEach(el => {
     const name = el.dataset.wilayah.toLowerCase();
-    const label = (el.querySelector('.sidebar__label')?.textContent || '').toLowerCase();
+    const label = (el.querySelector('.sidebar-item__label')?.textContent || '').toLowerCase();
     el.style.display = (!q || name.includes(q) || label.includes(q)) ? '' : 'none';
   });
-  document.querySelectorAll('.sidebar__section-label').forEach(label => {
+  document.querySelectorAll('.sidebar-province').forEach(label => {
     const sec = label.nextElementSibling;
-    const wrapper = label.closest('.sidebar__section');
+    const wrapper = label.closest('.sidebar-section');
     if (!sec) return;
-    const anyVisible = [...sec.querySelectorAll('.sidebar__item')].some(i => i.style.display !== 'none');
+    const anyVisible = [...sec.querySelectorAll('.sidebar-item')].some(i => i.style.display !== 'none');
     label.style.display = sec.style.display = anyVisible ? '' : 'none';
     if (wrapper) wrapper.style.display = anyVisible ? '' : 'none';
   });
@@ -238,19 +239,19 @@ function renderHeader() {
   return `<header class="app-header">
     <div class="app-header__brand">
       <span class="app-header__logo">KASPER</span>
-      <span class="app-header__title">Monitoring Spektrum FM · DIY &amp; Jawa Tengah</span>
+      <span class="app-header__subtitle">Monitoring Spektrum FM · DIY &amp; Jawa Tengah</span>
+    </div>
+    <div class="app-header__meta">
+      <span class="app-header__chip">87.5–108.0 MHz</span>
+      <span class="app-header__chip">100 kHz</span>
+      <span class="app-header__chip">KM 570/2025</span>
     </div>
     <div class="app-header__divider"></div>
-    <div class="app-header__meta">
-      <span class="app-header__chip">Band <b>87.5–108.0 MHz</b></span>
-      <span class="app-header__chip">Spasi <b>100 kHz</b></span>
-      <span class="app-header__chip">Regulasi <b>KM 570/2025</b></span>
-    </div>
     <div class="app-header__status">
       <span class="live-dot"></span>
-      <span id="headerStatus">—</span>
-      <button id="refreshBtn" class="theme-toggle" title="Refresh data [R]" style="font-size:13px">↺</button>
-      <button id="themeToggle" class="theme-toggle" title="Toggle dark/light mode">◑</button>
+      <span class="app-header__status-text" id="headerStatus">—</span>
+      <button id="refreshBtn" class="header-btn" title="Refresh data [R]">↺</button>
+      <button id="themeToggle" class="header-btn" title="Toggle dark/light mode">◑</button>
     </div>
   </header>`;
 }
@@ -284,35 +285,35 @@ function renderSidebar() {
   const itemHtml = (w) => {
     const active = state.selectedWilayah === w;
     const exp = expCnt(w);
-    const expBadge = exp > 0 ? `<span class="sidebar__badge sidebar__badge--exp" title="${exp} izin habis">⚠${exp}</span>` : '';
-    return `<button class="sidebar__item${active?' is-active':''}" data-wilayah="${esc(w)}">
-      <span class="sidebar__label">${esc(shortWilayah(w))}</span>
-      ${expBadge}<span class="sidebar__badge">${cnt(w)}</span>
+    const expBadge = exp > 0 ? `<span class="sidebar-item__exp" title="${exp} izin habis">⚠${exp}</span>` : '';
+    return `<button class="sidebar-item${active?' is-active':''}" data-wilayah="${esc(w)}">
+      <span class="sidebar-item__label">${esc(shortWilayah(w))}${expBadge}</span>
+      <span class="sidebar-item__badge">${cnt(w)}</span>
     </button>`;
   };
 
   const allActive = !state.selectedWilayah && state.page !== 'interference';
   nav.innerHTML = `
-    <button class="sidebar__item${allActive?' is-active':''}" data-wilayah="">
-      <span class="sidebar__label">Semua Wilayah</span>
-      <span class="sidebar__badge">${allWilayah.length}</span>
+    <button class="sidebar-item${allActive?' is-active':''}" data-wilayah="">
+      <span class="sidebar-item__label">Semua Wilayah</span>
+      <span class="sidebar-item__badge">${allWilayah.length}</span>
     </button>
-    ${diy.length ? `<div class="sidebar__section">
-      <div class="sidebar__section-label">D.I. Yogyakarta</div>
+    ${diy.length ? `<div class="sidebar-section">
+      <div class="sidebar-province">D.I. Yogyakarta</div>
       <div>${diy.map(itemHtml).join('')}</div>
     </div>` : ''}
-    ${jateng.length ? `<div class="sidebar__section">
-      <div class="sidebar__section-label">Jawa Tengah</div>
+    ${jateng.length ? `<div class="sidebar-section">
+      <div class="sidebar-province">Jawa Tengah</div>
       <div>${jateng.map(itemHtml).join('')}</div>
     </div>` : ''}
-    <div class="sidebar__section">
-      <div class="sidebar__section-label">Analisis</div>
-      <button class="sidebar__item${state.page==='interference'?' is-active':''}" data-page="interference">
-        <span class="sidebar__label">⚡ Interferensi RF</span>
+    <div class="sidebar-section">
+      <div class="sidebar-province">Analisis</div>
+      <button class="sidebar-item${state.page==='interference'?' is-active':''}" data-page="interference">
+        <span class="sidebar-item__label">⚡ Interferensi RF</span>
       </button>
     </div>`;
 
-  nav.querySelectorAll('.sidebar__item[data-wilayah]').forEach(btn => {
+  nav.querySelectorAll('.sidebar-item[data-wilayah]').forEach(btn => {
     btn.addEventListener('click', () => {
       const w = btn.dataset.wilayah;
       state.selectedWilayah = w || null;
@@ -344,13 +345,11 @@ function renderStatsBar(summary, allotmentStats = null, expiredCount = 0) {
     extra = `
       <div class="stat-cell">
         <div class="stat-cell__label">Allotted terisi</div>
-        <div class="stat-cell__val --amber">${allotmentStats.used}<span class="unit">/ ${allotmentStats.total}</span></div>
-        <div class="stat-cell__meter" style="width:${(allotmentStats.used/allotmentStats.total*100).toFixed(1)}%;background:var(--amber)"></div>
+        <div class="stat-cell__val stat-cell__val--amber">${allotmentStats.used}<span class="stat-cell__pct">/ ${allotmentStats.total}</span></div>
       </div>
       <div class="stat-cell">
         <div class="stat-cell__label">Allotted kosong</div>
-        <div class="stat-cell__val --cyan">${allotmentStats.free}</div>
-        <div class="stat-cell__meter" style="width:${(allotmentStats.free/allotmentStats.total*100).toFixed(1)}%;background:var(--cyan)"></div>
+        <div class="stat-cell__val stat-cell__val--accent">${allotmentStats.free}</div>
       </div>`;
   }
 
@@ -361,24 +360,20 @@ function renderStatsBar(summary, allotmentStats = null, expiredCount = 0) {
     </div>
     <div class="stat-cell stat-cell--btn" data-filter-chan="used" title="Filter: terisi saja">
       <div class="stat-cell__label">Terisi ↗</div>
-      <div class="stat-cell__val --amber">${summary.used}<span class="unit">${pctU}%</span></div>
-      <div class="stat-cell__meter" style="width:${pctU}%;background:var(--amber)"></div>
+      <div class="stat-cell__val stat-cell__val--accent">${summary.used}<span class="stat-cell__pct">${pctU}%</span></div>
     </div>
     <div class="stat-cell" title="Kanal terlindungi adjacent">
       <div class="stat-cell__label">Adjacent guard</div>
-      <div class="stat-cell__val --red">${adj}<span class="unit">${pctA}%</span></div>
-      <div class="stat-cell__meter" style="width:${pctA}%;background:var(--red)"></div>
+      <div class="stat-cell__val stat-cell__val--amber">${adj}<span class="stat-cell__pct">${pctA}%</span></div>
     </div>
     <div class="stat-cell stat-cell--btn" data-filter-chan="free" title="Filter: kosong saja">
       <div class="stat-cell__label">Kosong / potensial ↗</div>
-      <div class="stat-cell__val --green">${summary.free}<span class="unit">${pctF}%</span></div>
-      <div class="stat-cell__meter" style="width:${pctF}%;background:var(--phosphor)"></div>
+      <div class="stat-cell__val stat-cell__val--green">${summary.free}<span class="stat-cell__pct">${pctF}%</span></div>
     </div>
     ${expiredCount > 0 ? `
     <div class="stat-cell stat-cell--btn" data-filter-chan="expired" title="Filter: izin habis">
       <div class="stat-cell__label">⚠ Izin habis</div>
-      <div class="stat-cell__val --red">${expiredCount}<span class="unit">stasiun</span></div>
-      <div class="stat-cell__meter" style="width:${(expiredCount/summary.used*100).toFixed(1)}%;background:var(--red)"></div>
+      <div class="stat-cell__val stat-cell__val--red">${expiredCount}<span class="stat-cell__pct">stasiun</span></div>
     </div>` : ''}
     ${extra}
   </div>`;
@@ -399,13 +394,13 @@ function renderStatsBar(summary, allotmentStats = null, expiredCount = 0) {
 function renderLegend() {
   const el = document.getElementById('legendBar');
   if (!el) return;
-  el.innerHTML = `<div class="legend-strip">
-    <div class="legend-chip"><span class="legend-chip__dot" style="background:rgba(255,184,0,.35);border:1px solid var(--amber)"></span>Terisi</div>
-    <div class="legend-chip"><span class="legend-chip__dot" style="background:rgba(255,59,59,.08);border:1px dashed var(--red)"></span>Izin habis</div>
-    <div class="legend-chip"><span class="legend-chip__dot" style="background:var(--red-dim);border:1px dashed var(--red)"></span>Adjacent guard</div>
-    <div class="legend-chip"><span class="legend-chip__dot" style="background:var(--cyan-dim);border:1px solid var(--cyan)"></span>Allotted ★ (kosong)</div>
-    <div class="legend-chip"><span class="legend-chip__dot" style="background:var(--purple-dim);border:1px dashed var(--purple)"></span>Allotted RRI ▣</div>
-    <div class="legend-chip"><span class="legend-chip__dot" style="background:transparent;border:1px solid var(--border)"></span>Tidak dijatahkan</div>
+  el.innerHTML = `<div class="legend-bar">
+    <span class="legend-item"><span class="legend-swatch sw-used"></span>Terisi</span>
+    <span class="legend-item"><span class="legend-swatch sw-exp"></span>Izin habis</span>
+    <span class="legend-item"><span class="legend-swatch sw-adj"></span>Adjacent guard</span>
+    <span class="legend-item"><span class="legend-swatch sw-allot"></span>Allotted ★ (kosong)</span>
+    <span class="legend-item"><span class="legend-swatch sw-allot-rri"></span>Allotted RRI ▣</span>
+    <span class="legend-item"><span class="legend-swatch sw-free"></span>Tidak dijatahkan</span>
   </div>`;
 }
 
@@ -642,7 +637,7 @@ function renderContent() {
         `<div class="stat-cell"><div class="stat-cell__label">${l}</div><div class="stat-cell__val" style="color:var(--txt-3)">—</div></div>`
       ).join('')}
     </div>`;
-    el.innerHTML = `<div class="state-loading"><span class="live-dot"></span> Memuat…</div>`;
+    el.innerHTML = `<div class="state-loading"><div class="loading-spinner"></div> Memuat data…</div>`;
     return;
   }
   if (state.error) {
@@ -824,9 +819,9 @@ function renderContent() {
     el.innerHTML = cityRows.flatMap(({ city, row }) => {
       const filtered = applyFilter(row);
       if (!filtered.length) return [];
-      return [`<div class="city-block">
+      return [`<div class="city-section">
         <div class="city-block__head">
-          <span class="city-block__name" data-city="${esc(city)}">${esc(shortWilayah(city))}</span>
+          <span class="city-header__name" data-city="${esc(city)}">${esc(shortWilayah(city))}</span>
           <span class="city-block__count">${state._stationCountMap?.[city] ?? 0} stasiun</span>
         </div>
         <div class="ch-row">${filtered.map(c => renderCellGeo(c)).join('')}</div>
@@ -1180,15 +1175,15 @@ function openInlineDetail(info) {
             <div class="cd-item"><div class="cd-label">Jenis</div><div class="cd-val">${esc(s.jenis||'—')}</div></div>
             <div class="cd-item"><div class="cd-label">No. SIMF</div><div class="cd-val mono">${esc(s.no_simf||'—')}</div></div>
           </div>
-          <button class="cd-cta" onclick="window.__openDetailFreq(${freq})">Lihat detail stasiun →</button>
+          <button class="cell-drawer-cta" onclick="window.__openDetailFreq(${freq})">Lihat detail stasiun →</button>
         </div>`).join('');
       openCellDrawer(`
         <div class="cd-head">
           <div class="cd-head-left">
             <span class="cd-badge cd-badge--used">CO-CHANNEL ×${stations.length}</span>
-            <span class="cd-freq">${freq.toFixed(1)} MHz</span>
+            <span class="cell-drawer-freq">${freq.toFixed(1)} MHz</span>
           </div>
-          <button class="cd-close" id="cdClose">✕</button>
+          <button class="cell-drawer-close" id="cdClose">✕</button>
         </div>
         <div class="cd-swipe-hint">← geser →</div>
         <div class="cd-swipe-wrap" id="cdSwipeWrap">${cards}</div>
@@ -1219,7 +1214,7 @@ function openInlineDetail(info) {
       ['Jenis', s.jenis||'—', false],
       ['Berlaku s.d.', validLabel, sExpired],
     ];
-    cta = `<button class="cd-cta" id="cdCtaDetail">Lihat detail stasiun →</button>`;
+    cta = `<button class="cell-drawer-cta" id="cdCtaDetail">Lihat detail stasiun →</button>`;
   } else if (info.type === 'adjacent_1' || info.type === 'adjacent_2') {
     const isAdj1 = info.type === 'adjacent_1';
     const L = isAdj1 ? (info.adj1_left||info.adj_left) : (info.adj2_left||info.adj_left);
@@ -1244,9 +1239,9 @@ function openInlineDetail(info) {
     <div class="cd-head">
       <div class="cd-head-left">
         <span class="cd-badge ${badgeCls}">${badge}</span>
-        <span class="cd-freq">${freq.toFixed(1)} MHz</span>
+        <span class="cell-drawer-freq">${freq.toFixed(1)} MHz</span>
       </div>
-      <button class="cd-close" id="cdClose">✕</button>
+      <button class="cell-drawer-close" id="cdClose">✕</button>
     </div>
     <div class="cd-grid">
       ${rows.map(([l,v,mono]) => `<div class="cd-item"><div class="cd-label">${esc(l)}</div><div class="cd-val${mono?' mono':''}">${esc(String(v))}</div></div>`).join('')}
