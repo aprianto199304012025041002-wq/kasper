@@ -387,9 +387,9 @@ a { color: var(--accent); }
   .hdr-sub { display: none; }
   #f-search { width: 90px; }
   #f-search:focus { width: 120px; }
-  .ch { width: 52px; min-height: 38px; font-size: 9px; }
-  .ch b { font-size: 10px; }
-  .ch-row { gap: 2px; padding: 4px; }
+  .ch { width: 58px; min-height: 42px; font-size: 9.5px; }
+  .ch b { font-size: 10.5px; }
+  .ch-row { gap: 2px; padding: 5px; display: grid; grid-template-columns: repeat(auto-fill, 58px); }
   .city-hdr { padding: 5px 8px; }
   .stat { padding: 6px 10px; min-width: 80px; }
   .stat-v { font-size: 15px; }

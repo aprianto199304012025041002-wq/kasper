@@ -107,7 +107,10 @@ function renderCell(ch) {
 
   const freqStr = ch.freq.toFixed(1);
   const nameStr = station
-    ? esc(station.stn_name.replace(/^(RADIO |LPP RRI |LPP |LPK )/i, '').slice(0, 14))
+    ? esc(station.stn_name
+        .replace(/^(RADIO |LPP RRI |LPPL |LPP |LPK |PRAMBORS |SONORA )/i, '')
+        .replace(/ (FM|AM|RADIO|JOGJA|YOGYAKARTA)$/i, '')
+        .slice(0, 12))
     : '';
 
   const ttText = station
