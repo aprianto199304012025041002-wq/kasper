@@ -87,12 +87,22 @@ a { color: var(--accent); }
   background: var(--panel); border-right: 1px solid var(--border);
   display: flex; flex-direction: column; overflow: hidden;
 }
+.nav-header {
+  display: flex; align-items: center; gap: 4px;
+  padding: 6px 8px; border-bottom: 1px solid var(--border); flex-shrink: 0;
+}
 #nav-search {
-  margin: 8px; height: 28px; padding: 0 8px; font-size: 12px;
+  flex: 1; height: 28px; padding: 0 8px; font-size: 12px;
   background: var(--bg); border: 1px solid var(--border); border-radius: var(--r);
   outline: none; transition: border-color .1s;
 }
 #nav-search:focus { border-color: var(--accent); }
+#nav-close {
+  display: none; width: 26px; height: 26px; flex-shrink: 0;
+  background: none; border: 1px solid var(--border); border-radius: var(--r);
+  color: var(--txt3); font-size: 13px; align-items: center; justify-content: center;
+}
+@media (max-width: 767px) { #nav-close { display: flex; } }
 #nav-list { flex: 1; overflow-y: auto; padding-bottom: 8px; }
 #nav-list::-webkit-scrollbar { width: 3px; }
 #nav-list::-webkit-scrollbar-thumb { background: var(--bd2); border-radius: 2px; }

@@ -28,7 +28,10 @@ function buildShell() {
     <header id="hdr"></header>
     <div id="body">
       <nav id="sidebar">
-        <input id="nav-search" type="search" placeholder="Cari wilayah…" autocomplete="off"/>
+        <div class="nav-header">
+          <input id="nav-search" type="search" placeholder="Cari wilayah…" autocomplete="off"/>
+          <button id="nav-close" title="Tutup">✕</button>
+        </div>
         <div id="nav-list"></div>
       </nav>
       <div id="content">

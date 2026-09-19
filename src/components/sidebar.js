@@ -13,6 +13,15 @@ export function mountSidebar(onSelect) {
   if (search) {
     search.oninput = e => filterNav(e.target.value.toLowerCase());
   }
+
+  // Tombol tutup sidebar di mobile
+  const closeBtn = document.getElementById('nav-close');
+  if (closeBtn) {
+    closeBtn.onclick = () => {
+      document.getElementById('sidebar')?.classList.remove('mob-open');
+      document.getElementById('mob-backdrop')?.classList.remove('show');
+    };
+  }
 }
 
 export function renderSidebar() {
