@@ -55,7 +55,7 @@ function renderView() {
     }
   } catch (e) {
     const main = document.getElementById('main');
-    if (main) main.innerHTML = '<div class="err">Error render: ' + e.message + '<br><small>' + (e.stack||'').split('
+    if (main) main.innerHTML = '<div class="err">Error render: ' + e.message + '</div>';
 ')[1] + '</small></div>';
   }
 }
