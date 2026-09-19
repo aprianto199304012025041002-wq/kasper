@@ -80,7 +80,7 @@ a { color: var(--accent); }
 .hdr-r button:hover { background: var(--bg); color: var(--txt); }
 
 /* ── Body ── */
-#body { display: grid; grid-template-columns: var(--nav) 1fr; flex: 1; overflow: hidden; }
+#body { display: grid; grid-template-columns: var(--nav) 1fr; flex: 1; min-height: 0; overflow: hidden; }
 
 /* ── Sidebar ── */
 #sidebar {
@@ -118,7 +118,7 @@ a { color: var(--accent); }
 .nav-exp { color: var(--red); }
 
 /* ── Content ── */
-#content { display: flex; flex-direction: column; overflow: hidden; }
+#content { display: flex; flex-direction: column; flex: 1; min-height: 0; overflow: hidden; }
 
 /* ── Toolbar ── */
 #toolbar {

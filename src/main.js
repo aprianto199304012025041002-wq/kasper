@@ -46,12 +46,17 @@ function buildShell() {
 function renderView() {
   if (state.view !== 'geo') destroyGeo();
   closeDetail();
-
-  switch (state.view) {
-    case 'grid': renderGrid(onDetailOpen); break;
-    case 'band': renderBand(onDetailOpen); break;
-    case 'geo':  renderGeo();              break;
-    case 'rf':   renderRF();               break;
+  try {
+    switch (state.view) {
+      case 'grid': renderGrid(onDetailOpen); break;
+      case 'band': renderBand(onDetailOpen); break;
+      case 'geo':  renderGeo();              break;
+      case 'rf':   renderRF();               break;
+    }
+  } catch (e) {
+    const main = document.getElementById('main');
+    if (main) main.innerHTML = '<div class="err">Error render: ' + e.message + '<br><small>' + (e.stack||'').split('
+')[1] + '</small></div>';
   }
 }
 
