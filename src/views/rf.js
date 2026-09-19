@@ -125,6 +125,8 @@ function sortPairs(pairs) {
   });
 }
 
+const shortWil = w => !w ? '' : w.startsWith('2,5') ? 'Komunitas' : w;
+
 function buildRows(pairs) {
   const filtered = _filterLevel ? pairs.filter(p => p.level === _filterLevel) : pairs;
   if (!filtered.length) return `<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--txt3)">Tidak ada data</td></tr>`;
@@ -136,12 +138,12 @@ function buildRows(pairs) {
       <td>
         <span class="rf-freq">${p.tx.freq.toFixed(1)}</span>
         <span class="rf-name">${esc(p.tx.stn_name)}</span>
-        <span class="rf-wilayah">${esc(p.tx.wilayah_layanan || '')}</span>
+        <span class="rf-wilayah">${esc(shortWil(p.tx.wilayah_layanan))}</span>
       </td>
       <td>
         <span class="rf-freq">${p.rx.freq.toFixed(1)}</span>
         <span class="rf-name">${esc(p.rx.stn_name)}</span>
-        <span class="rf-wilayah">${esc(p.rx.wilayah_layanan || '')}</span>
+        <span class="rf-wilayah">${esc(shortWil(p.rx.wilayah_layanan))}</span>
       </td>
       <td class="mono">${p.dist_km} km</td>
       <td class="mono ${p.margin_db < 0 ? 'red' : 'green'}">${p.margin_db > 0 ? '+' : ''}${p.margin_db} dB</td>
