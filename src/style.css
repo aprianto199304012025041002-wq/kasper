@@ -370,13 +370,29 @@ a { color: var(--accent); }
 #tooltip.show { display: block; }
 
 /* ── Mobile responsive ── */
-@media (max-width: 640px) {
+@media (max-width: 767px) {
   #body { grid-template-columns: 1fr; height: 0; flex: 1; }
-  #sidebar { display: none; }
+  #sidebar {
+    position: fixed; left: 0; top: var(--hdr); bottom: 0;
+    width: 240px; z-index: 200;
+    transform: translateX(-100%); transition: transform .22s ease;
+    box-shadow: 2px 0 12px rgba(0,0,0,.12);
+  }
+  #sidebar.mob-open { transform: translateX(0); }
+  #mob-backdrop {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,.35); z-index: 199;
+  }
+  #mob-backdrop.show { display: block; }
   .hdr-sub { display: none; }
-  #f-search { width: 100px; }
-  #f-search:focus { width: 130px; }
-  .ch { width: 54px; min-height: 40px; }
+  #f-search { width: 90px; }
+  #f-search:focus { width: 120px; }
+  .ch { width: 52px; min-height: 38px; font-size: 9px; }
+  .ch b { font-size: 10px; }
+  .ch-row { gap: 2px; padding: 4px; }
+  .city-hdr { padding: 5px 8px; }
+  .stat { padding: 6px 10px; min-width: 80px; }
+  .stat-v { font-size: 15px; }
   .detail-panel {
     width: 100%; border-left: none;
     border-top: 1px solid var(--border);
@@ -384,9 +400,23 @@ a { color: var(--accent); }
     transform: translateY(100%);
   }
   .detail-panel.open { transform: translateY(0); }
-  .rf-table-wrap { font-size: 11px; }
   .rf-table th, .rf-table td { padding: 5px 7px; }
+  .rf-summary { grid-template-columns: repeat(3, 1fr); }
 }
+
+/* FAB untuk buka sidebar di mobile */
+#mob-fab {
+  display: none;
+  position: fixed; bottom: 20px; right: 16px; z-index: 150;
+  width: 42px; height: 42px; border-radius: 50%;
+  background: var(--accent); color: #fff;
+  border: none; font-size: 18px;
+  box-shadow: 0 3px 10px rgba(37,99,235,.4);
+  align-items: center; justify-content: center;
+  transition: transform .1s;
+}
+#mob-fab:active { transform: scale(.93); }
+@media (max-width: 767px) { #mob-fab { display: flex; } }
 
 /* ── Print ── */
 @media print {

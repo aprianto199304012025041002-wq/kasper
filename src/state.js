@@ -49,6 +49,10 @@ export function getWilayahByProv() {
 export function filteredStations() {
   let st = state.data?.stations || [];
 
+  // Exclude komunitas dari tampilan grid/band kecuali kalau dipilih eksplisit
+  if (!state.wilayah)
+    st = st.filter(s => (s.wilayah_layanan || s.kota) !== KOMUNITAS_RADIUS);
+
   if (state.wilayah)
     st = st.filter(s => (s.wilayah_layanan || s.kota) === state.wilayah);
 

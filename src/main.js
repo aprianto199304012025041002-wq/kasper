@@ -39,7 +39,20 @@ function buildShell() {
         </div>
       </div>
     </div>
+    <div id="mob-backdrop"></div>
+    <button id="mob-fab" title="Pilih wilayah">☰</button>
     <div id="tooltip"></div>`;
+
+  // Mobile sidebar FAB
+  const fab = document.getElementById('mob-fab');
+  const backdrop = document.getElementById('mob-backdrop');
+  const sidebar = document.getElementById('sidebar');
+  const toggleMobSidebar = (open) => {
+    sidebar?.classList.toggle('mob-open', open);
+    backdrop?.classList.toggle('show', open);
+  };
+  fab?.addEventListener('click', () => toggleMobSidebar(true));
+  backdrop?.addEventListener('click', () => toggleMobSidebar(false));
 }
 
 // ─── Render aktif view ────────────────────────────────────────────────
@@ -96,6 +109,9 @@ function boot() {
 
   mountSidebar(() => {
     if (state.view === 'rf') { state.view = 'grid'; renderToolbar(); }
+    // Tutup sidebar mobile setelah pilih wilayah
+    document.getElementById('sidebar')?.classList.remove('mob-open');
+    document.getElementById('mob-backdrop')?.classList.remove('show');
     renderView();
   });
 
