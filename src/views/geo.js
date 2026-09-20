@@ -32,13 +32,9 @@ export function renderGeo() {
 
   main.innerHTML = `<div id="geo-map"></div>`;
 
-  const isDark  = state.theme === 'dark';
-  const tileUrl = isDark
-    ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
-    : 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
-  const tileAttr = isDark
-    ? '© <a href="https://carto.com">CARTO</a> © OSM'
-    : '© <a href="https://openstreetmap.org">OpenStreetMap</a>';
+  // Gunakan OSM standar saja — CartoCDN sering blocked di jaringan tertentu
+  const tileUrl  = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+  const tileAttr = '© <a href="https://openstreetmap.org">OpenStreetMap</a> contributors';
 
   _map = L.map('geo-map').setView([-7.8, 110.4], 8);
   L.tileLayer(tileUrl, { attribution: tileAttr, maxZoom: 18 }).addTo(_map);
