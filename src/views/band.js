@@ -48,9 +48,13 @@ export function renderBand(onDetail) {
 
     const channels = computeChannelMapForWilayah(wSt, w);
 
+    const usedCh = channels.filter(c => c.type === 'used');
     html += `
       <div class="band-city">
-        <div class="band-city-lbl">${esc(w)}</div>
+        <div class="band-city-hdr">
+          <span class="band-city-lbl">${esc(w)}</span>
+          <span class="band-city-cnt">${usedCh.length} terisi</span>
+        </div>
         <div class="band-axis">
           <span>${FM_MIN}</span><span>${(FM_MIN + RANGE / 2).toFixed(1)}</span><span>${FM_MAX}</span>
         </div>
