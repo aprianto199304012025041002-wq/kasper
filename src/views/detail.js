@@ -4,28 +4,29 @@ import { fetchStationDetail } from '../api.js';
 import { isExpired, parseValidity, fmtDate, dbmToWatt, esc, JENIS_LABEL } from '../utils.js';
 
 let _panel = null;
+let _loadSeq = 0; // sequence number untuk cancel fetch lama
 
 export function openDetail(freq) {
   if (_panel) {
-    // Panel sudah terbuka — langsung ganti konten tanpa animasi tutup/buka
-    const freqTag = document.getElementById('detail-freq-tag');
-    const body    = document.getElementById('detail-body');
-    if (freqTag) freqTag.textContent = '…';
-    if (body)    body.innerHTML = '<div class="loading"><div class="spin"></div>Memuat…</div>';
-    loadAndRender(freq);
-    return;
+    // Reuse panel — reset konten langsung
+    _panel.querySelector('.detail-freq').textContent = '…';
+    _panel.querySelector('.detail-body').innerHTML =
+      '<div class="loading"><div class="spin"></div>Memuat…</div>';
+  } else {
+    _panel = createPanel();
+    document.body.appendChild(_panel);
+    requestAnimationFrame(() => _panel.classList.add('open'));
   }
-  _panel = createPanel();
-  document.body.appendChild(_panel);
-  requestAnimationFrame(() => _panel.classList.add('open'));
   loadAndRender(freq);
 }
 
 export function closeDetail() {
   if (!_panel) return;
-  _panel.classList.remove('open');
-  _panel.addEventListener('transitionend', () => _panel?.remove(), { once: true });
+  _loadSeq++; // cancel pending fetch
+  const p = _panel;
   _panel = null;
+  p.classList.remove('open');
+  p.addEventListener('transitionend', () => p.remove(), { once: true });
 }
 
 function createPanel() {
@@ -33,37 +34,40 @@ function createPanel() {
   el.className = 'detail-panel';
   el.innerHTML = `
     <div class="detail-hdr">
-      <button class="detail-close" id="detail-close">✕ Tutup</button>
-      <span class="detail-freq" id="detail-freq-tag">—</span>
+      <button class="detail-close">✕ Tutup</button>
+      <span class="detail-freq">—</span>
     </div>
-    <div class="detail-body" id="detail-body">
+    <div class="detail-body">
       <div class="loading"><div class="spin"></div>Memuat…</div>
     </div>`;
-  el.querySelector('#detail-close').onclick = closeDetail;
+  el.querySelector('.detail-close').onclick = closeDetail;
   return el;
 }
 
 async function loadAndRender(freq) {
+  const seq = ++_loadSeq;
   try {
     const result = await fetchStationDetail(freq);
+    // Pastikan ini masih request terbaru dan panel masih ada
+    if (seq !== _loadSeq || !_panel) return;
     renderDetail(result);
   } catch (e) {
-    const body = document.getElementById('detail-body');
-    if (body) body.innerHTML = `<div class="err">Gagal memuat detail: ${e.message}</div>`;
+    if (seq !== _loadSeq || !_panel) return;
+    _panel.querySelector('.detail-body').innerHTML =
+      `<div class="err">Gagal memuat detail: ${e.message}</div>`;
   }
 }
 
 function renderDetail({ data: s, neighbors = [] }) {
+  if (!_panel) return;
+
   if (!s) {
-    const body = document.getElementById('detail-body');
-    if (body) body.innerHTML = `<div class="err">Data tidak ditemukan</div>`;
+    _panel.querySelector('.detail-body').innerHTML = `<div class="err">Data tidak ditemukan</div>`;
     return;
   }
 
-  const freqTag = document.getElementById('detail-freq-tag');
-  if (freqTag) freqTag.textContent = `${parseFloat(s.freq).toFixed(1)} MHz`;
-
-  const body = document.getElementById('detail-body');
+  _panel.querySelector('.detail-freq').textContent = `${parseFloat(s.freq).toFixed(1)} MHz`;
+  const body = _panel.querySelector('.detail-body');
   if (!body) return;
 
   const exp      = isExpired(s);
