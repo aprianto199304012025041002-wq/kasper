@@ -53,9 +53,9 @@ export function renderGrid(onDetail) {
     if (!wStations.length) continue;
 
     const channels  = computeChannelMapForWilayah(wStations, w);
-    const expCount  = wStations.filter(s => isExpired(s)).length;
-    const allotUsed = channels.filter(c => c.allotment_status && c.type === 'used').length;
-    const allotFree = channels.filter(c => c.allotment_status === 'allotted_lps' && c.type === 'free').length;
+    const expCount   = wStations.filter(s => isExpired(s)).length;
+    const allotRRI   = channels.filter(c => c.allotment_status === 'allotted_rri' && c.type === 'free').length;
+    const allotLPS   = channels.filter(c => c.allotment_status === 'allotted_lps' && c.type === 'free').length;
 
     // Filter berdasarkan chanFilter
     const visible = channels.filter(ch => {
@@ -72,7 +72,8 @@ export function renderGrid(onDetail) {
         <div class="city-hdr">
           <span class="city-name">${esc(w)}</span>
           ${expCount ? `<span class="city-exp">⚠ ${expCount} habis</span>` : ''}
-          ${allotFree ? `<span class="city-allot">${allotFree} slot tersedia</span>` : ''}
+          ${allotRRI ? `<span class="city-allot-rri">● ${allotRRI} RRI</span>` : ''}
+          ${allotLPS ? `<span class="city-allot-lps">● ${allotLPS} LPS</span>` : ''}
           <span class="city-cnt">${wStations.length} stasiun</span>
         </div>
         <div class="ch-row">`;
@@ -93,13 +94,18 @@ function renderCell(ch) {
   const { type, station, allotment_status } = ch;
   const exp = type === 'used' && isExpired(station);
 
-  // Class: hanya status teknis — terisi/adjacent/kosong/expired
+  // Class: status teknis utama
   let cls = 'ch ';
   if      (exp)                   cls += 'ch-exp';
   else if (type === 'used')       cls += 'ch-used';
   else if (type === 'adjacent_1') cls += 'ch-adj1';
   else if (type === 'adjacent_2') cls += 'ch-adj2';
   else                            cls += 'ch-free';
+
+  // Indikator allotment (dot kecil di pojok)
+  let allotDot = '';
+  if (allotment_status === 'allotted_rri') allotDot = '<i class="ch-dot ch-dot-rri" title="Allotment RRI"></i>';
+  else if (allotment_status === 'allotted_lps') allotDot = '<i class="ch-dot ch-dot-lps" title="Allotment LPS"></i>';
 
   const freqStr = ch.freq.toFixed(1);
   const nameStr = station
@@ -109,11 +115,22 @@ function renderCell(ch) {
         .slice(0, 12))
     : '';
 
+  const allotLabel = allotment_status === 'allotted_rri' ? ' [RRI]'
+                   : allotment_status === 'allotted_lps' ? ' [LPS]' : '';
   const ttText = station
-    ? `${freqStr} MHz — ${station.stn_name}${exp ? ' [HABIS]' : ''}`
+    ? `${freqStr} MHz — ${station.stn_name}${exp ? ' [HABIS]' : ''}${allotLabel}`
+    : allotment_status === 'allotted_rri' ? `${freqStr} MHz — kosong (allotment RRI)`
+    : allotment_status === 'allotted_lps' ? `${freqStr} MHz — kosong (allotment LPS)`
     : `${freqStr} MHz — kosong`;
 
   const dataAttr = station ? `data-freq="${ch.freq}"` : '';
+
+  return `
+    <div class="${cls}" ${dataAttr} data-tt="${esc(ttText)}">
+      ${allotDot}
+      <b>${freqStr}</b>
+      ${nameStr ? `<span>${nameStr}</span>` : ''}
+    </div>`;
 
   return `
     <div class="${cls}" ${dataAttr} data-tt="${esc(ttText)}">
