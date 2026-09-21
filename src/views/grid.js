@@ -191,11 +191,20 @@ function attachGridEvents(main) {
 
   // ── Tooltip hover (desktop) ──────────────────────────────────────
   const tt = document.getElementById('tooltip');
+  let _ttTimer = null;
   main.addEventListener('mouseover', e => {
     const cell = e.target.closest('.ch[data-tt]');
-    if (cell && tt) { tt.textContent = cell.dataset.tt; tt.classList.add('show'); }
+    if (cell && tt) {
+      tt.textContent = cell.dataset.tt;
+      tt.classList.add('show');
+      clearTimeout(_ttTimer);
+      _ttTimer = setTimeout(() => tt.classList.remove('show'), 2500);
+    }
   });
-  main.addEventListener('mouseleave', () => tt?.classList.remove('show'));
+  main.addEventListener('mouseleave', () => {
+    clearTimeout(_ttTimer);
+    tt?.classList.remove('show');
+  });
   main.addEventListener('mousemove', e => {
     if (tt?.classList.contains('show')) {
       const tw = tt.offsetWidth  || 200;
