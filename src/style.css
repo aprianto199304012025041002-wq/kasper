@@ -244,21 +244,7 @@ a { color: var(--accent); }
 .ch-adj1 { background: var(--amberbg); color: var(--amber); border-color: #fde68a; }
 .ch-adj2 { background: #fff7ed; color: #c2410c; border-color: #fed7aa; }
 [data-theme="dark"] .ch-adj2 { background: rgba(251,146,60,.08); color: #fb923c; border-color: rgba(251,146,60,.2); }
-.ch-lps  { box-shadow: inset 0 0 0 2px var(--accent); }
-.ch-rri  { box-shadow: inset 0 0 0 2px var(--purple); }
-/* Slot allotment kosong — tersedia untuk permohonan */
-.ch-free-lps {
-  background: var(--bg);
-  color: var(--accent);
-  border: 1px dashed var(--accent);
-  opacity: .6;
-}
-.ch-free-rri {
-  background: var(--bg);
-  color: var(--purple);
-  border: 1px dashed var(--purple);
-  opacity: .6;
-}
+/* allotment styling dihapus — hanya pakai status terisi/kosong */
 
 /* ── Band/Pita view ── */
 .band-wrap { padding: 10px; display: flex; flex-direction: column; gap: 10px; }

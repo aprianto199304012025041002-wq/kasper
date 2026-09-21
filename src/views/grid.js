@@ -93,25 +93,13 @@ function renderCell(ch) {
   const { type, station, allotment_status } = ch;
   const exp = type === 'used' && isExpired(station);
 
-  // Class utama
+  // Class: hanya status teknis — terisi/adjacent/kosong/expired
   let cls = 'ch ';
-  if (exp) {
-    cls += 'ch-exp';
-  } else if (type === 'used') {
-    cls += 'ch-used';
-    // Outline allotment hanya saat terisi
-    if      (allotment_status === 'allotted_rri') cls += ' ch-rri';
-    else if (allotment_status === 'allotted_lps') cls += ' ch-lps';
-  } else if (type === 'adjacent_1') {
-    cls += 'ch-adj1';
-  } else if (type === 'adjacent_2') {
-    cls += 'ch-adj2';
-  } else {
-    // Free — bedakan yang dijatahkan (slot tersedia) vs tidak
-    if (allotment_status === 'allotted_rri') cls += 'ch-free-rri';
-    else if (allotment_status === 'allotted_lps') cls += 'ch-free-lps';
-    else cls += 'ch-free';
-  }
+  if      (exp)                   cls += 'ch-exp';
+  else if (type === 'used')       cls += 'ch-used';
+  else if (type === 'adjacent_1') cls += 'ch-adj1';
+  else if (type === 'adjacent_2') cls += 'ch-adj2';
+  else                            cls += 'ch-free';
 
   const freqStr = ch.freq.toFixed(1);
   const nameStr = station
@@ -121,16 +109,9 @@ function renderCell(ch) {
         .slice(0, 12))
     : '';
 
-  let ttText;
-  if (station) {
-    ttText = `${freqStr} MHz — ${station.stn_name}${exp ? ' [HABIS]' : ''}`;
-  } else if (allotment_status === 'allotted_lps') {
-    ttText = `${freqStr} MHz — ★ Slot tersedia (allotted LPS)`;
-  } else if (allotment_status === 'allotted_rri') {
-    ttText = `${freqStr} MHz — ▣ Slot RRI (allotted)`;
-  } else {
-    ttText = `${freqStr} MHz — kosong`;
-  }
+  const ttText = station
+    ? `${freqStr} MHz — ${station.stn_name}${exp ? ' [HABIS]' : ''}`
+    : `${freqStr} MHz — kosong`;
 
   const dataAttr = station ? `data-freq="${ch.freq}"` : '';
 
