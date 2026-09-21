@@ -42,6 +42,7 @@ function createPanel() {
   const el = document.createElement('div');
   el.className = 'detail-panel';
   el.innerHTML = `
+    <div class="detail-drag-handle"></div>
     <div class="detail-hdr">
       <button class="detail-close">✕ Tutup</button>
       <span class="detail-freq">—</span>
@@ -50,6 +51,15 @@ function createPanel() {
       <div class="loading"><div class="spin"></div>Memuat…</div>
     </div>`;
   el.querySelector('.detail-close').onclick = closeDetail;
+
+  // Swipe down to close (mobile)
+  let _touchY = 0;
+  el.addEventListener('touchstart', e => { _touchY = e.touches[0].clientY; }, { passive: true });
+  el.addEventListener('touchend', e => {
+    const dy = e.changedTouches[0].clientY - _touchY;
+    if (dy > 80) closeDetail(); // swipe down > 80px → tutup
+  }, { passive: true });
+
   return el;
 }
 
@@ -137,6 +147,8 @@ function renderDetail({ data: s, neighbors = [] }) {
     </div>` : ''}`;
 
   // Peta mini Leaflet
+  // Delay > durasi transisi panel (0.22s desktop, sama di mobile)
+  // agar Leaflet tahu ukuran container setelah animasi selesai
   if (lat && lon) {
     const mapEl = document.getElementById('dp-map');
     if (mapEl) {
@@ -146,7 +158,9 @@ function renderDetail({ data: s, neighbors = [] }) {
         L.circleMarker([lat, lon], {
           radius: 8, color: '#2563eb', fillColor: '#2563eb', fillOpacity: .8, weight: 2,
         }).addTo(m);
-      }, 100);
+        // invalidateSize setelah transisi panel benar-benar selesai
+        m.invalidateSize();
+      }, 300);
     }
   }
 }

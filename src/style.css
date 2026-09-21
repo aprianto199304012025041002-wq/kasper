@@ -364,6 +364,11 @@ a { color: var(--accent); }
   border: 1px solid var(--accbd); padding: 2px 10px; border-radius: 999px;
 }
 .detail-body { padding: 14px; display: flex; flex-direction: column; gap: 14px; }
+.detail-drag-handle {
+  display: none; /* hanya tampil di mobile via media query */
+  width: 36px; height: 4px; border-radius: 2px;
+  background: var(--border); margin: 8px auto 0;
+}
 .detail-name  { font-size: 15px; font-weight: 600; color: var(--txt); }
 .detail-owner { font-size: 12px; color: var(--txt2); margin-top: -8px; }
 .detail-exp-badge {
@@ -441,6 +446,7 @@ a { color: var(--accent); }
     transform: translateY(100%);
   }
   .detail-panel.open { transform: translateY(0); }
+  .detail-drag-handle { display: block; }
   .rf-table th, .rf-table td { padding: 5px 7px; }
   .rf-summary { grid-template-columns: repeat(3, 1fr); }
   /* Sembunyikan kolom Jarak dan Margin D/U di mobile karena tidak muat */
