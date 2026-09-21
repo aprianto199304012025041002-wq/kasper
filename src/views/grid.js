@@ -1,9 +1,9 @@
 // views/grid.js
-// Grid view: tabel frekuensi per wilayah, satu baris per wilayah.
-// Klik sel → detail stasiun.
+// Grid view: satu row per wilayah, 206 cell (full band 87.5–108 MHz).
+// Scroll horizontal sinkron antar wilayah — bisa lihat korelasi frekuensi.
 
 import { state, filteredStations, KOMUNITAS_RADIUS } from '../state.js';
-import { computeChannelMapForWilayah } from '../engine/channel.js';
+import { computeChannelMapForWilayah, buildChannelGrid } from '../engine/channel.js';
 import { renderStatsBar } from '../components/statsbar.js';
 import { isExpired, esc } from '../utils.js';
 
@@ -35,57 +35,72 @@ export function renderGrid(onDetail) {
     return;
   }
 
-  // Stats bar pakai channel map seluruh stasiun aktif
+  // Stats bar
   const allChannels = computeChannelMapForWilayah(
     stations.filter(s => !state.wilayah || (s.wilayah_layanan || s.kota) === state.wilayah),
     state.wilayah || ''
   );
   renderStatsBar(allChannels);
 
+  // Header frekuensi (ruler) — satu baris di atas semua wilayah
+  const freqGrid = buildChannelGrid();
+
   let html = '<div class="grid-wrap">';
 
+  // Ruler frekuensi
+  html += '<div class="grid-table"><div class="grid-ruler-row"><div class="grid-label-col"></div><div class="grid-scroll-body" id="grid-ruler">';
+  for (const f of freqGrid) {
+    // Tampilkan label hanya setiap 1 MHz (setiap 10 channel)
+    const label = Number.isInteger(Math.round(f * 10) / 10) && (Math.round(f * 10) % 10 === 0)
+      ? f.toFixed(0)
+      : '';
+    html += `<div class="ch-ruler">${label}</div>`;
+  }
+  html += '</div></div>';
+
+  // Satu row per wilayah
   for (const w of wilayahList) {
-    // Stasiun di wilayah ini (yang lolos filter)
     const wStations = state.wilayah
       ? stations
       : stations.filter(s => (s.wilayah_layanan || s.kota) === w);
 
     if (!wStations.length) continue;
 
-    const channels  = computeChannelMapForWilayah(wStations, w);
-    const expCount   = wStations.filter(s => isExpired(s)).length;
-    const allotRRI   = channels.filter(c => c.allotment_status === 'allotted_rri' && c.type === 'free').length;
-    const allotLPS   = channels.filter(c => c.allotment_status === 'allotted_lps' && c.type === 'free').length;
+    const channels = computeChannelMapForWilayah(wStations, w);
+    const expCount  = wStations.filter(s => isExpired(s)).length;
+    const allotRRI  = channels.filter(c => c.allotment_status === 'allotted_rri' && c.type === 'free').length;
+    const allotLPS  = channels.filter(c => c.allotment_status === 'allotted_lps' && c.type === 'free').length;
 
-    // Filter berdasarkan chanFilter
-    const visible = channels.filter(ch => {
+    // Untuk filter chanFilter: sembunyikan row jika tidak ada cell visible
+    const hasVisible = channels.some(ch => {
       if (state.chanFilter === 'free')    return ch.type === 'free';
       if (state.chanFilter === 'used')    return ch.type === 'used';
       if (state.chanFilter === 'expired') return ch.type === 'used' && isExpired(ch.station);
       return true;
     });
-
-    if (!visible.length) continue;
+    if (!hasVisible) continue;
 
     html += `
-      <div class="city">
-        <div class="city-hdr">
-          <span class="city-name">${esc(w)}</span>
-          ${expCount ? `<span class="city-exp">⚠ ${expCount} habis</span>` : ''}
-          ${allotRRI ? `<span class="city-allot-rri">● ${allotRRI} RRI</span>` : ''}
-          ${allotLPS ? `<span class="city-allot-lps">● ${allotLPS} LPS</span>` : ''}
-          <span class="city-cnt">${wStations.length} stasiun</span>
+      <div class="grid-row">
+        <div class="grid-label-col">
+          <div class="city-name">${esc(w)}</div>
+          <div class="city-meta">
+            ${expCount ? `<span class="city-exp">⚠${expCount}</span>` : ''}
+            ${allotRRI  ? `<span class="city-allot-rri">R${allotRRI}</span>` : ''}
+            ${allotLPS  ? `<span class="city-allot-lps">L${allotLPS}</span>` : ''}
+            <span class="city-cnt">${wStations.length}st</span>
+          </div>
         </div>
-        <div class="ch-row">`;
+        <div class="grid-scroll-body">`;
 
-    for (const ch of visible) {
+    for (const ch of channels) {
       html += renderCell(ch);
     }
 
     html += `</div></div>`;
   }
 
-  html += '</div>';
+  html += '</div></div>';
   main.innerHTML = html;
   attachGridEvents(main);
 }
@@ -94,7 +109,6 @@ function renderCell(ch) {
   const { type, station, allotment_status } = ch;
   const exp = type === 'used' && isExpired(station);
 
-  // Class: status teknis utama
   let cls = 'ch ';
   if      (exp)                   cls += 'ch-exp';
   else if (type === 'used')       cls += 'ch-used';
@@ -102,17 +116,21 @@ function renderCell(ch) {
   else if (type === 'adjacent_2') cls += 'ch-adj2';
   else                            cls += 'ch-free';
 
-  // Indikator allotment (dot kecil di pojok)
+  // Dim cell yang tidak lolos chanFilter
+  if (state.chanFilter === 'free'    && type !== 'free')                          cls += ' ch-dim';
+  if (state.chanFilter === 'used'    && type !== 'used')                          cls += ' ch-dim';
+  if (state.chanFilter === 'expired' && !(type === 'used' && isExpired(station))) cls += ' ch-dim';
+
   let allotDot = '';
-  if (allotment_status === 'allotted_rri') allotDot = '<i class="ch-dot ch-dot-rri" title="Allotment RRI"></i>';
-  else if (allotment_status === 'allotted_lps') allotDot = '<i class="ch-dot ch-dot-lps" title="Allotment LPS"></i>';
+  if (allotment_status === 'allotted_rri') allotDot = '<i class="ch-dot ch-dot-rri"></i>';
+  else if (allotment_status === 'allotted_lps') allotDot = '<i class="ch-dot ch-dot-lps"></i>';
 
   const freqStr = ch.freq.toFixed(1);
   const nameStr = station
     ? esc(station.stn_name
         .replace(/^(RADIO |LPP RRI |LPPL |LPP |LPK |PRAMBORS |SONORA )/i, '')
         .replace(/ (FM|AM|RADIO|JOGJA|YOGYAKARTA)$/i, '')
-        .slice(0, 12))
+        .slice(0, 10))
     : '';
 
   const allotLabel = allotment_status === 'allotted_rri' ? ' [RRI]'
@@ -125,21 +143,22 @@ function renderCell(ch) {
 
   const dataAttr = station ? `data-freq="${ch.freq}"` : '';
 
-  return `
-    <div class="${cls}" ${dataAttr} data-tt="${esc(ttText)}">
-      ${allotDot}
-      <b>${freqStr}</b>
-      ${nameStr ? `<span>${nameStr}</span>` : ''}
-    </div>`;
-
-  return `
-    <div class="${cls}" ${dataAttr} data-tt="${esc(ttText)}">
-      <b>${freqStr}</b>
-      ${nameStr ? `<span>${nameStr}</span>` : ''}
-    </div>`;
+  return `<div class="${cls}" ${dataAttr} data-tt="${esc(ttText)}">${allotDot}<b>${freqStr}</b>${nameStr ? `<s>${nameStr}</s>` : ''}</div>`;
 }
 
 function attachGridEvents(main) {
+  // Scroll sinkron: semua .grid-scroll-body ikut scroll bersama
+  const bodies = main.querySelectorAll('.grid-scroll-body');
+  let _syncing = false;
+  bodies.forEach(el => {
+    el.addEventListener('scroll', () => {
+      if (_syncing) return;
+      _syncing = true;
+      bodies.forEach(other => { if (other !== el) other.scrollLeft = el.scrollLeft; });
+      _syncing = false;
+    }, { passive: true });
+  });
+
   // Klik detail
   main.onclick = e => {
     const cell = e.target.closest('.ch[data-freq]');
@@ -151,10 +170,7 @@ function attachGridEvents(main) {
   const tt = document.getElementById('tooltip');
   main.addEventListener('mouseover', e => {
     const cell = e.target.closest('.ch[data-tt]');
-    if (cell && tt) {
-      tt.textContent = cell.dataset.tt;
-      tt.classList.add('show');
-    }
+    if (cell && tt) { tt.textContent = cell.dataset.tt; tt.classList.add('show'); }
   });
   main.addEventListener('mouseleave', () => tt?.classList.remove('show'));
   main.addEventListener('mousemove', e => {
