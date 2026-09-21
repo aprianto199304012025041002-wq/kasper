@@ -85,10 +85,10 @@ export function renderGrid(onDetail) {
         <div class="grid-label-col">
           <div class="city-name">${esc(w)}</div>
           <div class="city-meta">
-            ${expCount ? `<span class="city-exp">⚠${expCount}</span>` : ''}
-            ${allotRRI  ? `<span class="city-allot-rri">R${allotRRI}</span>` : ''}
-            ${allotLPS  ? `<span class="city-allot-lps">L${allotLPS}</span>` : ''}
-            <span class="city-cnt">${wStations.length}st</span>
+            ${expCount ? `<span class="city-exp" title="${expCount} izin habis">⚠${expCount}</span>` : ''}
+            ${allotRRI  ? `<span class="city-allot-rri" title="${allotRRI} slot allotment RRI kosong">R${allotRRI}</span>` : ''}
+            ${allotLPS  ? `<span class="city-allot-lps" title="${allotLPS} slot allotment LPS kosong">L${allotLPS}</span>` : ''}
+            <span class="city-cnt" title="${wStations.length} stasiun aktif">${wStations.length}st</span>
           </div>
         </div>
         <div class="grid-scroll-body">`;
