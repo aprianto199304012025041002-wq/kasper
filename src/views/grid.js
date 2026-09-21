@@ -143,7 +143,7 @@ function renderCell(ch) {
 
   const dataAttr = station ? `data-freq="${ch.freq}"` : '';
 
-  return `<div class="${cls}" ${dataAttr} data-tt="${esc(ttText)}">${allotDot}<b>${freqStr}</b>${nameStr ? `<s>${nameStr}</s>` : ''}</div>`;
+  return `<div class="${cls}" ${dataAttr} data-tt="${esc(ttText)}">${allotDot}<b>${freqStr}</b>${nameStr ? `<span class="ch-name">${nameStr}</span>` : ''}</div>`;
 }
 
 function attachGridEvents(main) {
