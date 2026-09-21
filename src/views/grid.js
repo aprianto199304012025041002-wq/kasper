@@ -128,8 +128,9 @@ function renderCell(ch) {
   const nameStr = station
     ? esc(station.stn_name
         .replace(/^(RADIO |LPP RRI |LPPL |LPP |LPK )/i, '')
+        .replace(/\s+(FM|AM)$/i, '')
         .split(/\s+/)[0]
-        .slice(0, 10))
+        .slice(0, 14))
     : '';
 
   const allotLabel = allotment_status === 'allotted_rri' ? ' [RRI]'
