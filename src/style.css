@@ -312,6 +312,7 @@ a { color: var(--accent); }
 .ch-adj2 { background: #fff7ed; color: #c2410c; border-color: #fed7aa; }
 [data-theme="dark"] .ch-adj2 { background: rgba(251,146,60,.08); color: #fb923c; border-color: rgba(251,146,60,.2); }
 .ch-dim  { opacity: .15; pointer-events: none; }
+.ch-hl   { outline: 2px solid var(--accent); outline-offset: -1px; z-index: 2; }
 
 
 /* ── Band/Pita view ── */

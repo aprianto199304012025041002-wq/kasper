@@ -139,13 +139,13 @@ function renderCell(ch) {
     : allotment_status === 'allotted_lps' ? `${freqStr} MHz — kosong (allotment LPS)`
     : `${freqStr} MHz — kosong`;
 
-  const dataAttr = station ? `data-freq="${ch.freq}"` : '';
+  const dataAttr = `data-freq="${ch.freq}"${station ? ' data-has-stn' : ''}`;
 
   return `<div class="${cls}" ${dataAttr} data-tt="${esc(ttText)}">${allotDot}<b>${freqStr}</b>${nameStr ? `<span class="ch-name">${nameStr}</span>` : ''}</div>`;
 }
 
 function attachGridEvents(main) {
-  // Scroll sinkron: semua .grid-scroll-body ikut scroll bersama
+  // Scroll sinkron
   const bodies = main.querySelectorAll('.grid-scroll-body');
   let _syncing = false;
   bodies.forEach(el => {
@@ -157,14 +157,39 @@ function attachGridEvents(main) {
     }, { passive: true });
   });
 
-  // Klik detail
-  main.onclick = e => {
+  // ── Highlight kolom ──────────────────────────────────────────────
+  let _hlFreq = null;
+
+  function setHighlight(freq) {
+    main.querySelectorAll('.ch.ch-hl').forEach(el => el.classList.remove('ch-hl'));
+    if (!freq) { _hlFreq = null; return; }
+    _hlFreq = freq;
+    main.querySelectorAll(`.ch[data-freq="${freq}"]`).forEach(el => el.classList.add('ch-hl'));
+  }
+
+  // Desktop: hover
+  main.addEventListener('mouseover', e => {
     const cell = e.target.closest('.ch[data-freq]');
+    if (cell) setHighlight(cell.dataset.freq);
+  });
+  main.addEventListener('mouseleave', () => setHighlight(null));
+
+  // Mobile: tap toggle highlight
+  main.addEventListener('touchend', e => {
+    const cell = e.target.closest('.ch[data-freq]');
+    if (!cell) return;
+    const freq = cell.dataset.freq;
+    setHighlight(_hlFreq === freq ? null : freq);
+  }, { passive: true });
+
+  // ── Klik detail (hanya cell berisi stasiun) ──────────────────────
+  main.onclick = e => {
+    const cell = e.target.closest('.ch[data-has-stn]');
     if (!cell || !_onDetail) return;
     _onDetail(parseFloat(cell.dataset.freq));
   };
 
-  // Tooltip hover
+  // ── Tooltip hover (desktop) ──────────────────────────────────────
   const tt = document.getElementById('tooltip');
   main.addEventListener('mouseover', e => {
     const cell = e.target.closest('.ch[data-tt]');
@@ -181,4 +206,24 @@ function attachGridEvents(main) {
       tt.style.top  = y + 'px';
     }
   });
+
+  // ── Jump to frekuensi ────────────────────────────────────────────
+  const search = document.getElementById('f-search');
+  if (search) {
+    search.addEventListener('input', () => {
+      const q = search.value.trim().replace(',', '.');
+      const freq = parseFloat(q);
+      if (isNaN(freq) || freq < 87.5 || freq > 108) return;
+
+      const freqKey = freq.toFixed(1);
+      const target  = main.querySelector(`.ch[data-freq="${freqKey}"]`);
+      if (!target) return;
+
+      const bodyEl   = target.closest('.grid-scroll-body');
+      if (!bodyEl) return;
+      const scrollTo = target.offsetLeft - bodyEl.offsetWidth / 2 + target.offsetWidth / 2;
+      bodies.forEach(b => { b.scrollLeft = scrollTo; });
+      setHighlight(freqKey);
+    });
+  }
 }
