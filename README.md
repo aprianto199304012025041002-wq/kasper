@@ -1,95 +1,58 @@
 # KASPER — Kanal Spektrum Radio
 
-Aplikasi web visualisasi spektrum frekuensi FM berbasis data ISR (Izin Stasiun Radio) Balmon Jogja, dengan overlay allotment berdasarkan KM Komdigi No. 570 Tahun 2025. Mencakup **84 wilayah layanan** di D.I. Yogyakarta dan Jawa Tengah.
+Aplikasi web monitoring spektrum frekuensi FM berbasis data ISR (Izin Stasiun Radio) Balmon Jogja, mencakup **DIY & Jawa Tengah**.
 
 - **Live:** `kasper.balmonjogja.info`
-- **Stack:** Vite + Vanilla JS · PHP 8 + MySQL · Deploy Hostinger
+- **Stack:** Vite + Vanilla JS · PHP 8 + MySQL · Hostinger
+- **Repo:** `aprianto199304012025041002-wq/kasper`
 
 ---
 
 ## Fitur
 
-| Fitur | Keterangan |
+| View | Keterangan |
 |---|---|
-| **Sidebar wilayah** | Navigasi cepat 84 wilayah, dikelompokkan per provinsi (DIY / Jateng) |
-| **Peta kanal grid** | Grid 100 kHz · 87.5–108.0 MHz, per wilayah layanan terpilih |
-| **Pita horizontal** | View alternatif, tinggi blok proporsional ERP |
-| **Geo Grid** | Grid per wilayah layanan dengan filter slot kosong |
-| **Overlay allotment** | KM 570/2025: allotted LPS ★, allotted RRI ▣, tidak dijatahkan · |
-| **Komunitas** | Row terpisah (oranye) di bawah, kanal 107.4–107.9 MHz |
-| **Detail stasiun** | Info lengkap + mini band strip + peta Leaflet + tetangga |
-| **Analisis interferensi** | Model ITU-R BS.412: co-channel & adjacent (±100/±200 kHz) |
-| **URL state sync** | View/wilayah/filter tersimpan di URL — bookmarkable & shareable |
-| **API PHP** | Backend MySQL dengan endpoint lengkap, file cache 5 menit |
-| **Offline fallback** | Jika API tidak tersedia, pakai data JSON lokal otomatis |
+| **Grid** | Grid kanal 100 kHz per wilayah, warna per status |
+| **Pita** | Band 87.5–108 MHz horizontal per wilayah |
+| **Geo** | Peta Leaflet marker per stasiun |
+| **RF** | Tabel interferensi ITU-R BS.412, sortable |
+| **Detail** | Panel slide-in: info lengkap + peta mini + tetangga |
+
+**Filter:** wilayah, search, kanal (all/terisi/kosong/expired)
+
+**Status cell grid:** biru=terisi · amber=adjacent guard · merah dashed=expired · abu=kosong
 
 ---
 
-## Struktur repo
+## Struktur
 
 ```
-kasper/
-├── index.html
-├── vite.config.js
-├── package.json
-│
-├── src/
-│   ├── main.js                 # App utama: state, sidebar, toolbar, semua view
-│   ├── apiClient.js            # HTTP client + offline fallback
-│   ├── channelEngine.js        # Logic grid/allotment (JS)
-│   ├── detailPage.js           # Halaman detail stasiun + Leaflet map
-│   ├── interferenceView.js     # Panel analisis interferensi
-│   ├── mobile.js               # Drawer mobile + FAB
-│   ├── style.css               # Design tokens global
-│   ├── data/
-│   │   ├── stations.json       # Fallback data stasiun FM
-│   │   └── allotment.js        # Data allotment KM 570/2025 (84 wilayah DIY+Jateng)
-│   └── components/
-│       ├── sidebar.css         # Sidebar wilayah + app layout
-│       ├── header.css
-│       ├── stats.css           # Stats bar (6-col desktop / 3-col mobile)
-│       ├── grid.css
-│       ├── band.css
-│       ├── detail-page.css
-│       └── responsive.css
-│
-└── api/
-    ├── index.php               # Router API
-    ├── data/
-    │   └── allotment_nasional.json   # Data allotment nasional KM 570/2025 (TODO)
-    └── src/
-        ├── config.php
-        ├── Database.php
-        ├── Response.php
-        ├── Cache.php
-        ├── ChannelEngine.php
-        ├── StationRepository.php
-        ├── ProvinceRepository.php
-        └── InterferenceEngine.php
+src/
+  main.js           — boot, shell HTML, wiring komponen
+  state.js          — state global + filteredStations()
+  api.js            — fetch ke /api/stations, /api/stations/:freq, /api/health
+  utils.js          — parseValidity, isExpired, fmtDate, dbmToWatt, esc, haversineKm
+  style.css         — design system (light/dark, CSS tokens)
+  components/
+    header.js       — logo, status, btn refresh/theme
+    sidebar.js      — nav wilayah per provinsi + mobile close
+    toolbar.js      — tab Grid/Pita/Geo/RF + search + filter kanal
+    statsbar.js     — stats ringkasan kanal
+  views/
+    grid.js         — grid kanal per wilayah
+    band.js         — pita frekuensi visual
+    geo.js          — peta Leaflet (bundled npm, tile OSM)
+    rf.js           — tabel interferensi sortable + filter level
+    detail.js       — slide-in panel detail stasiun
+  engine/
+    channel.js      — computeChannelMapForWilayah(), ITU-R grid
+    interference.js — computeInterference(), ITU-R BS.412
+  data/
+    allotment.js    — data allotment KM Komdigi 570/2025
+
+api/
+  data.php          — single-file PHP backend (PDO/MySQL)
 ```
-
----
-
-## Wilayah Layanan (KM 570/2025)
-
-Coverage: **8 wilayah DIY** + **76 wilayah Jawa Tengah** = **84 wilayah total**
-
-### D.I. Yogyakarta
-
-| Kode | Wilayah | Kelas |
-|------|---------|-------|
-| 34-001 | WATES, SENTOLO | C |
-| 34-002 | BANTUL, BANGUNTAPAN | C |
-| 34-003 | WONOSARI | C |
-| 34-004 | PATUK | C |
-| 34-005 | GAMPING | C |
-| 34-006 | DEPOK | C |
-| 34-007 | SLEMAN, NGAGLIK, KALASAN, NGEMPLAK, PAKEM | C |
-| 34-008 | KOTA YOGYAKARTA | B |
-
-### Jawa Tengah
-
-76 wilayah layanan, kode 33-001 s/d 33-076, mencakup seluruh kabupaten/kota di Jawa Tengah sesuai KM 570/2025. Data lengkap ada di `src/data/allotment.js`.
 
 ---
 
@@ -99,49 +62,36 @@ Coverage: **8 wilayah DIY** + **76 wilayah Jawa Tengah** = **84 wilayah total**
 git clone https://github.com/aprianto199304012025041002-wq/kasper.git
 cd kasper
 npm install
-npm run dev   # offline mode, data dari src/data/stations.json
+npm run dev
 ```
 
 ---
 
-## Endpoint API
+## API endpoints
 
 | Endpoint | Keterangan |
 |---|---|
-| `GET /stations` | Stasiun + channel map + free blocks |
-| `GET /stations/:freq` | Detail stasiun + tetangga |
-| `GET /provinces` | Daftar provinsi |
-| `GET /cities?province=` | Daftar wilayah layanan per provinsi |
-| `GET /channels` | Channel map saja |
-| `GET /slots?min_count=2` | Slot kosong potensial |
-| `GET /interference` | Analisis interferensi |
-| `GET /stats` | Statistik per wilayah layanan + per jenis |
-| `GET /allotment` | Data allotment KM 570/2025 (filter ?provinsi= ?kode=) |
-| `GET /health` | Cek koneksi DB |
-
-**Query params:** `province=`, `city=` (match ke `area_of_service`), `jenis=`, `search=`
+| `GET /api/stations` | Semua stasiun FM |
+| `GET /api/stations/:freq` | Detail stasiun + tetangga |
+| `GET /api/health` | Cek DB (`{ status, total_fm, db_ms }`) |
 
 ---
 
-## Model interferensi
+## Deploy
 
-ITU-R BS.412 free-space approximation:
-
-- **Co-channel**: PR minimum 30 dB
-- **1st Adjacent ±100 kHz**: PR minimum 20 dB
-- **2nd Adjacent ±200 kHz**: PR minimum 10 dB
-- Radius evaluasi: 150 km
-- Prasyarat: kolom `latitude`/`longitude` di tabel `isr` terisi
-
----
-
-## Update data ISR
+GitHub Actions → lftp → Hostinger. Retry 3x (30s interval) untuk handle FTP intermittent.
 
 ```bash
-# Bust cache
-rm -f api/cache/*.cache
-
-# Reimport
-mysql -u root -p isr_db -e "TRUNCATE TABLE isr;"
-mysql -u root -p isr_db < isr_baru.sql
+npm run build   # output ke dist/
+git push        # trigger CI/CD otomatis
 ```
+
+---
+
+## Model interferensi (ITU-R BS.412)
+
+| Tipe | Δf | D/U minimum | Radius |
+|---|---|---|---|
+| Co-channel | < 0.095 MHz | 30 dB | 150 km |
+| 1st Adjacent | < 0.195 MHz | 20 dB | 60 km |
+| 2nd Adjacent | < 0.295 MHz | 10 dB | 30 km |
