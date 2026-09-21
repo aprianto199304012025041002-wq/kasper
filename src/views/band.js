@@ -19,8 +19,8 @@ export function renderBand(onDetail) {
   const stations = filteredStations();
 
   let wilayahList;
-  if (state.wilayah) {
-    wilayahList = [state.wilayah];
+  if (state.wilayah.length) {
+    wilayahList = [...state.wilayah];
   } else {
     wilayahList = [...new Set(
       stations
@@ -35,14 +35,12 @@ export function renderBand(onDetail) {
     return;
   }
 
-  renderStatsBar(computeChannelMapForWilayah(stations, state.wilayah || ''));
+  renderStatsBar(computeChannelMapForWilayah(stations, ''));
 
   let html = '<div class="band-wrap">';
 
   for (const w of wilayahList) {
-    const wSt = state.wilayah
-      ? stations
-      : stations.filter(s => (s.wilayah_layanan || s.kota) === w);
+    const wSt = stations.filter(s => (s.wilayah_layanan || s.kota) === w);
 
     if (!wSt.length) continue;
 

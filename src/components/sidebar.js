@@ -37,7 +37,7 @@ export function renderSidebar() {
   const item = (w, label) => {
     const cnt = stationCount(w);
     const exp = expiredCount(w);
-    const active = state.wilayah === w;
+    const active = w === '' ? !state.wilayah.length : state.wilayah.includes(w);
     return `
       <button class="nav-item${active ? ' active' : ''}" data-w="${esc(w)}">
         <span class="nav-label">${esc(label)}</span>
@@ -59,9 +59,17 @@ export function renderSidebar() {
   nav.onclick = e => {
     const btn = e.target.closest('.nav-item');
     if (!btn) return;
-    state.wilayah = btn.dataset.w;
+    const w = btn.dataset.w;
+    if (w === '') {
+      // Semua Wilayah = reset
+      state.wilayah = [];
+    } else {
+      const idx = state.wilayah.indexOf(w);
+      if (idx === -1) state.wilayah = [...state.wilayah, w];
+      else            state.wilayah = state.wilayah.filter(x => x !== w);
+    }
     renderSidebar();
-    if (_onSelect) _onSelect(state.wilayah);
+    if (_onSelect) _onSelect();
   };
 }
 

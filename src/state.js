@@ -8,7 +8,7 @@ export const state = {
 
   // Navigasi
   view:     'grid',  // 'grid' | 'band' | 'geo' | 'rf'
-  wilayah:  '',      // '' = semua wilayah
+  wilayah:  [],      // [] = semua wilayah; array string wilayah yang dipilih
 
   // Filter
   search:     '',
@@ -50,11 +50,11 @@ export function filteredStations() {
   let st = state.data?.stations || [];
 
   // Exclude komunitas dari tampilan grid/band kecuali kalau dipilih eksplisit
-  if (!state.wilayah)
+  if (!state.wilayah.length)
     st = st.filter(s => (s.wilayah_layanan || s.kota) !== KOMUNITAS_RADIUS);
 
-  if (state.wilayah)
-    st = st.filter(s => (s.wilayah_layanan || s.kota) === state.wilayah);
+  if (state.wilayah.length)
+    st = st.filter(s => state.wilayah.includes(s.wilayah_layanan || s.kota));
 
   if (state.search) {
     const q = state.search.toLowerCase();

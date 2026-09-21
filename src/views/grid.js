@@ -19,8 +19,8 @@ export function renderGrid(onDetail) {
 
   // Tentukan daftar wilayah yang akan ditampilkan
   let wilayahList;
-  if (state.wilayah) {
-    wilayahList = [state.wilayah];
+  if (state.wilayah.length) {
+    wilayahList = [...state.wilayah];
   } else {
     wilayahList = [...new Set(
       stations
@@ -60,8 +60,8 @@ export function renderGrid(onDetail) {
 
   // Satu row per wilayah
   for (const w of wilayahList) {
-    const wStations = state.wilayah
-      ? stations
+    const wStations = state.wilayah.length
+      ? stations.filter(s => (s.wilayah_layanan || s.kota) === w)
       : stations.filter(s => (s.wilayah_layanan || s.kota) === w);
 
     if (!wStations.length) continue;
