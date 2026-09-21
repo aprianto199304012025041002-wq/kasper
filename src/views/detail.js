@@ -1,7 +1,16 @@
 // views/detail.js — detail panel stasiun FM
 
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
 import { fetchStationDetail } from '../api.js';
 import { isExpired, parseValidity, fmtDate, dbmToWatt, esc, JENIS_LABEL } from '../utils.js';
+
+// Fix Leaflet default icon path saat di-bundle
+import iconUrl       from 'leaflet/dist/images/marker-icon.png';
+import iconRetinaUrl from 'leaflet/dist/images/marker-icon-2x.png';
+import shadowUrl     from 'leaflet/dist/images/marker-shadow.png';
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({ iconUrl, iconRetinaUrl, shadowUrl });
 
 let _panel = null;
 let _loadSeq = 0; // sequence number untuk cancel fetch lama
@@ -128,7 +137,7 @@ function renderDetail({ data: s, neighbors = [] }) {
     </div>` : ''}`;
 
   // Peta mini Leaflet
-  if (lat && lon && typeof L !== 'undefined') {
+  if (lat && lon) {
     const mapEl = document.getElementById('dp-map');
     if (mapEl) {
       setTimeout(() => {
