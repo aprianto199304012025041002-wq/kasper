@@ -173,8 +173,12 @@ function attachGridEvents(main) {
   main.addEventListener('mouseleave', () => tt?.classList.remove('show'));
   main.addEventListener('mousemove', e => {
     if (tt?.classList.contains('show')) {
-      tt.style.left = (e.clientX + 12) + 'px';
-      tt.style.top  = (e.clientY + 12) + 'px';
+      const tw = tt.offsetWidth  || 200;
+      const th = tt.offsetHeight || 30;
+      const x = e.clientX + 12 + tw > window.innerWidth  ? e.clientX - tw - 8 : e.clientX + 12;
+      const y = e.clientY + 12 + th > window.innerHeight ? e.clientY - th - 8 : e.clientY + 12;
+      tt.style.left = x + 'px';
+      tt.style.top  = y + 'px';
     }
   });
 }
