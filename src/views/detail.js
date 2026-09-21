@@ -6,7 +6,15 @@ import { isExpired, parseValidity, fmtDate, dbmToWatt, esc, JENIS_LABEL } from '
 let _panel = null;
 
 export function openDetail(freq) {
-  closeDetail();
+  if (_panel) {
+    // Panel sudah terbuka — langsung ganti konten tanpa animasi tutup/buka
+    const freqTag = document.getElementById('detail-freq-tag');
+    const body    = document.getElementById('detail-body');
+    if (freqTag) freqTag.textContent = '…';
+    if (body)    body.innerHTML = '<div class="loading"><div class="spin"></div>Memuat…</div>';
+    loadAndRender(freq);
+    return;
+  }
   _panel = createPanel();
   document.body.appendChild(_panel);
   requestAnimationFrame(() => _panel.classList.add('open'));
