@@ -7,6 +7,7 @@ import { isExpired } from '../utils.js';
 export function mountHeader(onRefresh, onTheme) {
   document.getElementById('hdr').innerHTML = `
     <div class="hdr-l">
+      <button id="sidebar-toggle" title="Sembunyikan sidebar">‹</button>
       <span class="logo">KASPER</span>
       <span class="hdr-sub">Monitoring Spektrum FM · DIY &amp; Jawa Tengah</span>
     </div>

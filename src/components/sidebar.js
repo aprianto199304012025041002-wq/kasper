@@ -1,10 +1,20 @@
 // components/sidebar.js
 // Sidebar navigasi: daftar wilayah dikelompokkan per provinsi.
+// Provinsi bisa di-collapse; sidebar bisa disembunyikan sepenuhnya.
 
 import { state, getWilayahByProv, KOMUNITAS_RADIUS, wilayahOf } from '../state.js';
 import { isExpired, shortWilayah, esc } from '../utils.js';
 
 let _onSelect = null;
+
+// State collapse per provinsi — persist di localStorage
+const _collapsed = new Set(
+  JSON.parse(localStorage.getItem('kasper-collapsed') || '[]')
+);
+
+function saveCollapsed() {
+  localStorage.setItem('kasper-collapsed', JSON.stringify([..._collapsed]));
+}
 
 export function mountSidebar(onSelect) {
   _onSelect = onSelect;
@@ -22,6 +32,28 @@ export function mountSidebar(onSelect) {
       document.getElementById('mob-backdrop')?.classList.remove('show');
     };
   }
+
+  // Tombol toggle sidebar di desktop (collapse ke kiri)
+  const toggleBtn = document.getElementById('sidebar-toggle');
+  if (toggleBtn) {
+    const sidebar = document.getElementById('sidebar');
+    const body    = document.getElementById('body');
+    const collapsed = localStorage.getItem('kasper-sidebar-collapsed') === '1';
+    if (collapsed) { sidebar?.classList.add('sb-hidden'); body?.classList.add('sb-hidden'); }
+    updateToggleBtn(toggleBtn, collapsed);
+
+    toggleBtn.onclick = () => {
+      const isHidden = sidebar?.classList.toggle('sb-hidden');
+      body?.classList.toggle('sb-hidden', isHidden);
+      localStorage.setItem('kasper-sidebar-collapsed', isHidden ? '1' : '0');
+      updateToggleBtn(toggleBtn, isHidden);
+    };
+  }
+}
+
+function updateToggleBtn(btn, isHidden) {
+  btn.title = isHidden ? 'Tampilkan sidebar' : 'Sembunyikan sidebar';
+  btn.textContent = isHidden ? '›' : '‹';
 }
 
 export function renderSidebar() {
@@ -49,21 +81,45 @@ export function renderSidebar() {
       </button>`;
   };
 
-  const section = (title, items) => items.length
-    ? `<div class="nav-sec">${title}</div>${items.map(w => item(w, shortWilayah(w))).join('')}`
-    : '';
+  const section = (key, title, items) => {
+    if (!items.length) return '';
+    const isCollapsed = _collapsed.has(key);
+    const activeCount = items.filter(w => state.wilayah.includes(w)).length;
+    return `
+      <button class="nav-sec-hdr${isCollapsed ? ' collapsed' : ''}" data-sec="${key}">
+        <span>${title}</span>
+        <span class="nav-sec-meta">
+          ${activeCount ? `<span class="nav-sec-active">${activeCount} dipilih</span>` : ''}
+          <span class="nav-sec-chevron">${isCollapsed ? '›' : '‹'}</span>
+        </span>
+      </button>
+      <div class="nav-sec-body${isCollapsed ? ' hidden' : ''}">
+        ${items.map(w => item(w, shortWilayah(w))).join('')}
+      </div>`;
+  };
 
   nav.innerHTML =
     item('', 'Semua Wilayah') +
-    section('D.I. Yogyakarta', diy) +
-    section('Jawa Tengah', jateng);
+    section('diy',    'D.I. Yogyakarta', diy) +
+    section('jateng', 'Jawa Tengah',     jateng);
 
   nav.onclick = e => {
+    // Toggle collapse provinsi
+    const secBtn = e.target.closest('.nav-sec-hdr');
+    if (secBtn) {
+      const key = secBtn.dataset.sec;
+      if (_collapsed.has(key)) _collapsed.delete(key);
+      else _collapsed.add(key);
+      saveCollapsed();
+      renderSidebar();
+      return;
+    }
+
+    // Pilih wilayah
     const btn = e.target.closest('.nav-item');
     if (!btn) return;
     const w = btn.dataset.w;
     if (w === '') {
-      // Semua Wilayah = reset
       state.wilayah = [];
     } else {
       const idx = state.wilayah.indexOf(w);
