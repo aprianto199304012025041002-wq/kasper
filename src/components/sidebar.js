@@ -31,8 +31,10 @@ export function renderSidebar() {
   const stations = state.data.stations || [];
   const { diy, jateng } = getWilayahByProv();
 
-  const stationCount = w => stations.filter(s => (s.wilayah_layanan || s.kota) === w).length;
-  const expiredCount = w => stations.filter(s => (s.wilayah_layanan || s.kota) === w && isExpired(s)).length;
+  const stationCount = w => w === '' ? stations.filter(s => (s.wilayah_layanan || s.kota) !== KOMUNITAS_RADIUS).length
+                                     : stations.filter(s => (s.wilayah_layanan || s.kota) === w).length;
+  const expiredCount = w => w === '' ? stations.filter(s => (s.wilayah_layanan || s.kota) !== KOMUNITAS_RADIUS && isExpired(s)).length
+                                     : stations.filter(s => (s.wilayah_layanan || s.kota) === w && isExpired(s)).length;
 
   const item = (w, label) => {
     const cnt = stationCount(w);
