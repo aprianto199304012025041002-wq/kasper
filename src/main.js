@@ -3,7 +3,7 @@
 // Logic bisnis dan render ada di masing-masing modul.
 
 import './style.css';
-import { state }            from './state.js';
+import { state, resolveKomunitasWilayah } from './state.js';
 import { fetchStations }    from './api.js';
 import { mountHeader, updateStatus, setThemeButton } from './components/header.js';
 import { mountSidebar, renderSidebar }               from './components/sidebar.js';
@@ -87,6 +87,7 @@ async function loadData() {
 
   try {
     state.data       = await fetchStations();
+    resolveKomunitasWilayah();
     state.interfData = null;
     updateStatus();
     renderSidebar();

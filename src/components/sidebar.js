@@ -1,7 +1,7 @@
 // components/sidebar.js
 // Sidebar navigasi: daftar wilayah dikelompokkan per provinsi.
 
-import { state, getWilayahByProv, KOMUNITAS_RADIUS } from '../state.js';
+import { state, getWilayahByProv, KOMUNITAS_RADIUS, wilayahOf } from '../state.js';
 import { isExpired, shortWilayah, esc } from '../utils.js';
 
 let _onSelect = null;
@@ -31,10 +31,10 @@ export function renderSidebar() {
   const stations = state.data.stations || [];
   const { diy, jateng } = getWilayahByProv();
 
-  const stationCount = w => w === '' ? stations.filter(s => (s.wilayah_layanan || s.kota) !== KOMUNITAS_RADIUS).length
-                                     : stations.filter(s => (s.wilayah_layanan || s.kota) === w).length;
-  const expiredCount = w => w === '' ? stations.filter(s => (s.wilayah_layanan || s.kota) !== KOMUNITAS_RADIUS && isExpired(s)).length
-                                     : stations.filter(s => (s.wilayah_layanan || s.kota) === w && isExpired(s)).length;
+  const stationCount = w => w === '' ? stations.filter(s => wilayahOf(s) !== KOMUNITAS_RADIUS).length
+                                     : stations.filter(s => wilayahOf(s) === w).length;
+  const expiredCount = w => w === '' ? stations.filter(s => wilayahOf(s) !== KOMUNITAS_RADIUS && isExpired(s)).length
+                                     : stations.filter(s => wilayahOf(s) === w && isExpired(s)).length;
 
   const item = (w, label) => {
     const cnt = stationCount(w);

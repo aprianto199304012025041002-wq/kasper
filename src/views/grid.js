@@ -2,7 +2,7 @@
 // Grid view: satu row per wilayah, 206 cell (full band 87.5–108 MHz).
 // Scroll horizontal sinkron antar wilayah — bisa lihat korelasi frekuensi.
 
-import { state, filteredStations, KOMUNITAS_RADIUS } from '../state.js';
+import { state, filteredStations, KOMUNITAS_RADIUS, wilayahOf } from '../state.js';
 import { computeChannelMapForWilayah, buildChannelGrid } from '../engine/channel.js';
 import { renderStatsBar } from '../components/statsbar.js';
 import { isExpired, esc } from '../utils.js';
@@ -24,7 +24,7 @@ export function renderGrid(onDetail) {
   } else {
     wilayahList = [...new Set(
       stations
-        .map(s => s.wilayah_layanan || s.kota || '')
+        .map(s => wilayahOf(s))
         .filter(w => w && w !== KOMUNITAS_RADIUS)
     )].sort();
   }
@@ -37,7 +37,7 @@ export function renderGrid(onDetail) {
 
   // Stats bar
   const allChannels = computeChannelMapForWilayah(
-    stations.filter(s => !state.wilayah || (s.wilayah_layanan || s.kota) === state.wilayah),
+    stations.filter(s => !state.wilayah.length || state.wilayah.includes(wilayahOf(s))),
     state.wilayah || ''
   );
   renderStatsBar(allChannels);
@@ -60,9 +60,7 @@ export function renderGrid(onDetail) {
 
   // Satu row per wilayah
   for (const w of wilayahList) {
-    const wStations = state.wilayah.length
-      ? stations.filter(s => (s.wilayah_layanan || s.kota) === w)
-      : stations.filter(s => (s.wilayah_layanan || s.kota) === w);
+    const wStations = stations.filter(s => wilayahOf(s) === w);
 
     if (!wStations.length) continue;
 

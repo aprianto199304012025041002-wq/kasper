@@ -2,7 +2,7 @@
 // Pita view: visualisasi band FM 87.5–108 MHz sebagai bar horizontal per wilayah.
 // Tiap kanal → segmen berwarna sesuai statusnya.
 
-import { state, filteredStations, KOMUNITAS_RADIUS } from '../state.js';
+import { state, filteredStations, KOMUNITAS_RADIUS, wilayahOf } from '../state.js';
 import { computeChannelMapForWilayah, FM_MIN, FM_MAX, CHANNEL_SPACING } from '../engine/channel.js';
 import { renderStatsBar } from '../components/statsbar.js';
 import { isExpired, esc } from '../utils.js';
@@ -24,7 +24,7 @@ export function renderBand(onDetail) {
   } else {
     wilayahList = [...new Set(
       stations
-        .map(s => s.wilayah_layanan || s.kota || '')
+        .map(s => wilayahOf(s))
         .filter(w => w && w !== KOMUNITAS_RADIUS)
     )].sort();
   }
@@ -40,7 +40,7 @@ export function renderBand(onDetail) {
   let html = '<div class="band-wrap">';
 
   for (const w of wilayahList) {
-    const wSt = stations.filter(s => (s.wilayah_layanan || s.kota) === w);
+    const wSt = stations.filter(s => wilayahOf(s) === w);
 
     if (!wSt.length) continue;
 
