@@ -38,7 +38,7 @@ export function renderGrid(onDetail) {
   // Stats bar
   const allChannels = computeChannelMapForWilayah(
     stations.filter(s => !state.wilayah.length || state.wilayah.includes(wilayahOf(s))),
-    state.wilayah || ''
+    state.wilayah.length === 1 ? state.wilayah[0] : ''
   );
   renderStatsBar(allChannels);
 

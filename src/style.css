@@ -135,9 +135,11 @@ a { color: var(--accent); }
 #sidebar-toggle:hover { background: var(--bg); color: var(--txt); }
 @media (min-width: 768px) { #sidebar-toggle { display: flex; } }
 
-/* Sidebar tersembunyi — collapse ke 0 */
-#body.sb-hidden { grid-template-columns: 0 1fr; }
-#sidebar.sb-hidden { overflow: hidden; border-right: none; }
+/* Sidebar tersembunyi — collapse ke 0, desktop only */
+@media (min-width: 768px) {
+  #body.sb-hidden { grid-template-columns: 0 1fr; }
+  #sidebar.sb-hidden { overflow: hidden; border-right: none; }
+}
 .nav-item {
   display: flex; align-items: center; gap: 6px;
   width: 100%; padding: 5px 10px;
