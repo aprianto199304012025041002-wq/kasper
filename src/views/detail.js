@@ -52,13 +52,16 @@ function createPanel() {
     </div>`;
   el.querySelector('.detail-close').onclick = closeDetail;
 
-  // Swipe down to close (mobile)
-  let _touchY = 0;
-  el.addEventListener('touchstart', e => { _touchY = e.touches[0].clientY; }, { passive: true });
-  el.addEventListener('touchend', e => {
-    const dy = e.changedTouches[0].clientY - _touchY;
-    if (dy > 80) closeDetail(); // swipe down > 80px → tutup
-  }, { passive: true });
+  // Swipe down to close — hanya dari drag handle, bukan body panel
+  const handle = el.querySelector('.detail-drag-handle');
+  if (handle) {
+    let _touchY = 0;
+    handle.addEventListener('touchstart', e => { _touchY = e.touches[0].clientY; }, { passive: true });
+    handle.addEventListener('touchend', e => {
+      const dy = e.changedTouches[0].clientY - _touchY;
+      if (dy > 60) closeDetail();
+    }, { passive: true });
+  }
 
   return el;
 }
