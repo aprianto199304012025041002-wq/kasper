@@ -88,9 +88,11 @@ export function renderGeo(onDetail) {
 
   _map.addLayer(cluster);
 
-  // Titik pusat wilayah layanan dari KM 570/2025
+  // Titik pusat + radius wilayah layanan dari KM 570/2025
   const centerLayer = L.layerGroup();
+  const radiusLayer = L.layerGroup();
   const wilayahSet  = new Set(stations.map(s => wilayahOf(s)));
+  const RADIUS_KM   = { A: 30, B: 20, C: 12, D: 2.5 };
 
   for (const [wName, data] of Object.entries(ALLOTMENT)) {
     if (!wilayahSet.has(wName)) continue;
@@ -99,16 +101,29 @@ export function renderGeo(onDetail) {
     const lng = parseDMS(data.koordinat.lng);
     if (lat === null || lng === null) continue;
 
-    L.circleMarker([lat, lng], {
-      radius: 5, color: '#f59e0b', fillColor: '#fbbf24',
-      fillOpacity: 0.9, weight: 2,
-    }).bindTooltip(wName, { permanent: false, direction: 'top' })
-      .addTo(centerLayer);
-  }
-  centerLayer.addTo(_map);
+    const r   = (RADIUS_KM[data.kelas] || 12) * 1000;
+    const ttl = `${wName} — Kelas ${data.kelas} (r=${RADIUS_KM[data.kelas] || 12} km)`;
 
-  L.control.layers(null, { 'Titik pusat wilayah (KM 570)': centerLayer },
-    { collapsed: false, position: 'topright' }).addTo(_map);
+    // Circle radius wilayah layanan
+    L.circle([lat, lng], {
+      radius: r, color: '#f59e0b', fillColor: '#fbbf24',
+      fillOpacity: 0.05, weight: 1, dashArray: '4,4',
+    }).bindTooltip(ttl, { direction: 'top' }).addTo(radiusLayer);
+
+    // Titik pusat
+    L.circleMarker([lat, lng], {
+      radius: 4, color: '#f59e0b', fillColor: '#fbbf24',
+      fillOpacity: 0.9, weight: 2,
+    }).bindTooltip(ttl, { direction: 'top' }).addTo(centerLayer);
+  }
+
+  centerLayer.addTo(_map);
+  radiusLayer.addTo(_map);
+
+  L.control.layers(null, {
+    'Titik pusat wilayah (KM 570)': centerLayer,
+    'Radius wilayah layanan (KM 570)': radiusLayer,
+  }, { collapsed: false, position: 'topright' }).addTo(_map);
 
   // Delegasi klik tombol "Detail →" di popup
   _map.on('popupopen', e => {
