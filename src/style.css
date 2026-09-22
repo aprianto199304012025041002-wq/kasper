@@ -318,47 +318,58 @@ a { color: var(--accent); }
 
 
 /* ── Band/Pita view ── */
-/* Layout sama dengan grid, pakai .grid-* classes yang sudah ada */
-/* Tambahan: bar kontinu, tick ruler, segmen */
+.band-wrap { padding: 8px; display: flex; flex-direction: column; gap: 8px; }
 
+.band-city {
+  background: var(--panel); border: 1px solid var(--border);
+  border-radius: var(--r3); padding: 8px 10px;
+}
+.band-city-hdr {
+  display: flex; align-items: baseline; justify-content: space-between;
+  margin-bottom: 5px; gap: 8px;
+}
+.band-city-lbl  { font-size: 11px; font-weight: 600; color: var(--txt2); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.band-city-meta { display: flex; gap: 5px; align-items: center; flex-shrink: 0; }
+
+/* Sticky ruler di atas */
+.band-ruler {
+  position: sticky; top: 0; z-index: 10;
+  background: var(--bg); border-bottom: 1px solid var(--border);
+  height: 20px;
+}
+
+/* Scroll wrapper — full width, overflow hidden di luar */
+.band-scroll-wrap { overflow: hidden; }
 .band-scroll {
   overflow-x: auto; overflow-y: hidden;
   scrollbar-width: none; -ms-overflow-style: none;
 }
 .band-scroll::-webkit-scrollbar { display: none; }
 
-/* Wrapper bar — lebar virtual fixed (4000px) */
-.band-bar-wrap {
-  position: relative; height: 100%;
-  background: var(--bg);
-}
-.grid-row .band-bar-wrap  { height: 48px; }
-.grid-ruler-row .band-bar-wrap { height: 20px; }
+/* Bar virtual */
+.band-bar-wrap { position: relative; width: 4000px; }
+.band-ruler .band-bar-wrap { height: 20px; }
+.band-city .band-bar-wrap  { height: 44px; background: var(--bg); border-radius: var(--r); }
 
 /* Tick ruler */
 .band-tick {
   position: absolute; top: 0; bottom: 0;
   width: 1px; background: var(--border);
-  font-size: 8.5px; font-family: var(--mono); color: var(--txt3);
-  display: flex; align-items: flex-end; padding-bottom: 2px;
-  white-space: nowrap; padding-left: 2px;
+  font-size: 8px; font-family: var(--mono); color: var(--txt3);
+  display: flex; align-items: flex-end; padding-bottom: 2px; padding-left: 2px;
+  white-space: nowrap;
 }
 .band-tick.major { background: var(--bd2); }
 
-/* Segmen frekuensi */
+/* Segmen */
 .bs {
-  position: absolute; top: 4px; bottom: 4px;
-  min-width: 3px; cursor: pointer;
-  transition: top .12s, bottom .12s, box-shadow .12s;
-  border-radius: 2px;
+  position: absolute; top: 6px; bottom: 6px;
+  min-width: 4px; cursor: pointer; border-radius: 2px;
+  transition: top .1s, bottom .1s, box-shadow .1s;
 }
-.bs:hover, .bs.bs-active {
-  top: 0; bottom: 0;
-  box-shadow: 0 0 0 2px var(--accent);
-  z-index: 5;
-}
+.bs:hover, .bs.bs-active { top: 0; bottom: 0; z-index: 5; }
 .bs-used { background: var(--accent); }
-.bs-exp  { background: var(--red); border: 1px dashed color-mix(in srgb, var(--red) 50%, transparent); }
+.bs-exp  { background: var(--red); border: 1px dashed rgba(220,38,38,.4); }
 .bs-adj1 { background: var(--amber); opacity: .6; }
 .bs-adj2 { background: #ea580c; opacity: .4; }
 .bs-free { background: transparent; }

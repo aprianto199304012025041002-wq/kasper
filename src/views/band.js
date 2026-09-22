@@ -36,12 +36,10 @@ export function renderBand(onDetail) {
 
   renderStatsBar(computeChannelMapForWilayah(stations, ''));
 
-  // Ruler frekuensi — sama dengan grid
-  let html = '<div class="grid-wrap"><div class="grid-table">';
-  html += '<div class="grid-ruler-row"><div class="grid-label-col"></div>';
-  html += `<div class="grid-scroll-body band-scroll" id="band-ruler">`;
+  // Ruler frekuensi di atas
+  let html = '<div class="band-wrap">';
+  html += `<div class="band-scroll-wrap"><div class="band-ruler band-scroll">`;
   html += `<div class="band-bar-wrap" style="width:${BAR_W}px">`;
-  // Tick setiap 1 MHz
   for (let f = FM_MIN; f <= FM_MAX; f += 0.5) {
     const x = ((f - FM_MIN) / RANGE * BAR_W).toFixed(1);
     const isMajor = Number.isInteger(f);
@@ -49,7 +47,7 @@ export function renderBand(onDetail) {
   }
   html += '</div></div></div>';
 
-  // Satu row per wilayah
+  // Satu blok per wilayah: judul di atas, bar di bawah
   for (const w of wilayahList) {
     const wSt = stations.filter(s => wilayahOf(s) === w);
     if (!wSt.length) continue;
@@ -60,16 +58,16 @@ export function renderBand(onDetail) {
     const allotLPS  = channels.filter(c => c.allotment_status === 'allotted_lps' && c.type === 'free').length;
 
     html += `
-      <div class="grid-row">
-        <div class="grid-label-col">
-          <div class="city-name">${esc(w)}</div>
-          <div class="city-meta">
+      <div class="band-city">
+        <div class="band-city-hdr">
+          <span class="band-city-lbl">${esc(w)}</span>
+          <span class="band-city-meta">
             ${expCount  ? `<span class="city-exp">⚠${expCount} habis</span>` : ''}
             ${allotRRI  ? `<span class="city-allot-rri">RRI:${allotRRI}</span>` : ''}
             ${allotLPS  ? `<span class="city-allot-lps">LPS:${allotLPS}</span>` : ''}
-          </div>
+          </span>
         </div>
-        <div class="grid-scroll-body band-scroll">
+        <div class="band-scroll-wrap"><div class="band-scroll">
           <div class="band-bar-wrap" style="width:${BAR_W}px">`;
 
     for (const ch of channels) {
@@ -88,7 +86,6 @@ export function renderBand(onDetail) {
         : ch.allotment_status === 'allotted_rri' ? `${freq} MHz — kosong (allotment RRI)`
         : ch.allotment_status === 'allotted_lps' ? `${freq} MHz — kosong (allotment LPS)`
         : `${freq} MHz — kosong`;
-
       const allotCls = ch.allotment_status === 'allotted_rri' ? ' bs-allot-rri'
                      : ch.allotment_status === 'allotted_lps' ? ' bs-allot-lps' : '';
 
@@ -97,14 +94,14 @@ export function renderBand(onDetail) {
         data-freq="${ch.freq}"
         ${ch.station ? 'data-has-stn' : ''}
         data-tt="${esc(tt)}"
-        data-name="${esc(name)}"
-        data-freqlbl="${freq}"></div>`;
+        data-freqlbl="${freq}"
+        data-name="${esc(name)}"></div>`;
     }
 
-    html += `</div></div></div>`;
+    html += `</div></div></div></div>`;
   }
 
-  html += '</div></div>';
+  html += '</div>';
   main.innerHTML = html;
   attachBandEvents(main);
 }
