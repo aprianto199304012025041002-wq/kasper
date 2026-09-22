@@ -578,7 +578,17 @@ a { color: var(--accent); }
   .detail-panel.open { transform: translateY(0); }
   .detail-drag-handle { display: block; }
   .rf-table th, .rf-table td { padding: 5px 7px; }
-  .rf-summary { grid-template-columns: repeat(3, 1fr); }
+  .rf-summary {
+    display: flex; flex-direction: row; overflow-x: auto;
+    gap: 0; border: 1px solid var(--border); border-radius: var(--r3);
+    background: var(--panel);
+  }
+  .rf-stat {
+    flex: 0 0 auto; border: none; border-right: 1px solid var(--border);
+    border-radius: 0; padding: 6px 12px; min-width: 80px;
+  }
+  .rf-stat:last-child { border-right: none; }
+  .rf-stat-v { font-size: 15px; }
   /* Sembunyikan kolom Jarak dan Margin D/U di mobile karena tidak muat */
   .rf-table th:nth-child(5),
   .rf-table td:nth-child(5),
