@@ -67,7 +67,7 @@ function renderView() {
       case 'grid': renderGrid(onDetailOpen); break;
       case 'band': renderBand(onDetailOpen); break;
       case 'geo':  renderGeo();              break;
-      case 'rf':   renderRF();               break;
+      case 'rf':   renderRF(openDetail);      break;
     }
   } catch (e) {
     const main = document.getElementById('main');

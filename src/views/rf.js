@@ -3,6 +3,7 @@
 // Sortable per kolom, filter per level (critical/warning/ok).
 
 import { state } from '../state.js';
+import { wilayahOf } from '../state.js';
 import { computeInterference } from '../engine/interference.js';
 import { esc } from '../utils.js';
 
@@ -13,12 +14,14 @@ const LEVEL_CLS  = { critical: 'lv-critical', warning: 'lv-warning', ok: 'lv-ok'
 let _sortCol = 'level';
 let _sortAsc = true;
 let _filterLevel = '';
+let _onDetail = null;
 
-export function renderRF() {
+export function renderRF(onDetail) {
+  if (onDetail) _onDetail = onDetail;
+
   const main = document.getElementById('main');
   if (!main) return;
 
-  // Hitung jika belum ada
   if (!state.interfData) {
     main.innerHTML = `<div class="loading"><div class="spin"></div>Menghitung interferensi…</div>`;
     setTimeout(() => {
@@ -29,7 +32,7 @@ export function renderRF() {
         return;
       }
       renderRF();
-    }, 50); // beri waktu browser render spinner dulu
+    }, 50);
     return;
   }
 
@@ -71,6 +74,7 @@ export function renderRF() {
             <option value="warning"  ${_filterLevel === 'warning'  ? 'selected' : ''}>Warning saja</option>
             <option value="ok"       ${_filterLevel === 'ok'       ? 'selected' : ''}>OK saja</option>
           </select>
+          <span class="rf-hint">Tap baris → detail stasiun</span>
         </div>
         <div class="rf-table-wrap">
           <table class="rf-table">
@@ -90,13 +94,12 @@ export function renderRF() {
       }
     </div>`;
 
-  // Event: filter level
   document.getElementById('rf-filter')?.addEventListener('change', e => {
     _filterLevel = e.target.value;
     document.getElementById('rf-tbody').innerHTML = buildRows(sortPairs(pairs));
+    attachRowEvents();
   });
 
-  // Event: sort kolom
   document.querySelectorAll('.rf-table .sortable').forEach(th => {
     th.addEventListener('click', () => {
       const col = th.dataset.col;
@@ -107,7 +110,18 @@ export function renderRF() {
       );
       th.textContent += _sortAsc ? ' ▲' : ' ▼';
       document.getElementById('rf-tbody').innerHTML = buildRows(sortPairs(pairs));
+      attachRowEvents();
     });
+  });
+
+  attachRowEvents();
+}
+
+function attachRowEvents() {
+  if (!_onDetail) return;
+  document.querySelectorAll('#rf-tbody tr[data-freq]').forEach(tr => {
+    tr.style.cursor = 'pointer';
+    tr.onclick = () => _onDetail(parseFloat(tr.dataset.freq));
   });
 }
 
@@ -125,27 +139,29 @@ function sortPairs(pairs) {
   });
 }
 
-const shortWil = w => !w ? '' : w.startsWith('2,5') ? 'Komunitas' : w;
-
 function buildRows(pairs) {
   const filtered = _filterLevel ? pairs.filter(p => p.level === _filterLevel) : pairs;
   if (!filtered.length) return `<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--txt3)">Tidak ada data</td></tr>`;
 
-  return filtered.map(p => `
-    <tr data-level="${p.level}">
+  return filtered.map(p => {
+    const txWil = wilayahOf(p.tx);
+    const rxWil = wilayahOf(p.rx);
+    return `
+    <tr data-level="${p.level}" data-freq="${p.tx.freq}">
       <td><span class="lv-badge ${LEVEL_CLS[p.level]}">${p.level}</span></td>
       <td><span class="rf-badge ${TYPE_CLS[p.type]}">${TYPE_LABEL[p.type]}</span></td>
       <td>
         <span class="rf-freq">${p.tx.freq.toFixed(1)}</span>
         <span class="rf-name">${esc(p.tx.stn_name)}</span>
-        <span class="rf-wilayah">${esc(shortWil(p.tx.wilayah_layanan))}</span>
+        <span class="rf-wilayah">${esc(txWil)}</span>
       </td>
       <td>
         <span class="rf-freq">${p.rx.freq.toFixed(1)}</span>
         <span class="rf-name">${esc(p.rx.stn_name)}</span>
-        <span class="rf-wilayah">${esc(shortWil(p.rx.wilayah_layanan))}</span>
+        <span class="rf-wilayah">${esc(rxWil)}</span>
       </td>
       <td class="mono">${p.dist_km} km</td>
       <td class="mono ${p.margin_db < 0 ? 'red' : 'green'}">${p.margin_db > 0 ? '+' : ''}${p.margin_db} dB</td>
-    </tr>`).join('');
+    </tr>`;
+  }).join('');
 }

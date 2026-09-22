@@ -401,7 +401,8 @@ a { color: var(--accent); }
 .rf-stat-v { font-size: 18px; font-weight: 700; color: var(--txt); }
 .rf-stat-v.red   { color: var(--red); }
 .rf-stat-v.amber { color: var(--amber); }
-.rf-controls { display: flex; gap: 8px; }
+.rf-controls { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.rf-hint { font-size: 10.5px; color: var(--txt3); }
 .rf-controls select {
   height: 28px; padding: 0 8px; font-size: 12px;
   background: var(--bg); border: 1px solid var(--border); border-radius: var(--r2);
