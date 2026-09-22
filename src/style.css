@@ -363,7 +363,7 @@ a { color: var(--accent); }
 /* Bar virtual */
 .band-bar-wrap { position: relative; width: 4000px; }
 .band-ruler .band-bar-wrap { height: 20px; }
-.band-city .band-bar-wrap  { height: 44px; background: var(--bg); border-radius: var(--r); }
+.band-city .band-bar-wrap  { height: 44px; background: var(--bg); border-radius: var(--r); overflow: hidden; }
 
 /* Tick ruler */
 .band-tick {
