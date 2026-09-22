@@ -9,7 +9,7 @@ import { isExpired, esc } from '../utils.js';
 
 let _onDetail = null;
 const RANGE    = FM_MAX - FM_MIN;
-const BAR_W    = 4000; // lebar virtual bar dalam px — sama untuk semua wilayah
+const BAR_W    = 4020; // lebar virtual bar + 20px padding kanan untuk segmen 108.0
 
 export function renderBand(onDetail) {
   if (onDetail) _onDetail = onDetail;
