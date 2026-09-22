@@ -317,94 +317,53 @@ a { color: var(--accent); }
 .ch-hl   { outline: 2px solid var(--accent); outline-offset: -1px; z-index: 2; }
 
 
-/* Mobile: bar lebih tebal, segmen terisi min-width 12px supaya bisa di-tap */
-@media (max-width: 767px) {
-  .band-bar { height: 56px; }
-  .bs-used, .bs-exp { min-width: 12px !important; }
-  .bs.bs-hover, .bs.bs-active { height: 72px; top: -8px; min-width: 52px !important; }
-}
+/* ── Band/Pita view ── */
+/* Layout sama dengan grid, pakai .grid-* classes yang sudah ada */
+/* Tambahan: bar kontinu, tick ruler, segmen */
 
-.band-wrap { padding: 10px; display: flex; flex-direction: column; gap: 8px; }
+.band-scroll {
+  overflow-x: auto; overflow-y: hidden;
+  scrollbar-width: none; -ms-overflow-style: none;
+}
+.band-scroll::-webkit-scrollbar { display: none; }
 
-/* Axis global di atas */
-.band-axis-global {
-  position: relative; height: 16px;
-  padding: 0 0 0 4px; /* indent sesuai band-bar */
-  font-size: 9px; font-family: var(--mono); color: var(--txt3);
-  display: flex; justify-content: space-between; align-items: flex-end;
+/* Wrapper bar — lebar virtual fixed (4000px) */
+.band-bar-wrap {
+  position: relative; height: 100%;
+  background: var(--bg);
 }
-.band-axis-tick {
-  position: absolute; bottom: 0; transform: translateX(-50%);
-  font-size: 8.5px; color: var(--border);
-}
+.grid-row .band-bar-wrap  { height: 48px; }
+.grid-ruler-row .band-bar-wrap { height: 20px; }
 
-.band-city {
-  background: var(--panel); border: 1px solid var(--border);
-  border-radius: var(--r3); padding: 8px 10px 8px;
-  overflow: visible;
+/* Tick ruler */
+.band-tick {
+  position: absolute; top: 0; bottom: 0;
+  width: 1px; background: var(--border);
+  font-size: 8.5px; font-family: var(--mono); color: var(--txt3);
+  display: flex; align-items: flex-end; padding-bottom: 2px;
+  white-space: nowrap; padding-left: 2px;
 }
-.band-city-hdr {
-  display: flex; align-items: baseline; justify-content: space-between;
-  margin-bottom: 6px; gap: 8px;
-}
-.band-city-lbl  { font-size: 11px; font-weight: 600; color: var(--txt2); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.band-city-meta { display: flex; gap: 6px; align-items: center; flex-shrink: 0; }
-.band-cnt       { font-size: 10px; color: var(--txt3); }
-.band-exp       { font-size: 10px; color: var(--red); }
-.band-allot-rri { font-size: 10px; color: #dc2626; font-weight: 600; }
-.band-allot-lps { font-size: 10px; color: var(--green); font-weight: 600; }
+.band-tick.major { background: var(--bd2); }
 
-/* Bar utama */
-.band-bar {
-  position: relative; height: 36px;
-  background: var(--bg); border: 1px solid var(--border);
-  border-radius: var(--r2); overflow: visible;
-}
-
-/* Segmen */
+/* Segmen frekuensi */
 .bs {
-  position: absolute; top: 0; height: 100%;
+  position: absolute; top: 4px; bottom: 4px;
   min-width: 3px; cursor: pointer;
-  border-right: 1px solid rgba(0,0,0,.08);
-  transition: height .15s, top .15s, box-shadow .15s;
-  overflow: hidden;
+  transition: top .12s, bottom .12s, box-shadow .12s;
+  border-radius: 2px;
 }
-
-/* Expand saat hover/active — segmen naik ke atas dan lebih tinggi */
-.bs.bs-hover,
-.bs.bs-active {
-  height: 56px; top: -10px;
-  box-shadow: 0 2px 8px rgba(0,0,0,.18);
-  z-index: 10; overflow: visible; border-radius: 3px;
-  min-width: 48px !important; /* paksa lebar min untuk label */
+.bs:hover, .bs.bs-active {
+  top: 0; bottom: 0;
+  box-shadow: 0 0 0 2px var(--accent);
+  z-index: 5;
 }
-
-/* Label di dalam segmen saat expand */
-.bs.bs-hover::after,
-.bs.bs-active::after {
-  content: attr(data-freqlbl) '\A' attr(data-name);
-  white-space: pre;
-  position: absolute; bottom: 4px; left: 0; right: 0;
-  text-align: center; font-size: 8px; font-family: var(--mono);
-  font-weight: 600; color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,.5);
-  pointer-events: none; line-height: 1.3;
-}
-
-/* Allotment outline */
+.bs-used { background: var(--accent); }
+.bs-exp  { background: var(--red); border: 1px dashed color-mix(in srgb, var(--red) 50%, transparent); }
+.bs-adj1 { background: var(--amber); opacity: .6; }
+.bs-adj2 { background: #ea580c; opacity: .4; }
+.bs-free { background: transparent; }
 .bs-allot-rri { box-shadow: inset 0 0 0 2px #ef4444; }
 .bs-allot-lps { box-shadow: inset 0 0 0 2px #22c55e; }
-.bs-allot-rri.bs-hover, .bs-allot-rri.bs-active { box-shadow: 0 2px 8px rgba(0,0,0,.18), inset 0 0 0 2px #ef4444; }
-.bs-allot-lps.bs-hover, .bs-allot-lps.bs-active { box-shadow: 0 2px 8px rgba(0,0,0,.18), inset 0 0 0 2px #22c55e; }
-
-.bs-used { background: var(--accent); }
-.bs-exp  { background: var(--red); }
-.bs-adj1 { background: var(--amber); opacity: .7; }
-.bs-adj2 { background: #ea580c; opacity: .5; }
-.bs-free { background: transparent; }
-.bs-free.bs-hover,
-.bs-free.bs-active { background: var(--bg); border: 1px solid var(--border); }
-[data-theme="dark"] .bs-free.bs-hover,
-[data-theme="dark"] .bs-free.bs-active { background: var(--panel); }
 
 /* ── Geo view ── */
 #geo-map { width: 100%; height: 100%; min-height: 400px; display: block; }
