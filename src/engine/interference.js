@@ -75,16 +75,18 @@ export function computeInterference(stations) {
           margin_db,
           du_actual,
           tx: {
-            stn_name:        interferer.stn_name,
-            freq:            interferer.freq,
-            wilayah_layanan: interferer.wilayah_layanan || interferer.kota,
-            erp_dbm:         interferer.erp_dbm,
+            stn_name:          interferer.stn_name,
+            freq:              interferer.freq,
+            wilayah_layanan:   interferer.wilayah_layanan || interferer.kota,
+            _wilayah_resolved: interferer._wilayah_resolved,
+            erp_dbm:           interferer.erp_dbm,
           },
           rx: {
-            stn_name:        victim.stn_name,
-            freq:            victim.freq,
-            wilayah_layanan: victim.wilayah_layanan || victim.kota,
-            erp_dbm:         victim.erp_dbm,
+            stn_name:          victim.stn_name,
+            freq:              victim.freq,
+            wilayah_layanan:   victim.wilayah_layanan || victim.kota,
+            _wilayah_resolved: victim._wilayah_resolved,
+            erp_dbm:           victim.erp_dbm,
           },
         });
 
