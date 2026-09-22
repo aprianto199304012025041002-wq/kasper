@@ -66,7 +66,7 @@ function renderView() {
     switch (state.view) {
       case 'grid': renderGrid(onDetailOpen); break;
       case 'band': renderBand(onDetailOpen); break;
-      case 'geo':  renderGeo();              break;
+      case 'geo':  renderGeo(openDetail);     break;
       case 'rf':   renderRF(openDetail);      break;
     }
   } catch (e) {
