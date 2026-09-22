@@ -9,7 +9,9 @@ import { isExpired, esc } from '../utils.js';
 
 let _onDetail = null;
 const RANGE    = FM_MAX - FM_MIN;
-const BAR_W    = 4020; // lebar virtual bar + 20px padding kanan untuk segmen 108.0
+const BAR_W    = 4000; // lebar area plot (87.5–108 MHz)
+const BAR_PAD  = 30;   // padding kanan supaya segmen 108.0 tidak keluar
+const BAR_TOTAL = BAR_W + BAR_PAD;
 
 export function renderBand(onDetail) {
   if (onDetail) _onDetail = onDetail;
@@ -39,7 +41,7 @@ export function renderBand(onDetail) {
   // Ruler frekuensi — di luar band-wrap, sticky ke bawah statsbar
   let html = `<div class="band-ruler-fixed band-scroll-wrap">
     <div class="band-scroll band-ruler-scroll">
-      <div class="band-bar-wrap" style="width:${BAR_W}px">`;
+      <div class="band-bar-wrap" style="width:${BAR_TOTAL}px">`;
   for (let f = FM_MIN; f <= FM_MAX; f += 0.5) {
     const x = ((f - FM_MIN) / RANGE * BAR_W).toFixed(1);
     const isMajor = Number.isInteger(f);
@@ -69,7 +71,7 @@ export function renderBand(onDetail) {
           </span>
         </div>
         <div class="band-scroll-wrap"><div class="band-scroll">
-          <div class="band-bar-wrap" style="width:${BAR_W}px">`;
+          <div class="band-bar-wrap" style="width:${BAR_TOTAL}px">`;
 
     for (const ch of channels) {
       const x     = ((ch.freq - FM_MIN) / RANGE * BAR_W).toFixed(1);
