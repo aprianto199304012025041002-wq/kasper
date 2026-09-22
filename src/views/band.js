@@ -102,37 +102,7 @@ export function renderBand(onDetail) {
         data-freqlbl="${freq}"></div>`;
     }
 
-    html += `</div>`;
-
-    // Chip list — mobile only (class band-chips, disembunyikan di desktop via CSS)
-    const usedChannels = channels.filter(c => c.type === 'used' || c.type === 'adjacent_1' || c.type === 'adjacent_2');
-    if (usedChannels.length) {
-      html += `<div class="band-chips">`;
-      for (const ch of usedChannels) {
-        const cls   = segClass(ch);
-        const freq  = ch.freq.toFixed(1);
-        const exp   = ch.type === 'used' && isExpired(ch.station);
-        const name  = ch.station
-          ? ch.station.stn_name
-              .replace(/^(RADIO |LPP RRI |LPPL |LPP |LPK )/i, '')
-              .replace(/\s+(FM|AM)$/i, '')
-              .split(/\s+/)[0]
-              .slice(0, 10)
-          : '';
-        const tt = ch.station
-          ? `${freq} MHz — ${ch.station.stn_name}${exp ? ' [HABIS]' : ''}`
-          : `${freq} MHz`;
-        html += `<div class="band-chip ${cls}"
-          data-freq="${ch.freq}"
-          ${ch.station ? 'data-has-stn' : ''}
-          data-tt="${esc(tt)}">
-          <b>${freq}</b>${name ? `<span>${name}</span>` : ''}
-        </div>`;
-      }
-      html += `</div>`;
-    }
-
-    html += `</div>`;
+    html += `</div></div>`;
   }
 
   html += '</div>';
@@ -181,31 +151,21 @@ function attachBandEvents(main) {
     tt?.classList.remove('show');
   });
 
-  // Mobile tap chip
+  // Mobile tap bar segmen
   main.addEventListener('touchend', e => {
-    const chip = e.target.closest('.band-chip[data-tt]');
-    if (chip) {
-      const touch = e.changedTouches[0];
-      showTt(chip.dataset.tt, touch.clientX, touch.clientY);
-      return;
-    }
-    // Bar segmen (desktop size di tablet)
     const seg = e.target.closest('.bs[data-tt]');
-    if (seg) {
-      const wasActive = seg.classList.contains('bs-active');
-      main.querySelectorAll('.bs.bs-active').forEach(el => el.classList.remove('bs-active'));
-      if (!wasActive) {
-        seg.classList.add('bs-active');
-        const touch = e.changedTouches[0];
-        showTt(seg.dataset.tt, touch.clientX, touch.clientY);
-      }
+    if (!seg) return;
+    const wasActive = seg.classList.contains('bs-active');
+    main.querySelectorAll('.bs.bs-active').forEach(el => el.classList.remove('bs-active'));
+    if (!wasActive) {
+      seg.classList.add('bs-active');
+      const touch = e.changedTouches[0];
+      showTt(seg.dataset.tt, touch.clientX, touch.clientY);
     }
   }, { passive: true });
 
   // Klik detail
   main.onclick = e => {
-    const chip = e.target.closest('.band-chip[data-has-stn]');
-    if (chip && _onDetail) { _onDetail(parseFloat(chip.dataset.freq)); return; }
     const seg = e.target.closest('.bs[data-has-stn]');
     if (seg && _onDetail) _onDetail(parseFloat(seg.dataset.freq));
   };

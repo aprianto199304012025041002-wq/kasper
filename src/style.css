@@ -317,27 +317,11 @@ a { color: var(--accent); }
 .ch-hl   { outline: 2px solid var(--accent); outline-offset: -1px; z-index: 2; }
 
 
-/* Chip list — mobile only */
-.band-chips {
-  display: none;
-  flex-wrap: wrap; gap: 4px; margin-top: 6px;
-}
-.band-chip {
-  display: flex; flex-direction: column; align-items: center;
-  padding: 4px 8px; border-radius: var(--r2); cursor: pointer;
-  min-width: 52px; text-align: center; line-height: 1.3;
-  border: 1px solid transparent;
-}
-.band-chip b    { font-size: 10px; font-family: var(--mono); font-weight: 600; }
-.band-chip span { font-size: 8.5px; }
-.band-chip.bs-used { background: var(--accbg); color: var(--accent); border-color: var(--accbd); }
-.band-chip.bs-exp  { background: var(--redbg); color: var(--red); border-color: var(--red); border-style: dashed; }
-.band-chip.bs-adj1 { background: var(--amberbg); color: var(--amber); border-color: #fde68a; }
-.band-chip.bs-adj2 { background: #fff7ed; color: #c2410c; border-color: #fed7aa; }
-
+/* Mobile: bar lebih tebal, segmen terisi min-width 12px supaya bisa di-tap */
 @media (max-width: 767px) {
-  .band-bar, .band-axis-global { display: none; }
-  .band-chips { display: flex; }
+  .band-bar { height: 56px; }
+  .bs-used, .bs-exp { min-width: 12px !important; }
+  .bs.bs-hover, .bs.bs-active { height: 72px; top: -8px; min-width: 52px !important; }
 }
 
 .band-wrap { padding: 10px; display: flex; flex-direction: column; gap: 8px; }
@@ -356,7 +340,8 @@ a { color: var(--accent); }
 
 .band-city {
   background: var(--panel); border: 1px solid var(--border);
-  border-radius: var(--r3); padding: 8px 10px;
+  border-radius: var(--r3); padding: 8px 10px 8px;
+  overflow: visible;
 }
 .band-city-hdr {
   display: flex; align-items: baseline; justify-content: space-between;
