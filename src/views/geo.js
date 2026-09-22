@@ -1,6 +1,7 @@
 // views/geo.js — peta Leaflet dengan marker cluster
 
 import { state, filteredStations, wilayahOf } from '../state.js';
+import { ALLOTMENT } from '../data/allotment.js';
 import { renderStatsBar } from '../components/statsbar.js';
 import { computeChannelMap } from '../engine/channel.js';
 import { isExpired, esc } from '../utils.js';
@@ -87,6 +88,28 @@ export function renderGeo(onDetail) {
 
   _map.addLayer(cluster);
 
+  // Titik pusat wilayah layanan dari KM 570/2025
+  const centerLayer = L.layerGroup();
+  const wilayahSet  = new Set(stations.map(s => wilayahOf(s)));
+
+  for (const [wName, data] of Object.entries(ALLOTMENT)) {
+    if (!wilayahSet.has(wName)) continue;
+    if (!data.koordinat) continue;
+    const lat = parseDMS(data.koordinat.lat);
+    const lng = parseDMS(data.koordinat.lng);
+    if (lat === null || lng === null) continue;
+
+    L.circleMarker([lat, lng], {
+      radius: 5, color: '#f59e0b', fillColor: '#fbbf24',
+      fillOpacity: 0.9, weight: 2,
+    }).bindTooltip(wName, { permanent: false, direction: 'top' })
+      .addTo(centerLayer);
+  }
+  centerLayer.addTo(_map);
+
+  L.control.layers(null, { 'Titik pusat wilayah (KM 570)': centerLayer },
+    { collapsed: false, position: 'topright' }).addTo(_map);
+
   // Delegasi klik tombol "Detail →" di popup
   _map.on('popupopen', e => {
     const btn = e.popup.getElement()?.querySelector('.geo-detail-btn');
@@ -97,6 +120,20 @@ export function renderGeo(onDetail) {
       };
     }
   });
+}
+
+/** Parse koordinat DMS format KM 570: "07S49 43" → -7.829, "110E09 36" → 110.16 */
+function parseDMS(str) {
+  if (!str) return null;
+  const m = str.match(/^(\d+)([NSEW])(\d+)\s*(\d*)/i);
+  if (!m) return null;
+  const deg = parseInt(m[1]);
+  const hem = m[2].toUpperCase();
+  const min = parseInt(m[3]);
+  const sec = m[4] ? parseInt(m[4]) : 0;
+  let val = deg + min / 60 + sec / 3600;
+  if (hem === 'S' || hem === 'W') val = -val;
+  return val;
 }
 
 export function destroyGeo() {
