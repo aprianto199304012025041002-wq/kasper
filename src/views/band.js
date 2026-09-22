@@ -36,16 +36,17 @@ export function renderBand(onDetail) {
 
   renderStatsBar(computeChannelMapForWilayah(stations, ''));
 
-  // Ruler frekuensi di atas
-  let html = '<div class="band-wrap">';
-  html += `<div class="band-scroll-wrap"><div class="band-ruler band-scroll">`;
-  html += `<div class="band-bar-wrap" style="width:${BAR_W}px">`;
+  // Ruler frekuensi — di luar band-wrap, sticky ke bawah statsbar
+  let html = `<div class="band-ruler-fixed band-scroll-wrap">
+    <div class="band-scroll band-ruler-scroll">
+      <div class="band-bar-wrap" style="width:${BAR_W}px">`;
   for (let f = FM_MIN; f <= FM_MAX; f += 0.5) {
     const x = ((f - FM_MIN) / RANGE * BAR_W).toFixed(1);
     const isMajor = Number.isInteger(f);
     html += `<div class="band-tick${isMajor ? ' major' : ''}" style="left:${x}px">${isMajor ? f : ''}</div>`;
   }
-  html += '</div></div></div>';
+  html += `</div></div></div>`;
+  html += '<div class="band-wrap">';
 
   // Satu blok per wilayah: judul di atas, bar di bawah
   for (const w of wilayahList) {
@@ -116,13 +117,16 @@ function segClass(ch) {
 
 function attachBandEvents(main) {
   // Scroll sinkron — sama dengan grid
+  // Scroll sinkron — semua band-scroll + ruler
   const bodies = main.querySelectorAll('.band-scroll');
+  const ruler  = main.querySelector('.band-ruler-scroll');
+  const allScrolls = ruler ? [...bodies, ruler] : [...bodies];
   let _syncing = false;
-  bodies.forEach(el => {
+  allScrolls.forEach(el => {
     el.addEventListener('scroll', () => {
       if (_syncing) return;
       _syncing = true;
-      bodies.forEach(other => { if (other !== el) other.scrollLeft = el.scrollLeft; });
+      allScrolls.forEach(other => { if (other !== el) other.scrollLeft = el.scrollLeft; });
       _syncing = false;
     }, { passive: true });
   });
