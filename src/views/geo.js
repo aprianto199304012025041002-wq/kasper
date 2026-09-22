@@ -107,7 +107,8 @@ export function renderGeo(onDetail) {
     // Circle radius wilayah layanan
     L.circle([lat, lng], {
       radius: r, color: '#f59e0b', fillColor: '#fbbf24',
-      fillOpacity: 0.05, weight: 1, dashArray: '4,4',
+      fillOpacity: 0, weight: 2, dashArray: '6,4',
+      interactive: false,
     }).bindTooltip(ttl, { direction: 'top' }).addTo(radiusLayer);
 
     // Titik pusat
