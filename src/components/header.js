@@ -9,7 +9,7 @@ export function mountHeader(onRefresh, onTheme) {
     <div class="hdr-l">
       <button id="sidebar-toggle" title="Sembunyikan sidebar">‹</button>
       <span class="logo">KASPER</span>
-      <span class="hdr-sub">Monitoring Spektrum FM · DIY &amp; Jawa Tengah</span>
+      <span class="hdr-sub">Pengkanalan Spektrum Radio · DIY &amp; Jawa Tengah</span>
     </div>
     <div class="hdr-r">
       <span id="hdr-status">—</span>

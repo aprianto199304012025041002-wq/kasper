@@ -131,8 +131,8 @@ body {
     <div class="logo-icon"><i class="ti ti-radio"></i></div>
     <div class="logo-name">KASPER</div>
     <div class="logo-desc">
-      Monitoring Spektrum Frekuensi FM
-      <span class="logo-org">BALAI MONITOR SPEKTRUM FREKUENSI RADIO<br>KELAS II YOGYAKARTA</span>
+      Pengkanalan Spektrum Radio
+      <span class="logo-org">BALAI MONITOR SPEKTRUM FREKUENSI RADIO DAN INFRASTRUKTUR DIGITAL<br>KELAS I YOGYAKARTA</span>
     </div>
   </div>
   <div class="login-card">
