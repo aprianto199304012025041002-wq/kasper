@@ -28,30 +28,40 @@ jobs:
       - name: Build frontend
         run: npm run build
 
-      # Inject credentials SETELAH build — agar data.php berisi credential
-      # tidak pernah ada di direktori yang di-build Vite (api/ tidak di-build)
-      # dan tidak ada risiko build gagal + file dengan credential ter-cache.
-      - name: Inject DB credentials ke data.php
+
+
+      # Siapkan folder deploy tunggal: dist/ + api/ + PHP auth files
+      - name: Prepare deploy folder
+        run: |
+          mkdir -p deploy_root/api deploy_root/includes
+          cp -r dist/. deploy_root/
+          cp -r api/. deploy_root/api/
+          cp -r includes/. deploy_root/includes/
+          cp login.php callback.php logout.php config.php favicon.svg deploy_root/
+
+      # Generate kasper_config.php dari secrets
+      - name: Generate kasper_config.php
         env:
           DB_HOST: ${{ secrets.DB_HOST }}
           DB_NAME: ${{ secrets.DB_NAME }}
           DB_USER: ${{ secrets.DB_USER }}
           DB_PASS: ${{ secrets.DB_PASS }}
+          SSO_PUBLIC_KEY: ${{ secrets.SSO_PUBLIC_KEY }}
         run: |
-          sed -i "s|DB_HOST_PLACEHOLDER|$DB_HOST|g" api/data.php
-          sed -i "s|DB_NAME_PLACEHOLDER|$DB_NAME|g" api/data.php
-          sed -i "s|DB_USER_PLACEHOLDER|$DB_USER|g" api/data.php
-          sed -i "s|DB_PASS_PLACEHOLDER|$DB_PASS|g" api/data.php
-          # Verifikasi: placeholder tidak boleh ada lagi
-          grep -q 'PLACEHOLDER' api/data.php && echo "ERROR: placeholder masih ada!" && exit 1 || echo "OK: credentials injected"
-
-      # Siapkan folder deploy tunggal: dist/ + api/ digabung
-      # Menghindari dua koneksi FTP berurutan yang bisa kena throttle Hostinger
-      - name: Prepare deploy folder
-        run: |
-          mkdir -p deploy_root/api
-          cp -r dist/. deploy_root/
-          cp -r api/. deploy_root/api/
+          cat > deploy_root/kasper_config.php << PHPEOF
+          <?php
+          define('APP_BASE_URL',  'https://kasper.balmonjogja.info');
+          define('SSO_URL',       'https://gudeg.xo.je/sso.php');
+          define('SSO_CLIENT_ID', '1d4b1ae1b885ed27');
+          define('SSO_PUBLIC_KEY', <<<PEM
+          ${SSO_PUBLIC_KEY}
+          PEM);
+          define('DB_HOST', '${DB_HOST}');
+          define('DB_NAME', '${DB_NAME}');
+          define('DB_USER', '${DB_USER}');
+          define('DB_PASS', '${DB_PASS}');
+          PHPEOF
+          echo "OK: kasper_config.php generated"
 
       # Deploy via lftp — lebih handal dari FTP action, support passive mode eksplisit
       - name: Install lftp

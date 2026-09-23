@@ -2,6 +2,9 @@
 // data.php — satu-satunya file PHP, langsung query MySQL
 declare(strict_types=1);
 
+require_once __DIR__ . '/../includes/auth.php';
+require_login();
+
 header('Content-Type: application/json; charset=utf-8');
 $allowed = ['https://kasper.balmonjogja.info', 'http://localhost:5173', 'http://localhost:4173', 'http://127.0.0.1:5173'];
 $origin  = $_SERVER['HTTP_ORIGIN'] ?? '';
@@ -11,13 +14,7 @@ header('Access-Control-Allow-Methods: GET, OPTIONS');
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') { http_response_code(204); exit; }
 if ($_SERVER['REQUEST_METHOD'] !== 'GET')     { http_response_code(405); echo json_encode(['error'=>'Method not allowed']); exit; }
 
-// ── Koneksi ──────────────────────────────────────────────────────────────────
-// Credentials di-inject oleh CI/CD — jangan edit manual di sini
-define('DB_HOST', 'DB_HOST_PLACEHOLDER');
-define('DB_NAME', 'DB_NAME_PLACEHOLDER');
-define('DB_USER', 'DB_USER_PLACEHOLDER');
-define('DB_PASS', 'DB_PASS_PLACEHOLDER');
-
+// ── Koneksi — credentials dari kasper_config.php (di-generate saat deploy) ──
 try {
     $pdo = new PDO(
         'mysql:host=' . DB_HOST . ';dbname=' . DB_NAME . ';charset=utf8mb4',

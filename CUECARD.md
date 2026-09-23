@@ -98,3 +98,14 @@ Retry 3x dengan 30s interval (FTP Hostinger kadang intermittent)
 - `src/apiClient.js` (file lama) masih ada — bisa dihapus
 - `api/data/allotment_nasional.json` belum diisi (perlu ekstraksi dari PDF KM 570)
 - Test detail panel di HP (slide-in + peta mini)
+
+## SSO GUDEG (ditambahkan Sep 2026)
+- Login via SSO GUDEG (`gudeg.xo.je/sso.php`)
+- Client ID: `1d4b1ae1b885ed27`
+- Callback: `https://kasper.balmonjogja.info/callback.php`
+- File baru: `login.php`, `callback.php`, `logout.php`, `config.php`, `includes/auth.php`
+- `kasper_config.php` di-generate saat deploy via CI/CD, tidak di-commit
+- GitHub Secret yang dibutuhkan: `DB_HOST`, `DB_NAME`, `DB_USER`, `DB_PASS`, `SSO_PUBLIC_KEY`
+- SSO_PUBLIC_KEY: public key RSA dari GUDEG — jalankan `scripts/fetch-gudeg-pubkey.sh` dari laptop
+- `api/data.php` sekarang require_login() — redirect ke login.php jika belum auth
+- Health check URL sekarang return 401 jika tidak ada session (wajar)

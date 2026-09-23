@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <rect width="32" height="32" rx="7" fill="#0f1520"/>
+  <rect width="32" height="32" rx="7" fill="rgba(74,144,217,0.15)"/>
+  <rect x="0.5" y="0.5" width="31" height="31" rx="6.5" fill="none" stroke="rgba(74,144,217,0.4)" stroke-width="1"/>
+  <!-- radio icon -->
+  <g transform="translate(5,6)" fill="none" stroke="#4A90D9" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+    <!-- body radio -->
+    <rect x="0" y="8" width="22" height="13" rx="2"/>
+    <!-- speaker grill -->
+    <rect x="2" y="11" width="7" height="7" rx="1"/>
+    <!-- tuner dial -->
+    <circle cx="16" cy="14.5" r="3"/>
+    <line x1="16" y1="11.5" x2="16" y2="12.5"/>
+    <!-- antenna -->
+    <line x1="6" y1="8" x2="3" y2="1"/>
+    <line x1="10" y1="8" x2="13" y2="1"/>
+    <!-- frekuensi garis kecil -->
+    <line x1="12" y1="12" x2="14" y2="12"/>
+    <line x1="12" y1="14.5" x2="14" y2="14.5"/>
+    <line x1="12" y1="17" x2="14" y2="17"/>
+  </g>
+</svg>
