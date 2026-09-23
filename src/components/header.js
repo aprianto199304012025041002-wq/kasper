@@ -19,7 +19,7 @@ export function mountHeader(onRefresh, onTheme) {
       <button id="btn-refresh" title="Refresh data [R]">↺</button>
       <button id="btn-theme" title="Toggle tema">${state.theme === 'dark' ? '☀' : '☾'}</button>
       ${name ? `<span class="hdr-user" title="${name}">${name.split(' ')[0]}</span>` : ''}
-      <a href="/logout.php" class="hdr-logout" title="Keluar">Keluar</a>
+      <a href="/logout.php" class="hdr-logout" title="Keluar"><i class="ti ti-power"></i></a>
     </div>`;
 
   document.getElementById('btn-refresh').onclick = onRefresh;
