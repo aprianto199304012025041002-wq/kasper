@@ -1,0 +1,23 @@
+# KASPER — Apache config
+Options -Indexes
+
+# Redirect root ke index.php (auth guard)
+DirectoryIndex index.php index.html
+
+# Block akses langsung ke file sensitif
+<FilesMatch "^(kasper_config|config)\.php$">
+    Require all denied
+</FilesMatch>
+<FilesMatch "^\.">
+    Require all denied
+</FilesMatch>
+
+# Assets Vite (JS/CSS/images) boleh diakses langsung tanpa auth
+<FilesMatch "\.(js|css|svg|png|jpg|ico|woff2?)$">
+    Require all granted
+</FilesMatch>
+
+# Security headers
+Header always set X-Content-Type-Options "nosniff"
+Header always set X-Frame-Options "DENY"
+Header always set Referrer-Policy "strict-origin-when-cross-origin"

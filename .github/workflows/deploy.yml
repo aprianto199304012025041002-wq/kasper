@@ -37,7 +37,8 @@ jobs:
           cp -r dist/. deploy_root/
           cp -r api/. deploy_root/api/
           cp -r includes/. deploy_root/includes/
-          cp login.php callback.php logout.php config.php favicon.svg deploy_root/
+          cp login.php callback.php logout.php config.php index.php favicon.svg deploy_root/
+          cp .htaccess deploy_root/ 2>/dev/null || true
 
       # Generate kasper_config.php dari secrets
       - name: Generate kasper_config.php
