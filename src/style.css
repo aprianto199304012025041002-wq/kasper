@@ -78,6 +78,20 @@ a { color: var(--accent); }
   display: flex; align-items: center; justify-content: center; transition: background .1s;
 }
 .hdr-r button:hover { background: var(--bg); color: var(--txt); }
+.hdr-user {
+  font-size: 11px; font-weight: 600; color: var(--txt2);
+  background: var(--bg); border: 1px solid var(--border);
+  border-radius: var(--r); padding: 3px 8px;
+  max-width: 80px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.hdr-logout {
+  display: flex; align-items: center; justify-content: center;
+  width: 28px; height: 28px; border-radius: var(--r);
+  border: 1px solid var(--border); background: none;
+  color: var(--txt3); font-size: 14px; text-decoration: none;
+  transition: color .1s, border-color .1s;
+}
+.hdr-logout:hover { color: var(--red); border-color: var(--red); }
 
 /* ── Body ── */
 #body { display: grid; grid-template-columns: var(--nav) 1fr; flex: 1; height: 0; overflow: hidden; }

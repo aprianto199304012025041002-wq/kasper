@@ -5,6 +5,9 @@ import { state } from '../state.js';
 import { isExpired } from '../utils.js';
 
 export function mountHeader(onRefresh, onTheme) {
+  const user = window.__KASPER_USER__ || {};
+  const name = user.name || user.email || '';
+
   document.getElementById('hdr').innerHTML = `
     <div class="hdr-l">
       <button id="sidebar-toggle" title="Sembunyikan sidebar">‹</button>
@@ -15,6 +18,8 @@ export function mountHeader(onRefresh, onTheme) {
       <span id="hdr-status">—</span>
       <button id="btn-refresh" title="Refresh data [R]">↺</button>
       <button id="btn-theme" title="Toggle tema">${state.theme === 'dark' ? '☀' : '☾'}</button>
+      ${name ? `<span class="hdr-user" title="${name}">${name.split(' ')[0]}</span>` : ''}
+      <a href="/logout.php" class="hdr-logout" title="Keluar">⏏</a>
     </div>`;
 
   document.getElementById('btn-refresh').onclick = onRefresh;
