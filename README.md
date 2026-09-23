@@ -1,9 +1,10 @@
-# KASPER — Kanal Spektrum Radio
+# KASPER — Pengkanalan Spektrum Radio
 
-Aplikasi web monitoring spektrum frekuensi FM berbasis data ISR (Izin Stasiun Radio) Balmon Jogja, mencakup **DIY & Jawa Tengah**.
+Aplikasi web pengkanalan spektrum frekuensi FM berbasis data ISR (Izin Stasiun Radio) Balmon Jogja, mencakup **DIY & Jawa Tengah**.
 
 - **Live:** `kasper.balmonjogja.info`
 - **Stack:** Vite + Vanilla JS · PHP 8 + MySQL · Hostinger
+- **Auth:** SSO GUDEG (`gudeg.xo.je`)
 - **Repo:** `aprianto199304012025041002-wq/kasper`
 
 ---
@@ -12,15 +13,15 @@ Aplikasi web monitoring spektrum frekuensi FM berbasis data ISR (Izin Stasiun Ra
 
 | View | Keterangan |
 |---|---|
-| **Grid** | Grid kanal 100 kHz per wilayah, warna per status |
-| **Pita** | Band 87.5–108 MHz horizontal per wilayah |
-| **Geo** | Peta Leaflet marker per stasiun |
-| **RF** | Tabel interferensi ITU-R BS.412, sortable |
-| **Detail** | Panel slide-in: info lengkap + peta mini + tetangga |
+| **Grid** | Grid kanal 100 kHz per wilayah, sync scroll horizontal, highlight kolom, jump to frekuensi |
+| **Pita** | Bar kontinu 87.5–108 MHz per wilayah, sync scroll horizontal |
+| **Geo** | Peta Leaflet, marker cluster, titik pusat + radius wilayah layanan (KM 570/2025) |
+| **RF** | Tabel interferensi ITU-R BS.412, sortable, filter level |
+| **Detail** | Panel slide-in: info lengkap + peta mini + tetangga frekuensi |
 
-**Filter:** wilayah, search, kanal (all/terisi/kosong/expired)
+**Filter:** multi-select wilayah, search, kanal (all/terisi/kosong/expired)
 
-**Status cell grid:** biru=terisi · amber=adjacent guard · merah dashed=expired · abu=kosong
+**Allotment:** KM Komdigi 570/2025 — dot RRI/LPS per cell, radius wilayah per kelas (A=30km, B=20km, C=12km)
 
 ---
 
@@ -29,29 +30,38 @@ Aplikasi web monitoring spektrum frekuensi FM berbasis data ISR (Izin Stasiun Ra
 ```
 src/
   main.js           — boot, shell HTML, wiring komponen
-  state.js          — state global + filteredStations()
-  api.js            — fetch ke /api/stations, /api/stations/:freq, /api/health
+  state.js          — state global, filteredStations(), wilayahOf(), resolveKomunitasWilayah()
+  api.js            — fetch ke /api/stations, /api/stations/:freq
   utils.js          — parseValidity, isExpired, fmtDate, dbmToWatt, esc, haversineKm
   style.css         — design system (light/dark, CSS tokens)
   components/
-    header.js       — logo, status, btn refresh/theme
-    sidebar.js      — nav wilayah per provinsi + mobile close
+    header.js       — logo, user badge, btn refresh/theme/logout
+    sidebar.js      — nav wilayah collapsible per provinsi, multi-select, mobile slide-in
     toolbar.js      — tab Grid/Pita/Geo/RF + search + filter kanal
     statsbar.js     — stats ringkasan kanal
   views/
-    grid.js         — grid kanal per wilayah
-    band.js         — pita frekuensi visual
-    geo.js          — peta Leaflet (bundled npm, tile OSM)
-    rf.js           — tabel interferensi sortable + filter level
-    detail.js       — slide-in panel detail stasiun
+    grid.js         — grid kanal per wilayah, sync scroll, highlight, jump
+    band.js         — pita frekuensi bar kontinu, sync scroll
+    geo.js          — Leaflet + cluster, titik pusat + radius wilayah KM 570
+    rf.js           — tabel interferensi sortable + filter level + tap detail
+    detail.js       — slide-in panel, peta mini, swipe-to-close (mobile)
   engine/
     channel.js      — computeChannelMapForWilayah(), ITU-R grid
     interference.js — computeInterference(), ITU-R BS.412
   data/
-    allotment.js    — data allotment KM Komdigi 570/2025
+    allotment.js    — data allotment KM Komdigi 570/2025 (84 wilayah DIY+Jateng)
 
 api/
-  data.php          — single-file PHP backend (PDO/MySQL)
+  data.php          — single-file PHP backend (PDO/MySQL), require_login()
+
+includes/
+  auth.php          — require_login(), verify_sso_token() RS256, security headers
+
+login.php           — halaman login SSO GUDEG
+callback.php        — verifikasi JWT, set session
+logout.php          — destroy session
+config.php          — loader kasper_config.php
+index.php           — auth guard + serve dist/index.html
 ```
 
 ---
@@ -63,28 +73,29 @@ git clone https://github.com/aprianto199304012025041002-wq/kasper.git
 cd kasper
 npm install
 npm run dev
+# Untuk auth: buat kasper_config.php dari kasper_config.example.php
 ```
-
----
-
-## API endpoints
-
-| Endpoint | Keterangan |
-|---|---|
-| `GET /api/stations` | Semua stasiun FM |
-| `GET /api/stations/:freq` | Detail stasiun + tetangga |
-| `GET /api/health` | Cek DB (`{ status, total_fm, db_ms }`) |
 
 ---
 
 ## Deploy
 
-GitHub Actions → lftp → Hostinger. Retry 3x (30s interval) untuk handle FTP intermittent.
+GitHub Actions → `npm run build` → generate `kasper_config.php` dari secrets → lftp ke Hostinger (retry 3x).
 
 ```bash
-npm run build   # output ke dist/
-git push        # trigger CI/CD otomatis
+git push   # trigger CI/CD otomatis
 ```
+
+**GitHub Secrets yang dibutuhkan:** `DB_HOST`, `DB_NAME`, `DB_USER`, `DB_PASS`, `SSO_PUBLIC_KEY`
+
+---
+
+## Auth (SSO GUDEG)
+
+- Client ID: `1d4b1ae1b885ed27`
+- Callback: `https://kasper.balmonjogja.info/callback.php`
+- JWT RS256 — public key dari `gudeg.xo.je`
+- `kasper_config.php` tidak di-commit, di-generate saat deploy
 
 ---
 
