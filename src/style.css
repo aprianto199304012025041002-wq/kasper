@@ -86,9 +86,10 @@ a { color: var(--accent); }
 }
 .hdr-logout {
   display: flex; align-items: center; justify-content: center;
-  width: 28px; height: 28px; border-radius: var(--r);
+  height: 28px; padding: 0 8px; border-radius: var(--r);
   border: 1px solid var(--border); background: none;
-  color: var(--txt3); font-size: 14px; text-decoration: none;
+  color: var(--txt3); font-size: 11px; font-weight: 600;
+  text-decoration: none; white-space: nowrap;
   transition: color .1s, border-color .1s;
 }
 .hdr-logout:hover { color: var(--red); border-color: var(--red); }
