@@ -19,6 +19,7 @@ switch ($err_code) {
     case '1': $err_msg = 'Token tidak ditemukan. Coba login kembali.'; break;
     case '2': $err_msg = 'Token tidak valid atau sudah kedaluwarsa.'; break;
     case '3': $err_msg = ''; break;
+    case 'timeout': $err_msg = 'Sesi Anda telah berakhir. Silakan login kembali.'; break;
     case '403': $err_msg = 'Akun Anda tidak memiliki akses ke aplikasi ini.'; break;
 }
 ?>
