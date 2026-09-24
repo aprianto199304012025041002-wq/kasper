@@ -34,10 +34,10 @@ function require_login(): void {
         header('Location: ' . APP_BASE_URL . '/login.php');
         exit;
     }
-    // Session timeout 8 jam
-    if (isset($_SESSION['login_time']) && (time() - $_SESSION['login_time']) > 28800) {
-        session_unset();
-        session_destroy();
+    // Session timeout: idle 30 menit atau absolut 8 jam
+    $now = time();
+    if (isset($_SESSION['login_time']) && ($now - $_SESSION['login_time']) > 28800) {
+        session_unset(); session_destroy();
         if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) || str_contains($_SERVER['REQUEST_URI'] ?? '', '/api/')) {
             http_response_code(401);
             header('Content-Type: application/json');
@@ -47,6 +47,18 @@ function require_login(): void {
         header('Location: ' . APP_BASE_URL . '/login.php?err=timeout');
         exit;
     }
+    if (isset($_SESSION['last_activity']) && ($now - $_SESSION['last_activity']) > 1800) {
+        session_unset(); session_destroy();
+        if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) || str_contains($_SERVER['REQUEST_URI'] ?? '', '/api/')) {
+            http_response_code(401);
+            header('Content-Type: application/json');
+            echo json_encode(['error' => 'Sesi berakhir, silakan login kembali.']);
+            exit;
+        }
+        header('Location: ' . APP_BASE_URL . '/login.php?err=timeout');
+        exit;
+    }
+    $_SESSION['last_activity'] = $now;
 }
 
 function is_logged_in(): bool {
