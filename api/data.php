@@ -74,6 +74,8 @@ switch ($route) {
 
     // GET /api/stations  atau  GET /api/stations/:freq
     case 'stations':
+        // Data stasiun jarang berubah — cache 5 menit di browser
+        header('Cache-Control: private, max-age=300');
         if ($param !== null) {
             $freq = filter_var($param, FILTER_VALIDATE_FLOAT);
             if ($freq === false) { http_response_code(400); out(['error'=>'Frekuensi tidak valid']); }
@@ -215,6 +217,7 @@ switch ($route) {
 
     // GET /api/health
     case 'health':
+        header('Cache-Control: no-store');
         $cnt = $pdo->query("SELECT COUNT(*) FROM isr WHERE service='Broadcast' AND subservice='FM'")->fetchColumn();
         $exp = $pdo->query("SELECT COUNT(*) FROM isr WHERE service='Broadcast' AND subservice='FM' AND validity_date < CURDATE()")->fetchColumn();
         out(['status' => 'ok', 'total_fm' => (int)$cnt, 'expired' => (int)$exp, 'time' => date('c')]);
