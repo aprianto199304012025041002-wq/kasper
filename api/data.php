@@ -3,6 +3,15 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/../includes/auth.php';
+
+// Global handler — tangkap semua uncaught exception (misal query gagal)
+set_exception_handler(function (Throwable $e) {
+    error_log('[KASPER] Uncaught exception: ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine());
+    http_response_code(500);
+    header('Content-Type: application/json');
+    echo json_encode(['error' => 'Terjadi kesalahan server.']);
+    exit;
+});
 require_login();
 
 header('Content-Type: application/json; charset=utf-8');
@@ -22,6 +31,7 @@ try {
         [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION, PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC]
     );
 } catch (PDOException $e) {
+    error_log('[KASPER] DB connection failed: ' . $e->getMessage());
     http_response_code(503);
     echo json_encode(['error' => 'Koneksi database gagal']);
     exit;
